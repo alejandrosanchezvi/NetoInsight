@@ -1,0 +1,210 @@
+/* 👤 NetoInsight - User Menu Styles */
+
+.user-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 320px;
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  z-index: 1000;
+}
+
+/* ===== Menu Header ===== */
+.menu-header {
+  padding: 1.25rem;
+  background: linear-gradient(135deg, var(--neto-blue) 0%, var(--neto-blue-dark) 100%);
+  color: var(--white);
+}
+
+.menu-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.menu-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.menu-user-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-user-avatar .avatar-initials {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+  text-transform: uppercase;
+}
+
+.menu-user-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.menu-user-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-user-email {
+  font-size: 0.8125rem;
+  opacity: 0.9;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-user-role {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-top: 0.125rem;
+  padding: 0.125rem 0.5rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  display: inline-block;
+  align-self: flex-start;
+}
+
+/* ===== Menu Items ===== */
+.menu-items {
+  padding: 0.5rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  color: var(--text-dark);
+}
+
+.menu-item:hover {
+  background-color: var(--light-gray);
+}
+
+.menu-item:active {
+  transform: scale(0.98);
+}
+
+/* Divider before item */
+.menu-item-divider {
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.75rem;
+}
+
+/* Danger item (logout) */
+.menu-item-danger {
+  color: #dc2626;
+}
+
+.menu-item-danger:hover {
+  background-color: #fef2f2;
+}
+
+.menu-item-danger .menu-item-icon {
+  color: #dc2626;
+}
+
+/* Item Icon */
+.menu-item-icon {
+  flex-shrink: 0;
+  color: var(--text-gray);
+  transition: color 0.2s ease;
+}
+
+.menu-item:hover .menu-item-icon {
+  color: var(--neto-blue);
+}
+
+.menu-item-danger:hover .menu-item-icon {
+  color: #dc2626;
+}
+
+/* Item Label */
+.menu-item-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ===== Menu Footer ===== */
+.menu-footer {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--light-gray);
+}
+
+.menu-footer-text {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  text-align: center;
+  display: block;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .user-menu {
+    width: 280px;
+    right: -0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-menu {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
+
+/* Animation */
+.fade-in {
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

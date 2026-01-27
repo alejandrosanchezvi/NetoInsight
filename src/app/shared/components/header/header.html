@@ -1,0 +1,76 @@
+<!-- 🎨 NetoInsight - Header Template (LOGO CORREGIDO) -->
+
+<header class="header">
+  <div class="header-content">
+    <!-- Left Section: Toggle + Logo PNG -->
+    <div class="header-left">
+      <!-- Menu Toggle Button (SIEMPRE VISIBLE, a la izquierda del logo) -->
+      <button 
+        class="menu-toggle" 
+        (click)="onToggleSidebar()"
+        aria-label="Toggle menu">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+        <img 
+          src="/assets/images/logoNetoBlanco.png" 
+          alt="Neto Logo" 
+          class="logo">
+    </div>
+
+    <!-- Right Section: User Info + Avatar -->
+    <div class="header-right">
+      <div class="user-info-container" *ngIf="currentUser">
+        <!-- User Info Button -->
+        <button 
+          class="user-info-button" 
+          (click)="toggleUserMenu()"
+          [class.active]="showUserMenu">
+          
+          <!-- Tenant/Proveedor Name -->
+          <div class="user-info-text">
+            <span class="user-tenant">{{ getTenantName() }}</span>
+            <span class="user-name">{{ currentUser.name }}</span>
+          </div>
+
+          <!-- Avatar -->
+          <div class="user-avatar">
+            <img 
+              *ngIf="currentUser.avatarUrl" 
+              [src]="currentUser.avatarUrl" 
+              [alt]="currentUser.name"
+              class="avatar-image">
+            <span *ngIf="!currentUser.avatarUrl" class="avatar-initials">
+              {{ getUserInitials() }}
+            </span>
+          </div>
+
+          <!-- Dropdown Arrow -->
+          <svg 
+            class="dropdown-arrow" 
+            [class.rotated]="showUserMenu"
+            width="16" 
+            height="16" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2" 
+            stroke-linecap="round" 
+            stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- User Dropdown Menu -->
+        <app-user-menu 
+          *ngIf="showUserMenu"
+          [user]="currentUser"
+          (closeMenu)="closeUserMenu()">
+        </app-user-menu>
+      </div>
+    </div>
+  </div>
+</header>

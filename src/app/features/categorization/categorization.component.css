@@ -1,0 +1,265 @@
+/* 📊 NetoInsight - Categorization Styles (CON SCALE AUTOMÁTICO) */
+
+.categorization-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* 🔹 Sin padding para máximo espacio */
+}
+
+/* ===== Section Header ===== */
+.section-header {
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  margin: 0.5rem; /* 🔹 Margen mínimo */
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1.25rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-icon {
+  color: var(--neto-orange);
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--neto-blue-dark);
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-gray);
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background-color: var(--light-gray);
+  border-color: var(--neto-blue);
+  color: var(--neto-blue);
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
+
+/* ===== Tableau Container (CON SCALE AUTOMÁTICO) ===== */
+.tableau-container {
+  flex: 1;
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  position: relative;
+  min-height: 800px;
+  margin: 0 0.5rem 0.5rem 0.5rem; /* 🔹 Margen mínimo */
+  
+  /* 🔹 SCALE AUTOMÁTICO: Reduce el dashboard para que entre completo */
+  transform-origin: top left;
+  transform: scale(0.8); /* 🔹 Ajusta este valor según tu pantalla */
+  width: 125%; /* 🔹 100 / 0.8 = 125% para compensar el scale */
+}
+
+.tableau-container.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 🔹 Tableau viz element */
+tableau-viz {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===== SCALES RESPONSIVE ===== */
+
+/* Pantallas muy grandes (>1920px) */
+@media (min-width: 1921px) {
+  .tableau-container {
+    transform: scale(0.95); /* Casi tamaño completo */
+    width: 105.26%; /* 100 / 0.95 */
+  }
+}
+
+/* Pantallas grandes (1600-1920px) */
+@media (max-width: 1920px) {
+  .tableau-container {
+    transform: scale(0.85);
+    width: 117.65%; /* 100 / 0.85 */
+  }
+}
+
+/* Pantallas medianas (1366-1600px) */
+@media (max-width: 1600px) {
+  .tableau-container {
+    transform: scale(0.90);
+    width: 110%; /* 100 / 0.75 */
+  }
+}
+
+/* Pantallas pequeñas (1024-1366px) */
+@media (max-width: 1366px) {
+  .tableau-container {
+    transform: scale(0.65);
+    width: 153.85%; /* 100 / 0.65 */
+  }
+}
+
+/* Tablets (768-1024px) */
+@media (max-width: 1024px) {
+  .tableau-container {
+    transform: scale(0.55);
+    width: 181.82%; /* 100 / 0.55 */
+  }
+}
+
+/* Móviles (<768px) - Sin scale, permitir scroll horizontal */
+@media (max-width: 768px) {
+  .tableau-container {
+    transform: scale(0.25); /* Sin scale */
+    width: 385%;
+    overflow-x: auto; /* Scroll horizontal en móvil */
+    overflow-y: hidden;
+  }
+  
+  tableau-viz {
+    min-width: 600px; /* Ancho mínimo legible */
+  }
+}
+
+/* ===== Loading Overlay ===== */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: var(--radius-lg);
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--light-gray);
+  border-top-color: var(--neto-orange);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-gray);
+  margin: 0;
+}
+
+/* ===== Error Message ===== */
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin: 2rem 0.5rem;
+}
+
+.error-message svg {
+  color: #ef4444;
+  margin-bottom: 1.5rem;
+}
+
+.error-message h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.error-message p {
+  font-size: 0.9375rem;
+  color: var(--text-gray);
+  max-width: 500px;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== Animación de entrada ===== */
+.categorization-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== NOTA: Ajusta el valor de transform: scale() según tu pantalla ===== */
+/*
+VALORES COMUNES:
+- scale(1.0) = 100% tamaño original (para pantallas muy grandes)
+- scale(0.9) = 90% (para pantallas grandes ~1800px)
+- scale(0.8) = 80% (para pantallas medianas ~1600px) ← DEFAULT
+- scale(0.7) = 70% (para pantallas pequeñas ~1366px)
+- scale(0.6) = 60% (para laptops ~1024px)
+
+RECUERDA: width debe ser 100 / scale
+- scale(0.8) → width: 125% (100 / 0.8)
+- scale(0.7) → width: 142.86% (100 / 0.7)
+- scale(0.6) → width: 166.67% (100 / 0.6)
+*/

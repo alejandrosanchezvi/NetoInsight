@@ -1,0 +1,20 @@
+<!-- 🏠 NetoInsight - Main Layout Template (CON SIDEBAR MINI) -->
+
+<div class="main-layout">
+  <!-- Header -->
+  <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+
+  <!-- Sidebar -->
+  <app-sidebar 
+    [isOpen]="isSidebarOpen"
+    (closeSidebar)="closeSidebar()">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <main class="main-content" [class.sidebar-mini]="!isSidebarOpen">
+    <div class="content-container">
+      <!-- Router Outlet para las rutas hijas -->
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

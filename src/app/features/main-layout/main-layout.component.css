@@ -1,0 +1,214 @@
+/* 🏠 NetoInsight - Main Layout Styles (SIN PADDING) */
+
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--light-gray);
+}
+
+/* ===== Main Content ===== */
+.main-content {
+  margin-left: 260px;
+  margin-top: 5px;
+  height: calc(100vh - 55px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--light-gray);
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Cuando el sidebar está en modo mini (70px) */
+.main-content.sidebar-mini {
+  margin-left: 65px;
+}
+
+/* Content Container (SIN PADDING PARA MÁXIMO ESPACIO) */
+.content-container {
+  padding: 0; /* 🔹 SIN PADDING - Máximo espacio disponible */
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100%;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* ===== Content Placeholder ===== */
+.content-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 110px);
+  text-align: center;
+  padding: 3rem 2rem;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.placeholder-icon {
+  margin-bottom: 2rem;
+  color: var(--neto-blue);
+  opacity: 0.3;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.placeholder-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--neto-blue-dark);
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--neto-blue) 0%, var(--neto-blue-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.placeholder-text {
+  font-size: 1.0625rem;
+  color: var(--text-gray);
+  max-width: 600px;
+  margin-bottom: 2.5rem;
+  line-height: 1.7;
+}
+
+.placeholder-text + .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(245, 130, 32, 0.3);
+  transition: all 0.3s ease;
+}
+
+.placeholder-text + .btn:hover {
+  box-shadow: 0 6px 16px rgba(245, 130, 32, 0.4);
+  transform: translateY(-2px);
+}
+
+.placeholder-text + .btn:active {
+  transform: translateY(0);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    margin-top: 5px;
+    height: calc(100vh - 50px);
+  }
+
+  .main-content.sidebar-mini {
+    margin-left: 0;
+  }
+
+  .content-container {
+    padding: 0; /* Sin padding en móvil también */
+  }
+
+  .content-placeholder {
+    padding: 2rem 1rem;
+    min-height: calc(100vh - 90px);
+  }
+
+  .placeholder-title {
+    font-size: 1.625rem;
+  }
+
+  .placeholder-text {
+    font-size: 0.9375rem;
+  }
+
+  .placeholder-icon {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-container {
+    padding: 0;
+  }
+
+  .content-placeholder {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .placeholder-title {
+    font-size: 1.375rem;
+  }
+
+  .placeholder-text {
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+  }
+
+  .placeholder-text + .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* ===== Scrollbar Customization ===== */
+.main-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: var(--light-gray);
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--neto-blue) 0%, var(--neto-orange) 100%);
+  border-radius: var(--radius-full);
+  transition: all 0.3s ease;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--neto-blue-dark) 0%, var(--neto-orange) 100%);
+  box-shadow: 0 0 8px rgba(245, 130, 32, 0.5);
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Loading State ===== */
+.content-container.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .main-content {
+    margin-left: 0;
+    margin-top: 0;
+  }
+}
