@@ -1,0 +1,54 @@
+/* 🔄 NetoInsight - Loading Spinner Styles */
+
+.loading-overlay-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(3px);
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #e5e7eb;
+  border-top-color: #F58220;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0E3B83;
+  margin: 0;
+  text-align: center;
+}
+
+.loading-subtext {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+  margin-top: -0.75rem;
+  text-align: center;
+}

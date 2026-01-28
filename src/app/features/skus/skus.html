@@ -1,16 +1,16 @@
-<!-- 📊 NetoInsight - Categorization Template -->
+<!-- 📊 NetoInsight - Skus Template -->
 
 <app-loading-spinner 
   [show]="isLoading"
-  [message]="'Cargando dashboard de Categorización para ' + getCurrentProviderName()"
+  [message]="'Cargando dashboard de SKUs para ' + getCurrentProviderName()"
   submessage="Aplicando filtros personalizados...">
 </app-loading-spinner>
 
-<div class="categorization-container">
+<div class="dashboard-container">
   <div class="tableau-container" [style.visibility]="showDashboard ? 'visible' : 'hidden'">
     <tableau-viz 
       #tableauViz
-      id='tableau-viz' 
+      id='tableau-viz-skus' 
       [src]='tableauVizUrl'
       width='100%'
       height='1240'

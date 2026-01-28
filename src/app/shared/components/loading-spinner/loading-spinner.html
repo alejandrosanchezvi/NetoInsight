@@ -1,0 +1,9 @@
+<!-- 🔄 NetoInsight - Loading Spinner Template -->
+
+<div *ngIf="show" class="loading-overlay-fullscreen">
+  <div class="spinner-container">
+    <div class="spinner"></div>
+    <p class="loading-text">{{ message }}</p>
+    <p *ngIf="submessage" class="loading-subtext">{{ submessage }}</p>
+  </div>
+</div>

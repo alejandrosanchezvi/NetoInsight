@@ -1,8 +1,10 @@
-// 🗺️ NetoInsight - App Routes (MVP)
+// 🗺️ NetoInsight - App Routes
 
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './features/main-layout/main-layout.component';
 import { CategorizationComponent } from './features/categorization/categorization.component';
+import { Skus } from './features/skus/skus';
+import { Stocks } from './features/stocks/stocks';
 
 export const routes: Routes = [
   {
@@ -18,22 +20,21 @@ export const routes: Routes = [
         path: 'categorization',
         component: CategorizationComponent
       },
-      // 🔹 RUTAS MVP: Solo las 5 opciones del menú
       {
         path: 'stores',
-        component: CategorizationComponent // Temporal, usar el mismo componente
+        component: CategorizationComponent
       },
       {
         path: 'skus',
-        component: CategorizationComponent // Temporal
+        component: Skus
       },
       {
         path: 'stocks',
-        component: CategorizationComponent // Temporal
+        component: Stocks
       },
       {
         path: 'purchase-orders',
-        component: CategorizationComponent // Temporal
+        component: CategorizationComponent
       }
     ]
   },
