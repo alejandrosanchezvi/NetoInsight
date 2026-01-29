@@ -67,4 +67,16 @@ export class HeaderComponent implements OnInit {
   getTenantName(): string {
     return this.currentUser?.tenantName ?? 'Sin asignar';
   }
+
+  /**
+ * Logout del usuario
+ */
+async onLogout(): Promise<void> {
+  try {
+    await this.authService.logout();
+    // El redirect lo maneja el AuthService
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+  }
+}
 }

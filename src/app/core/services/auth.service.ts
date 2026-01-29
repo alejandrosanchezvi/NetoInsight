@@ -1,70 +1,207 @@
-// 🔐 NetoInsight - Authentication Service (COMPLETO)
+// 🔐 NetoInsight - Authentication Service (Firebase)
 
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Router } from '@angular/router';
+import { BehaviorSubject, Observable, from, of } from 'rxjs';
+import { switchMap, map, catchError, tap } from 'rxjs/operators';
+
+// Firebase imports
+import {
+  Auth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser,
+  UserCredential,
+} from '@angular/fire/auth';
+
+import {
+  Firestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+} from '@angular/fire/firestore';
+
 import { User, UserRole } from '../models/user.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-  private currentUserSubject: BehaviorSubject<User | null>;
-  public currentUser$: Observable<User | null>;
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor() {
-    // Inicializar con usuario mock o desde localStorage
-    const storedUser = this.getUserFromStorage();
-    this.currentUserSubject = new BehaviorSubject<User | null>(storedUser || this.getMockUser());
-    this.currentUser$ = this.currentUserSubject.asObservable();
+  constructor(
+    private auth: Auth,
+    private firestore: Firestore,
+    private router: Router,
+  ) {
+    console.log('🔐 [AUTH] AuthService initialized');
+    this.initAuthListener();
   }
 
   /**
-   * Obtener usuario actual (sincrónico)
+   * Listener de cambios de autenticación de Firebase
+   */
+  private initAuthListener(): void {
+    onAuthStateChanged(this.auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        console.log('🔐 [AUTH] Firebase user detected:', firebaseUser.email);
+        const userData = await this.getUserData(firebaseUser.uid);
+        this.currentUserSubject.next(userData);
+        if (userData) {
+          console.log('✅ [AUTH] User data loaded:', userData.email);
+        }
+      } else {
+        console.log('🔐 [AUTH] No Firebase user');
+        this.currentUserSubject.next(null);
+      }
+    });
+  }
+
+  /**
+   * Login con email y password
+   */
+  async login(email: string, password: string): Promise<User> {
+    console.log('🔐 [AUTH] Login attempt for:', email);
+
+    try {
+      // 1. Autenticar con Firebase
+      const credential: UserCredential = await signInWithEmailAndPassword(
+        this.auth,
+        email,
+        password,
+      );
+
+      console.log('✅ [AUTH] Firebase authentication successful');
+
+      // 2. Obtener datos adicionales de Firestore
+      const userData = await this.getUserData(credential.user.uid);
+
+      if (!userData) {
+        throw new Error('User data not found in Firestore');
+      }
+
+      // 3. Actualizar última conexión
+      await this.updateLastLogin(credential.user.uid);
+
+      console.log('✅ [AUTH] Login complete:', userData.email);
+      return userData;
+    } catch (error: any) {
+      console.error('❌ [AUTH] Login error:', error);
+
+      // Mensajes de error amigables
+      let errorMessage = 'Error al iniciar sesión';
+
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Usuario no encontrado';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Contraseña incorrecta';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Email inválido';
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = 'Usuario deshabilitado';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Demasiados intentos. Intenta más tarde';
+      }
+
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Logout
+   */
+  async logout(): Promise<void> {
+    console.log('🔐 [AUTH] Logging out...');
+
+    try {
+      await signOut(this.auth);
+      this.currentUserSubject.next(null);
+      this.router.navigate(['/login']);
+      console.log('✅ [AUTH] Logout successful');
+    } catch (error) {
+      console.error('❌ [AUTH] Logout error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener datos del usuario desde Firestore
+   */
+  private async getUserData(uid: string): Promise<User | null> {
+    console.log('📄 [AUTH] Fetching user data for UID:', uid);
+
+    try {
+      console.log('uid: '+uid);
+      const userDocRef = doc(this.firestore, 'users', uid);
+      console.log('uid 2: '+uid);
+      const userDoc = await getDoc(userDocRef);
+      console.log('uid 3: '+uid);
+
+      if (!userDoc.exists()) {
+        console.warn('⚠️ [AUTH] User document not found in Firestore');
+        return null;
+      }
+
+      const data = userDoc.data();
+
+      const user: User = {
+        uid: uid,
+        email: data['email'],
+        name: data['name'],
+        role: data['role'] as UserRole,
+        tenantId: data['tenantId'],
+        tenantName: data['tenantName'],
+        avatarUrl: data['avatarUrl'],
+        isInternal: data['isInternal'] || false,
+        mfaEnabled: data['mfaEnabled'] || false,
+        createdAt: data['createdAt']?.toDate() || new Date(),
+        lastLogin: data['lastLogin']?.toDate(),
+      };
+
+      console.log('✅ [AUTH] User data fetched:', user.email);
+      return user;
+    } catch (error) {
+      console.error('❌ [AUTH] Error fetching user data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Actualizar última conexión
+   */
+  private async updateLastLogin(uid: string): Promise<void> {
+    try {
+      const userDocRef = doc(this.firestore, 'users', uid);
+      await updateDoc(userDocRef, {
+        lastLogin: serverTimestamp(),
+      });
+      console.log('✅ [AUTH] Last login updated');
+    } catch (error) {
+      console.error('⚠️ [AUTH] Error updating last login:', error);
+      // No lanzar error, es una actualización secundaria
+    }
+  }
+
+  /**
+   * Obtener usuario actual (síncrono)
    */
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
   /**
-   * Obtener observable del usuario actual
-   */
-  getCurrentUserObservable(): Observable<User | null> {
-    return this.currentUser$;
-  }
-
-  /**
-   * Login mock (simulación)
-   */
-  login(email: string, password: string): Observable<User> {
-    return new Observable(observer => {
-      // Simulación de delay de red
-      setTimeout(() => {
-        const user = this.getMockUser();
-        this.setCurrentUser(user);
-        observer.next(user);
-        observer.complete();
-      }, 1000);
-    });
-  }
-
-  /**
-   * Logout
-   */
-  logout(): void {
-    this.currentUserSubject.next(null);
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('authToken');
-  }
-
-  /**
-   * Verificar si el usuario está autenticado
+   * Verificar si está autenticado
    */
   isAuthenticated(): boolean {
     return this.currentUserSubject.value !== null;
   }
 
   /**
-   * Verificar si el usuario tiene un rol específico
+   * Verificar si tiene un rol específico
    */
   hasRole(role: UserRole): boolean {
     const user = this.currentUserSubject.value;
@@ -72,7 +209,7 @@ export class AuthService {
   }
 
   /**
-   * Verificar si el usuario es interno
+   * Verificar si es usuario interno
    */
   isInternalUser(): boolean {
     const user = this.currentUserSubject.value;
@@ -80,128 +217,13 @@ export class AuthService {
   }
 
   /**
-   * Actualizar usuario actual
+   * Obtener token de Firebase (para llamadas a backend)
    */
-  private setCurrentUser(user: User): void {
-    this.currentUserSubject.next(user);
-    this.saveUserToStorage(user);
-  }
-
-  /**
-   * Guardar usuario en localStorage
-   */
-  private saveUserToStorage(user: User): void {
-    localStorage.setItem('currentUser', JSON.stringify(user));
-  }
-
-  /**
-   * Obtener usuario desde localStorage
-   */
-  private getUserFromStorage(): User | null {
-    const userStr = localStorage.getItem('currentUser');
-    if (userStr) {
-      try {
-        return JSON.parse(userStr) as User;
-      } catch (error) {
-        console.error('Error parsing user from storage:', error);
-        return null;
-      }
+  async getIdToken(): Promise<string | null> {
+    const firebaseUser = this.auth.currentUser;
+    if (firebaseUser) {
+      return await firebaseUser.getIdToken();
     }
     return null;
-  }
-
-  /**
-   * 🔹 MOCK USER - Usuario de prueba
-   * En producción, esto vendrá del SSO (Azure AD / Google Workspace)
-   */
-  private getMockUser(): User {
-    return {
-      id: 'user-001',
-      email: 'juan.perez@bimbo.com',
-      name: 'Juan Pérez',
-      role: UserRole.VIEWER,
-      tenantId: 'tenant-bimbo',
-      tenantName: 'ALEN DEL NORTE S.A. DE C.V.', // 🔹 IMPORTANTE: Este valor se usa para filtrar Tableau
-      avatarUrl: '', // Opcional: URL de avatar
-      isInternal: false,
-      createdAt: new Date('2024-01-15'),
-      lastLoginAt: new Date()
-    };
-  }
-
-  /**
-   * 🔹 CAMBIAR USUARIO MOCK (para testing)
-   * Útil para probar diferentes proveedores sin autenticación real
-   */
-  setMockUser(providerName: string): void {
-    const mockUsers: { [key: string]: User } = {
-      'Bimbo': {
-        id: 'user-001',
-        email: 'juan.perez@bimbo.com',
-        name: 'Juan Pérez',
-        role: UserRole.VIEWER,
-        tenantId: 'tenant-bimbo',
-        tenantName: 'Bimbo',
-        avatarUrl: '',
-        isInternal: false,
-        createdAt: new Date('2024-01-15'),
-        lastLoginAt: new Date()
-      },
-      'Coca-Cola': {
-        id: 'user-002',
-        email: 'maria.lopez@cocacola.com',
-        name: 'María López',
-        role: UserRole.VIEWER,
-        tenantId: 'tenant-cocacola',
-        tenantName: 'Coca-Cola',
-        avatarUrl: '',
-        isInternal: false,
-        createdAt: new Date('2024-02-10'),
-        lastLoginAt: new Date()
-      },
-      'Walmart': {
-        id: 'user-003',
-        email: 'carlos.garcia@walmart.com',
-        name: 'Carlos García',
-        role: UserRole.VIEWER,
-        tenantId: 'tenant-walmart',
-        tenantName: 'Walmart',
-        avatarUrl: '',
-        isInternal: false,
-        createdAt: new Date('2024-03-05'),
-        lastLoginAt: new Date()
-      },
-      'Neto-Admin': {
-        id: 'admin-001',
-        email: 'admin@neto.com',
-        name: 'Admin Neto',
-        role: UserRole.ADMIN,
-        tenantId: 'tenant-neto',
-        tenantName: 'Neto',
-        avatarUrl: '',
-        isInternal: true,
-        createdAt: new Date('2023-01-01'),
-        lastLoginAt: new Date()
-      }
-    };
-
-    const user = mockUsers[providerName] || mockUsers['Bimbo'];
-    this.setCurrentUser(user);
-    console.log(`🔄 Mock user cambiado a: ${user.tenantName}`);
-  }
-
-  /**
-   * Obtener token (mock)
-   * En producción retornará el token JWT real
-   */
-  getToken(): string | null {
-    return localStorage.getItem('authToken');
-  }
-
-  /**
-   * Guardar token
-   */
-  saveToken(token: string): void {
-    localStorage.setItem('authToken', token);
   }
 }

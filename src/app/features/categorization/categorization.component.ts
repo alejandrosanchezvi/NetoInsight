@@ -8,7 +8,7 @@ import { LoadingSpinner } from '../../shared/components/loading-spinner/loading-
 @Component({
   selector: 'app-categorization',
   standalone: true,
-  imports: [CommonModule, LoadingSpinner],
+  imports: [CommonModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './categorization.component.html',
   styleUrls: ['./categorization.component.css']
