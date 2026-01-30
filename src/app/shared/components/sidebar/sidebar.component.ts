@@ -52,7 +52,7 @@ export class SidebarComponent {
     {
       id: 'purchase-orders',
       label: 'Órdenes de Compra',
-      icon: 'shopping-cart',
+      icon: 'shoppingcart',
       route: '/purchase-orders',
     },
     {
@@ -64,7 +64,7 @@ export class SidebarComponent {
     {
       id: 'admin-tenants',
       label: 'Proveedores',
-      icon: 'building',
+      icon: 'supplier',
       route: '/admin/tenants',
       // internal: true, // Solo visible para usuarios internos
     },
@@ -105,9 +105,10 @@ export class SidebarComponent {
       package:
         'M16.5 9.4l-9-5.19 M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12',
       box: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12',
-      'shopping-cart': 'M9 2L1 4v14l8 2 8-2 8 2V6l-8-2-8 2z M9 2v18 M17 4v18',
-      users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2',
-    };
+      shoppingcart: 'M9 2L1 4v14l8 2 8-2 8 2V6l-8-2-8 2z M9 2v18 M17 4v18',
+      users:
+        'M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z',
+};
 
     return icons[iconName] || '';
   }

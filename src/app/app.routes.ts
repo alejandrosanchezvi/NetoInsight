@@ -10,6 +10,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { UserManagement } from './features/admin/user-management/user-management';
 import { AcceptInvite } from './features/auth/accept-invite/accept-invite';
 import { TenantManagement } from './features/admin/tenant-management/tenant-management';
+import { internalAdminGuard } from './core/guards/internal-admin.guard';
 
 export const routes: Routes = [
   // 🔐 Ruta pública de Login
@@ -55,6 +56,11 @@ export const routes: Routes = [
       {
         path: 'purchase-orders',
         component: CategorizationComponent,
+      },
+      {
+        path: 'admin/tenants',
+        component: TenantManagement,
+        canActivate: [internalAdminGuard], // ✅ AGREGAR ESTO
       },
     ],
   },

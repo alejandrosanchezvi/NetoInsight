@@ -84,10 +84,14 @@ export interface UpdateTenantDTO {
   plan?: TenantPlan;
   maxLicenses?: number;
   features?: Partial<TenantFeatures>;
+  tableauGroup?: string;  
+  bigQueryDataset?: string; 
+  bigQueryFilter?: string; 
   isActive?: boolean;
-  contractEnd?: Date;
   adminEmail?: string;
   billingEmail?: string;
+  contractStart?: string;  
+  contractEnd?: string;    
 }
 
 /**

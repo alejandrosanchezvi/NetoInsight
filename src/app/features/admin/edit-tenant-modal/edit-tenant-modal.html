@@ -1,0 +1,158 @@
+<!-- 🏢 NetoInsight - Edit Tenant Modal -->
+
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <div>
+          <h2 class="modal-title">Editar Proveedor</h2>
+          <p class="modal-subtitle">{{ tenant.name }}</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="onClose()" [disabled]="isSubmitting">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage" class="alert-error">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="modal-form">
+      
+      <!-- Info Básica -->
+      <div class="form-section">
+        <h3 class="section-title">Información Básica</h3>
+
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input type="text" class="form-input" [value]="tenant.name" disabled>
+          <span class="field-hint">El nombre no se puede modificar</span>
+        </div>
+
+        <div class="form-group">
+          <label for="legalName" class="form-label">Razón Social</label>
+          <input id="legalName" type="text" formControlName="legalName" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="rfc" class="form-label">RFC</label>
+          <input id="rfc" type="text" formControlName="rfc" class="form-input" [class.error]="hasError('rfc')" maxlength="13" style="text-transform: uppercase;">
+          <span *ngIf="hasError('rfc')" class="error-message">{{ getErrorMessage('rfc') }}</span>
+        </div>
+      </div>
+
+      <!-- Configuración -->
+      <div class="form-section">
+        <h3 class="section-title">Configuración</h3>
+
+        <div class="form-group">
+          <label class="form-label">Plan <span class="required">*</span></label>
+          <div class="radio-group">
+            <label *ngFor="let plan of planOptions" class="radio-option">
+              <input type="radio" formControlName="plan" [value]="plan.value">
+              <div class="radio-content">
+                <span class="radio-label">{{ plan.label }}</span>
+                <span class="radio-hint">Hasta {{ plan.maxLicenses }} licencias</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="maxLicenses" class="form-label">Licencias Máximas <span class="required">*</span></label>
+          <input id="maxLicenses" type="number" formControlName="maxLicenses" class="form-input" [class.error]="hasError('maxLicenses')" [min]="tenant.usedLicenses">
+          <span *ngIf="hasError('maxLicenses')" class="error-message">{{ getErrorMessage('maxLicenses') }}</span>
+          <span class="field-hint">En uso: {{ tenant.usedLicenses }} de {{ tenant.maxLicenses }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="tableauGroup" class="form-label">Tableau Group</label>
+          <input id="tableauGroup" type="text" formControlName="tableauGroup" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="bigQueryDataset" class="form-label">BigQuery Dataset</label>
+          <input id="bigQueryDataset" type="text" formControlName="bigQueryDataset" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="bigQueryFilter" class="form-label">BigQuery Filter</label>
+          <input id="bigQueryFilter" type="text" formControlName="bigQueryFilter" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dashboards Permitidos</label>
+          <div class="checkbox-group">
+            <label *ngFor="let dashboard of dashboardOptions" class="checkbox-option">
+              <input type="checkbox" [checked]="dashboard.checked" (change)="toggleDashboard(dashboard.id)">
+              <span>{{ dashboard.label }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="form-section">
+        <h3 class="section-title">Contacto</h3>
+
+        <div class="form-group">
+          <label for="adminEmail" class="form-label">Email Administrador <span class="required">*</span></label>
+          <input id="adminEmail" type="email" formControlName="adminEmail" class="form-input" [class.error]="hasError('adminEmail')">
+          <span *ngIf="hasError('adminEmail')" class="error-message">{{ getErrorMessage('adminEmail') }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="billingEmail" class="form-label">Email Facturación</label>
+          <input id="billingEmail" type="email" formControlName="billingEmail" class="form-input" [class.error]="hasError('billingEmail')">
+          <span *ngIf="hasError('billingEmail')" class="error-message">{{ getErrorMessage('billingEmail') }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="contractStart" class="form-label">Inicio Contrato</label>
+          <input id="contractStart" type="date" formControlName="contractStart" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label for="contractEnd" class="form-label">Fin Contrato</label>
+          <input id="contractEnd" type="date" formControlName="contractEnd" class="form-input">
+        </div>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="isSubmitting">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary" (click)="onSubmit()" [disabled]="isSubmitting || editForm.invalid">
+        <span *ngIf="!isSubmitting">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Guardar Cambios
+        </span>
+        <span *ngIf="isSubmitting" class="loading-text">
+          <span class="spinner-sm"></span>
+          Guardando...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

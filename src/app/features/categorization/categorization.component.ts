@@ -17,6 +17,7 @@ export class CategorizationComponent implements OnInit, AfterViewInit {
   @ViewChild('tableauViz', { static: false }) tableauVizElement!: ElementRef;
   
   tableauVizUrl: string = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/views/NexusProveedores/Categorizacin';
+  // tableauVizUrl: string = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/views/NexusProveedores/Categorizacin';
   isLoading: boolean = true;
   currentProviderName: string = '';
   showDashboard: boolean = false;

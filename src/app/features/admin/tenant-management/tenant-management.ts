@@ -8,11 +8,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { Tenant, TenantUsageStats } from '../../../core/models/tenant.model';
 import { CreateTenantModal } from '../create-tenant-modal/create-tenant-modal';
+import { EditTenantModal } from '../edit-tenant-modal/edit-tenant-modal';
 
 @Component({
   selector: 'app-tenant-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, CreateTenantModal],
+  imports: [CommonModule, FormsModule, EditTenantModal, CreateTenantModal],
   templateUrl: './tenant-management.html',
   styleUrls: ['./tenant-management.css']
 })

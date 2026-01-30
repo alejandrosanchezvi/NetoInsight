@@ -247,11 +247,10 @@
   (tenantCreated)="onTenantCreated()">
 </app-create-tenant-modal>
 
-<!-- Edit Modal Placeholder -->
-<div *ngIf="showEditModal" class="modal-overlay" (click)="closeEditModal()">
-  <div class="modal-placeholder" (click)="$event.stopPropagation()">
-    <h2>Editar: {{ selectedTenant?.name }}</h2>
-    <p>Este formulario se implementará en el Paso 4.3</p>
-    <button class="btn-primary" (click)="closeEditModal()">Cerrar</button>
-  </div>
-</div>
+<!-- Edit Tenant Modal -->
+<app-edit-tenant-modal
+  *ngIf="showEditModal && selectedTenant"
+  [tenant]="selectedTenant"
+  (close)="closeEditModal()"
+  (tenantUpdated)="onTenantUpdated()">
+</app-edit-tenant-modal>
