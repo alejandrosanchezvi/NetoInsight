@@ -1,0 +1,138 @@
+/* 📧 NetoInsight - Accept Invite Styles */
+
+.accept-invite-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0E3B83 0%, #004E89 100%);
+  padding: 2rem 1rem;
+}
+
+/* State Card */
+.state-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 3rem 2.5rem;
+  max-width: 500px;
+  text-align: center;
+  animation: fadeInUp 0.5s ease;
+}
+
+/* Spinner */
+.spinner-large {
+  width: 64px;
+  height: 64px;
+  border: 5px solid var(--light-gray);
+  border-top-color: var(--neto-orange);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 2rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* State Icon */
+.state-icon {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.state-icon.error {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  color: #c62828;
+}
+
+.state-icon.warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  color: #ef6c00;
+}
+
+.state-icon.success {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+}
+
+/* Text */
+.state-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--neto-blue-dark);
+  margin: 0 0 1rem 0;
+}
+
+.state-text {
+  font-size: 1rem;
+  color: var(--text-gray);
+  margin: 0 0 1.5rem 0;
+  font-weight: 500;
+}
+
+.state-hint {
+  font-size: 0.9375rem;
+  color: var(--text-gray);
+  line-height: 1.6;
+  margin: 0 0 2rem 0;
+}
+
+/* Button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, var(--neto-orange) 0%, #d66f1a 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(245, 130, 32, 0.3);
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .state-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .state-title {
+    font-size: 1.5rem;
+  }
+
+  .state-icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .state-icon svg {
+    width: 56px;
+    height: 56px;
+  }
+}

@@ -1,0 +1,57 @@
+<!-- 📧 NetoInsight - Accept Invite Template -->
+
+<div class="accept-invite-container">
+  
+  <!-- Validating State -->
+  <div *ngIf="currentStep === 'validating'" class="state-card">
+    <div class="spinner-large"></div>
+    <h1 class="state-title">Validando invitación...</h1>
+    <p class="state-text">Por favor espera un momento</p>
+  </div>
+
+  <!-- Invalid Token -->
+  <div *ngIf="currentStep === 'invalid'" class="state-card">
+    <div class="state-icon error">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+    </div>
+    <h1 class="state-title">Invitación Inválida</h1>
+    <p class="state-text">{{ errorMessage }}</p>
+    <p class="state-hint">
+      El link de invitación no es válido. Por favor, contacta al administrador 
+      de tu organización para que te envíe una nueva invitación.
+    </p>
+    <button class="btn-primary" (click)="goToLogin()">
+      Ir al Login
+    </button>
+  </div>
+
+  <!-- Expired Token -->
+  <div *ngIf="currentStep === 'expired'" class="state-card">
+    <div class="state-icon warning">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <h1 class="state-title">Invitación Expirada</h1>
+    <p class="state-text">Esta invitación expiró el {{ invitation?.expiresAt | date:'dd/MM/yyyy' }}</p>
+    <p class="state-hint">
+      Las invitaciones expiran después de 7 días. Por favor, contacta al 
+      administrador de tu organización para que te envíe una nueva invitación.
+    </p>
+    <button class="btn-primary" (click)="goToLogin()">
+      Ir al Login
+    </button>
+  </div>
+
+  <!-- Setup Account -->
+  <div *ngIf="currentStep === 'setup' && invitation">
+    <app-setup-account [invitation]="invitation"></app-setup-account>
+  </div>
+
+</div>

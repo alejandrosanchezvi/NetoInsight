@@ -1,7 +1,7 @@
-// 👤 NetoInsight - User Model (Actualizado con Firebase)
+// 👤 NetoInsight - User Model (Actualizado)
 
 export interface User {
-  uid: string;              // ← Firebase UID
+  uid: string;
   email: string;
   name: string;
   role: UserRole;
@@ -9,9 +9,11 @@ export interface User {
   tenantName: string;
   avatarUrl?: string;
   isInternal: boolean;
-  mfaEnabled: boolean;      // ← Nuevo campo
+  isActive: boolean;       // ← Nuevo campo
+  mfaEnabled: boolean;
   createdAt: Date;
   lastLogin?: Date;
+  invitationId?: string;   // ← Nuevo campo (referencia a invitación)
 }
 
 export enum UserRole {
@@ -23,12 +25,9 @@ export enum UserRole {
 export interface Tenant {
   id: string;
   name: string;
-  displayName: string;
   logoUrl?: string;
   tableauGroup: string;
   isActive: boolean;
-  maxUsers: number;
-  currentUsers: number;
 }
 
 export interface UserSession {

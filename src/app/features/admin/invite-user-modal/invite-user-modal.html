@@ -1,0 +1,145 @@
+<!-- 📧 NetoInsight - Invite User Modal Template -->
+
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="onModalClick($event)">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <svg class="header-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="19" y1="8" x2="19" y2="14"></line>
+          <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
+        <div>
+          <h2 class="modal-title">Invitar Nuevo Usuario</h2>
+          <p class="modal-subtitle">{{ tenant.name }}</p>
+        </div>
+      </div>
+      <button 
+        class="btn-close" 
+        (click)="onClose()"
+        [disabled]="isSubmitting">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      
+      <!-- Success Message -->
+      <div *ngIf="successMessage" class="alert alert-success">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="inviteForm" (ngSubmit)="onSubmit()" *ngIf="!successMessage">
+        
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label">
+            Email del usuario
+            <span class="required">*</span>
+          </label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="form-input"
+            [class.error]="hasError('email')"
+            placeholder="ejemplo@dominio.com"
+            autocomplete="off">
+          <span *ngIf="hasError('email')" class="error-message">
+            {{ getErrorMessage('email') }}
+          </span>
+          <p class="field-help">
+            El usuario recibirá un email con instrucciones para crear su cuenta
+          </p>
+        </div>
+
+        <!-- Role Field -->
+        <div class="form-group">
+          <label class="form-label">
+            Rol
+            <span class="required">*</span>
+          </label>
+          
+          <div class="role-options">
+            <label 
+              *ngFor="let role of roles"
+              class="role-option"
+              [class.selected]="inviteForm.get('role')?.value === role.value">
+              <input
+                type="radio"
+                formControlName="role"
+                [value]="role.value"
+                class="role-radio">
+              <div class="role-content">
+                <div class="role-header">
+                  <span class="role-name">{{ role.label }}</span>
+                  <svg *ngIf="inviteForm.get('role')?.value === role.value" class="role-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+                <p class="role-description">{{ role.description }}</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <div>
+            <p class="info-title">La invitación expira en 7 días</p>
+            <p class="info-text">El usuario deberá aceptar la invitación antes de que expire</p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button 
+            type="button" 
+            class="btn-secondary"
+            (click)="onClose()"
+            [disabled]="isSubmitting">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn-primary"
+            [disabled]="isSubmitting || inviteForm.invalid">
+            <svg *ngIf="!isSubmitting" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span class="spinner" *ngIf="isSubmitting"></span>
+            {{ isSubmitting ? 'Enviando...' : 'Enviar Invitación' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

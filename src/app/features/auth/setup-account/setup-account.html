@@ -1,0 +1,188 @@
+<!-- 🔐 NetoInsight - Setup Account Template (CORREGIDO) -->
+
+<div class="setup-container">
+  <div class="setup-card">
+    
+    <!-- Header -->
+    <div class="setup-header">
+      <img src="/assets/images/logoNeto.png" alt="Neto Logo" class="setup-logo">
+      <h1 class="setup-title">Crear tu Cuenta</h1>
+      <p class="setup-subtitle">{{ invitation.tenantName }}</p>
+      <p class="setup-email">{{ invitation.email }}</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+      <div class="step active">
+        <div class="step-number">1</div>
+        <span class="step-label">Configurar Cuenta</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <span class="step-label">Dashboard</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="setupForm" (ngSubmit)="onSubmit()" class="setup-form">
+      
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="alert-error">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Name Field -->
+      <div class="form-group">
+        <label for="name" class="form-label">
+          Nombre Completo
+          <span class="required">*</span>
+        </label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          class="form-input"
+          [class.error]="hasError('name')"
+          placeholder="Ej: Juan Pérez"
+          autocomplete="name">
+        <span *ngIf="hasError('name')" class="error-message">
+          {{ getErrorMessage('name') }}
+        </span>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password" class="form-label">
+          Contraseña
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            class="form-input"
+            [class.error]="hasError('password')"
+            placeholder="Mínimo 12 caracteres"
+            autocomplete="new-password"
+            (input)="calculatePasswordStrength()">
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility('password')"
+            tabindex="-1">
+            <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Password Strength -->
+        <div class="password-strength" *ngIf="setupForm.get('password')?.value">
+          <div class="strength-bar">
+            <div 
+              class="strength-fill" 
+              [ngClass]="passwordStrength"
+              [style.width.%]="passwordStrength === 'weak' ? 33 : passwordStrength === 'medium' ? 66 : 100">
+            </div>
+          </div>
+          <span class="strength-label" [ngClass]="passwordStrength">
+            {{ passwordStrength === 'weak' ? 'Débil' : passwordStrength === 'medium' ? 'Media' : 'Fuerte' }}
+          </span>
+        </div>
+
+        <span *ngIf="hasError('password')" class="error-message">
+          {{ getErrorMessage('password') }}
+        </span>
+        
+        <div class="password-requirements">
+          <p class="requirements-title">La contraseña debe tener:</p>
+          <ul class="requirements-list">
+            <li [class.valid]="hasMinLength()">
+              Mínimo 12 caracteres
+            </li>
+            <li [class.valid]="hasUpperCase()">
+              Al menos una mayúscula
+            </li>
+            <li [class.valid]="hasLowerCase()">
+              Al menos una minúscula
+            </li>
+            <li [class.valid]="hasNumber()">
+              Al menos un número
+            </li>
+            <li [class.valid]="hasSymbol()">
+              Al menos un símbolo (!@#$%...)
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Confirm Password Field -->
+      <div class="form-group">
+        <label for="confirmPassword" class="form-label">
+          Confirmar Contraseña
+          <span class="required">*</span>
+        </label>
+        <div class="input-wrapper">
+          <input
+            id="confirmPassword"
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            class="form-input"
+            [class.error]="hasError('confirmPassword')"
+            placeholder="Repite tu contraseña"
+            autocomplete="new-password">
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility('confirmPassword')"
+            tabindex="-1">
+            <svg *ngIf="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg *ngIf="showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+        <span *ngIf="hasError('confirmPassword')" class="error-message">
+          {{ getErrorMessage('confirmPassword') }}
+        </span>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn-submit"
+        [disabled]="isSubmitting || setupForm.invalid">
+        <span *ngIf="!isSubmitting">Crear Cuenta</span>
+        <span *ngIf="isSubmitting" class="loading-text">
+          <span class="spinner"></span>
+          Creando cuenta...
+        </span>
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="setup-footer">
+      <p class="footer-text">
+        Al crear tu cuenta, aceptas nuestros 
+        <a href="#" class="footer-link">Términos de Servicio</a> y 
+        <a href="#" class="footer-link">Política de Privacidad</a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -157,6 +157,7 @@ export class AuthService {
         tenantName: data['tenantName'],
         avatarUrl: data['avatarUrl'],
         isInternal: data['isInternal'] || false,
+        isActive: data['isActive'] !== false,
         mfaEnabled: data['mfaEnabled'] || false,
         createdAt: data['createdAt']?.toDate() || new Date(),
         lastLogin: data['lastLogin']?.toDate(),

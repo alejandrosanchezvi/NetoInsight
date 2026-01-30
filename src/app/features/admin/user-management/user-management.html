@@ -1,0 +1,258 @@
+<!-- 👥 NetoInsight - User Management Template -->
+
+<div class="user-management-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <svg class="header-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <div>
+          <h1 class="page-title">Gestión de Usuarios</h1>
+          <p class="page-subtitle">{{ currentTenant?.name }}</p>
+        </div>
+      </div>
+      
+      <button 
+        class="btn-primary"
+        (click)="openInviteModal()"
+        [disabled]="!hasAvailableLicenses()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        Invitar Usuario
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading" class="content">
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      
+      <!-- Total Users -->
+      <div class="stat-card">
+        <div class="stat-icon primary">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Usuarios Totales</p>
+          <p class="stat-value">{{ usageStats?.totalUsers || 0 }}</p>
+        </div>
+      </div>
+
+      <!-- Active Users -->
+      <div class="stat-card">
+        <div class="stat-icon success">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Usuarios Activos</p>
+          <p class="stat-value">{{ usageStats?.activeUsers || 0 }}</p>
+        </div>
+      </div>
+
+      <!-- Licenses -->
+      <div class="stat-card">
+        <div class="stat-icon" [ngClass]="getLicensesBadgeColor()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Licencias</p>
+          <p class="stat-value">
+            {{ usageStats?.licensesUsed || 0 }} / {{ (usageStats?.licensesUsed || 0) + (usageStats?.licensesAvailable || 0) }}
+          </p>
+          <div class="progress-bar">
+            <div 
+              class="progress-fill" 
+              [ngClass]="getLicensesBadgeColor()"
+              [style.width.%]="getLicensesPercentage()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Invitations -->
+      <div class="stat-card">
+        <div class="stat-icon warning">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Invitaciones Pendientes</p>
+          <p class="stat-value">{{ invitations.length }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button 
+          class="tab"
+          [class.active]="activeTab === 'users'"
+          (click)="setActiveTab('users')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+          </svg>
+          Usuarios ({{ users.length }})
+        </button>
+        <button 
+          class="tab"
+          [class.active]="activeTab === 'invitations'"
+          (click)="setActiveTab('invitations')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          Invitaciones ({{ invitations.length }})
+        </button>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div *ngIf="activeTab === 'users'" class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Último Acceso</th>
+            <th>MFA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">
+                  <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" [alt]="user.name">
+                  <span *ngIf="!user.avatarUrl" class="avatar-initials">{{ getInitials(user.name) }}</span>
+                </div>
+                <span class="user-name">{{ user.name }}</span>
+              </div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="badge badge-role">{{ formatRole(user.role) }}</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="user.isActive ? 'badge-success' : 'badge-danger'">
+                {{ user.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-muted">{{ formatDate(user.lastLogin) }}</td>
+            <td>
+              <span class="badge" [ngClass]="user.mfaEnabled ? 'badge-success' : 'badge-warning'">
+                {{ user.mfaEnabled ? 'Habilitado' : 'Deshabilitado' }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="users.length === 0">
+            <td colspan="6" class="text-center text-muted">
+              No hay usuarios registrados
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Invitations Table -->
+    <div *ngIf="activeTab === 'invitations'" class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Invitado Por</th>
+            <th>Fecha de Envío</th>
+            <th>Expira</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let invitation of invitations">
+            <td>{{ invitation.email }}</td>
+            <td>
+              <span class="badge badge-role">{{ formatRole(invitation.role) }}</span>
+            </td>
+            <td class="text-muted">{{ invitation.invitedByName || invitation.invitedByEmail }}</td>
+            <td class="text-muted">{{ formatDate(invitation.createdAt) }}</td>
+            <td class="text-muted">{{ formatDate(invitation.expiresAt) }}</td>
+            <td>
+              <div class="action-buttons">
+                <button 
+                  class="btn-icon" 
+                  title="Copiar link"
+                  (click)="copyInvitationLink(invitation)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </button>
+                <button 
+                  class="btn-icon" 
+                  title="Reenviar"
+                  (click)="resendInvitation(invitation)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                  </svg>
+                </button>
+                <button 
+                  class="btn-icon danger" 
+                  title="Cancelar"
+                  (click)="cancelInvitation(invitation)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="invitations.length === 0">
+            <td colspan="6" class="text-center text-muted">
+              No hay invitaciones pendientes
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Invite User Modal -->
+<app-invite-user-modal
+  *ngIf="showInviteModal"
+  [tenant]="currentTenant!"
+  (close)="closeInviteModal()"
+  (invitationCreated)="onInvitationCreated()">
+</app-invite-user-modal>
