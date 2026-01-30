@@ -1,0 +1,380 @@
+<!-- 🏢 NetoInsight - Create Tenant Modal Template -->
+
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <svg class="header-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <div>
+          <h2 class="modal-title">Crear Nuevo Proveedor</h2>
+          <p class="modal-subtitle">Paso {{ currentStep }} de {{ totalSteps }}</p>
+        </div>
+      </div>
+      <button 
+        class="btn-close"
+        (click)="onClose()"
+        [disabled]="isSubmitting">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+      <div 
+        class="progress-step"
+        [class.active]="currentStep >= 1"
+        [class.completed]="currentStep > 1"
+        (click)="goToStep(1)">
+        <div class="step-number">1</div>
+        <span class="step-label">Información</span>
+      </div>
+      <div class="step-divider" [class.active]="currentStep > 1"></div>
+      <div 
+        class="progress-step"
+        [class.active]="currentStep >= 2"
+        [class.completed]="currentStep > 2"
+        (click)="goToStep(2)">
+        <div class="step-number">2</div>
+        <span class="step-label">Configuración</span>
+      </div>
+      <div class="step-divider" [class.active]="currentStep > 2"></div>
+      <div 
+        class="progress-step"
+        [class.active]="currentStep >= 3"
+        (click)="goToStep(3)">
+        <div class="step-number">3</div>
+        <span class="step-label">Contacto</span>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert-error">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="createForm" (ngSubmit)="onSubmit()" class="modal-form">
+      
+      <!-- PASO 1: Información Básica -->
+      <div class="form-section" *ngIf="currentStep === 1">
+        <h3 class="section-title">Información Básica</h3>
+
+        <!-- Nombre -->
+        <div class="form-group">
+          <label for="name" class="form-label">
+            Nombre del Proveedor
+            <span class="required">*</span>
+          </label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="form-input"
+            [class.error]="hasError('name')"
+            placeholder="Ej: Pepsico">
+          <span *ngIf="hasError('name')" class="error-message">
+            {{ getErrorMessage('name') }}
+          </span>
+        </div>
+
+        <!-- Razón Social -->
+        <div class="form-group">
+          <label for="legalName" class="form-label">
+            Razón Social
+          </label>
+          <input
+            id="legalName"
+            type="text"
+            formControlName="legalName"
+            class="form-input"
+            placeholder="Ej: COMERCIALIZADORA PEPSICO MEXICO S D">
+        </div>
+
+        <!-- RFC -->
+        <div class="form-group">
+          <label for="rfc" class="form-label">
+            RFC
+          </label>
+          <input
+            id="rfc"
+            type="text"
+            formControlName="rfc"
+            class="form-input"
+            [class.error]="hasError('rfc')"
+            placeholder="Ej: WAL850101XXX"
+            maxlength="13"
+            style="text-transform: uppercase;">
+          <span *ngIf="hasError('rfc')" class="error-message">
+            {{ getErrorMessage('rfc') }}
+          </span>
+          <span class="field-hint">Opcional - Formato: ABC123456XYZ</span>
+        </div>
+      </div>
+
+      <!-- PASO 2: Configuración -->
+      <div class="form-section" *ngIf="currentStep === 2">
+        <h3 class="section-title">Configuración</h3>
+
+        <!-- Plan -->
+        <div class="form-group">
+          <label class="form-label">
+            Plan
+            <span class="required">*</span>
+          </label>
+          <div class="radio-group">
+            <label 
+              *ngFor="let plan of planOptions" 
+              class="radio-option">
+              <input
+                type="radio"
+                formControlName="plan"
+                [value]="plan.value">
+              <div class="radio-content">
+                <span class="radio-label">{{ plan.label }}</span>
+                <span class="radio-hint">{{ plan.maxLicenses }} licencias</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Licencias Máximas -->
+        <div class="form-group">
+          <label for="maxLicenses" class="form-label">
+            Licencias Máximas
+            <span class="required">*</span>
+          </label>
+          <input
+            id="maxLicenses"
+            type="number"
+            formControlName="maxLicenses"
+            class="form-input"
+            [class.error]="hasError('maxLicenses')"
+            min="1">
+          <span *ngIf="hasError('maxLicenses')" class="error-message">
+            {{ getErrorMessage('maxLicenses') }}
+          </span>
+        </div>
+
+        <!-- Proveedor ID -->
+        <div class="form-group">
+          <label for="proveedorIdInterno" class="form-label">
+            Proveedor ID
+            <span class="required">*</span>
+          </label>
+          <div class="input-with-button">
+            <input
+              id="proveedorIdInterno"
+              type="text"
+              formControlName="proveedorIdInterno"
+              class="form-input"
+              [class.error]="hasError('proveedorIdInterno')"
+              placeholder="PROV-001"
+              style="text-transform: uppercase;">
+            <button
+              type="button"
+              class="btn-generate"
+              (click)="generateProveedorId()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              Generar
+            </button>
+          </div>
+          <span *ngIf="hasError('proveedorIdInterno')" class="error-message">
+            {{ getErrorMessage('proveedorIdInterno') }}
+          </span>
+          <span class="field-hint">Formato: PROV-XXX</span>
+        </div>
+
+        <!-- Tableau Group -->
+        <div class="form-group">
+          <label for="tableauGroup" class="form-label">
+            Tableau Group
+          </label>
+          <input
+            id="tableauGroup"
+            type="text"
+            formControlName="tableauGroup"
+            class="form-input"
+            placeholder="Ej: Pepsico_Viewers">
+          <span class="field-hint">Se auto-completa basado en el nombre</span>
+        </div>
+
+        <!-- BigQuery Dataset -->
+        <div class="form-group">
+          <label for="bigQueryDataset" class="form-label">
+            BigQuery Dataset
+          </label>
+          <input
+            id="bigQueryDataset"
+            type="text"
+            formControlName="bigQueryDataset"
+            class="form-input"
+            placeholder="Ej: proveedores_pepsico">
+        </div>
+
+        <!-- BigQuery Filter -->
+        <div class="form-group">
+          <label for="bigQueryFilter" class="form-label">
+            BigQuery Filter
+          </label>
+          <input
+            id="bigQueryFilter"
+            type="text"
+            formControlName="bigQueryFilter"
+            class="form-input"
+            placeholder="Ej: proveedor_id = 'PROV-001'">
+        </div>
+
+        <!-- Dashboards Permitidos -->
+        <div class="form-group">
+          <label class="form-label">Dashboards Permitidos</label>
+          <div class="checkbox-group">
+            <label 
+              *ngFor="let dashboard of dashboardOptions"
+              class="checkbox-option">
+              <input
+                type="checkbox"
+                [checked]="dashboard.checked"
+                (change)="toggleDashboard(dashboard.id)">
+              <span>{{ dashboard.label }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 3: Contacto -->
+      <div class="form-section" *ngIf="currentStep === 3">
+        <h3 class="section-title">Información de Contacto</h3>
+
+        <!-- Admin Email -->
+        <div class="form-group">
+          <label for="adminEmail" class="form-label">
+            Email del Administrador
+            <span class="required">*</span>
+          </label>
+          <input
+            id="adminEmail"
+            type="email"
+            formControlName="adminEmail"
+            class="form-input"
+            [class.error]="hasError('adminEmail')"
+            placeholder="admin@proveedor.com">
+          <span *ngIf="hasError('adminEmail')" class="error-message">
+            {{ getErrorMessage('adminEmail') }}
+          </span>
+          <span class="field-hint">Se enviará invitación a este email</span>
+        </div>
+
+        <!-- Billing Email -->
+        <div class="form-group">
+          <label for="billingEmail" class="form-label">
+            Email de Facturación
+          </label>
+          <input
+            id="billingEmail"
+            type="email"
+            formControlName="billingEmail"
+            class="form-input"
+            [class.error]="hasError('billingEmail')"
+            placeholder="facturacion@proveedor.com">
+          <span *ngIf="hasError('billingEmail')" class="error-message">
+            {{ getErrorMessage('billingEmail') }}
+          </span>
+        </div>
+
+        <!-- Fecha de Inicio de Contrato -->
+        <div class="form-group">
+          <label for="contractStart" class="form-label">
+            Inicio de Contrato
+          </label>
+          <input
+            id="contractStart"
+            type="date"
+            formControlName="contractStart"
+            class="form-input">
+        </div>
+
+        <!-- Fecha de Fin de Contrato -->
+        <div class="form-group">
+          <label for="contractEnd" class="form-label">
+            Fin de Contrato
+          </label>
+          <input
+            id="contractEnd"
+            type="date"
+            formControlName="contractEnd"
+            class="form-input">
+        </div>
+      </div>
+    </form>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="onClose()"
+        [disabled]="isSubmitting">
+        Cancelar
+      </button>
+
+      <div class="footer-actions">
+        <button
+          *ngIf="currentStep > 1"
+          type="button"
+          class="btn-secondary"
+          (click)="prevStep()"
+          [disabled]="isSubmitting">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Anterior
+        </button>
+
+        <button
+          *ngIf="currentStep < totalSteps"
+          type="button"
+          class="btn-primary"
+          (click)="nextStep()">
+          Siguiente
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+
+        <button
+          *ngIf="currentStep === totalSteps"
+          type="submit"
+          class="btn-primary"
+          (click)="onSubmit()"
+          [disabled]="isSubmitting || createForm.invalid">
+          <span *ngIf="!isSubmitting">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Crear Proveedor
+          </span>
+          <span *ngIf="isSubmitting" class="loading-text">
+            <span class="spinner-sm"></span>
+            Creando...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

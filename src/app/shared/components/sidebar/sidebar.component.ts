@@ -61,6 +61,13 @@ export class SidebarComponent {
       icon: 'users',
       route: '/users',
     },
+    {
+      id: 'admin-tenants',
+      label: 'Proveedores',
+      icon: 'building',
+      route: '/admin/tenants',
+      // internal: true, // Solo visible para usuarios internos
+    },
   ];
 
   activeMenuItem: string = 'categorization';
@@ -99,6 +106,7 @@ export class SidebarComponent {
         'M16.5 9.4l-9-5.19 M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12',
       box: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12',
       'shopping-cart': 'M9 2L1 4v14l8 2 8-2 8 2V6l-8-2-8 2z M9 2v18 M17 4v18',
+      users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2',
     };
 
     return icons[iconName] || '';

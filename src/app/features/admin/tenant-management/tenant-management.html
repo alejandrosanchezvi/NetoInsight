@@ -1,0 +1,257 @@
+<!-- 🏢 NetoInsight - Tenant Management Template (CON MODAL) -->
+
+<div class="tenant-management-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <svg class="header-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <div>
+          <h1 class="page-title">Gestión de Proveedores</h1>
+          <p class="page-subtitle">Panel de Administración Neto</p>
+        </div>
+      </div>
+      
+      <button 
+        class="btn-primary"
+        (click)="openCreateModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        Agregar Proveedor
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando proveedores...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading" class="content">
+    
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+      <!-- Status Tabs -->
+      <div class="filter-tabs">
+        <button 
+          class="filter-tab"
+          [class.active]="statusFilter === 'all'"
+          (click)="setStatusFilter('all')">
+          Todos ({{ tenants.length }})
+        </button>
+        <button 
+          class="filter-tab"
+          [class.active]="statusFilter === 'active'"
+          (click)="setStatusFilter('active')">
+          Activos ({{ getActiveTenants() }})
+        </button>
+        <button 
+          class="filter-tab"
+          [class.active]="statusFilter === 'inactive'"
+          (click)="setStatusFilter('inactive')">
+          Inactivos ({{ getInactiveTenants() }})
+        </button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input 
+          type="text" 
+          placeholder="Buscar por nombre, RFC o ID..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          class="search-input">
+      </div>
+    </div>
+
+    <!-- Tenants Grid -->
+    <div class="tenants-grid" *ngIf="filteredTenants.length > 0">
+      <div *ngFor="let tenant of filteredTenants" class="tenant-card">
+        
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="tenant-info">
+            <h3 class="tenant-name">{{ tenant.name }}</h3>
+            <p class="tenant-id">ID: {{ tenant.proveedorIdInterno }}</p>
+          </div>
+          <span 
+            class="status-badge" 
+            [class.active]="tenant.isActive"
+            [class.inactive]="!tenant.isActive">
+            {{ tenant.isActive ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          
+          <!-- Plan -->
+          <div class="info-row">
+            <span class="info-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              Plan
+            </span>
+            <span class="badge" [ngClass]="getPlanBadgeColor(tenant.plan)">
+              {{ formatPlan(tenant.plan) }}
+            </span>
+          </div>
+
+          <!-- Licencias -->
+          <div class="info-row">
+            <span class="info-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Licencias
+            </span>
+            <span class="info-value">
+              {{ tenant.usedLicenses }} / {{ tenant.maxLicenses }}
+              <span class="percentage" [class.danger]="getLicensePercentage(tenant.tenantId) >= 90">
+                ({{ getLicensePercentage(tenant.tenantId) | number:'1.0-0' }}%)
+              </span>
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-bar-container">
+            <div class="progress-bar">
+              <div 
+                class="progress-fill" 
+                [ngClass]="getProgressColor(getLicensePercentage(tenant.tenantId))"
+                [style.width.%]="getLicensePercentage(tenant.tenantId)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Usuarios -->
+          <div class="info-row" *ngIf="getStats(tenant.tenantId) as stats">
+            <span class="info-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Usuarios
+            </span>
+            <span class="info-value">
+              {{ stats.totalUsers }} total 
+              <span class="text-muted">({{ stats.activeUsers }} activos)</span>
+            </span>
+          </div>
+
+          <!-- Fecha de creación -->
+          <div class="info-row">
+            <span class="info-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Creado
+            </span>
+            <span class="info-value text-muted">{{ formatDate(tenant.createdAt) }}</span>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer">
+          <button 
+            class="btn-action" 
+            (click)="viewDetails(tenant)"
+            title="Ver detalles">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Ver
+          </button>
+          
+          <button 
+            class="btn-action" 
+            (click)="openEditModal(tenant)"
+            title="Editar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Editar
+          </button>
+          
+          <button 
+            class="btn-action"
+            [class.danger]="tenant.isActive"
+            [class.success]="!tenant.isActive"
+            (click)="toggleTenantStatus(tenant)"
+            [title]="tenant.isActive ? 'Desactivar' : 'Activar'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line *ngIf="tenant.isActive" x1="15" y1="9" x2="9" y2="15"></line>
+              <line *ngIf="tenant.isActive" x1="9" y1="9" x2="15" y2="15"></line>
+              <line *ngIf="!tenant.isActive" x1="12" y1="8" x2="12" y2="16"></line>
+              <line *ngIf="!tenant.isActive" x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            {{ tenant.isActive ? 'Desactivar' : 'Activar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredTenants.length === 0" class="empty-state">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-opacity="0.3">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <h3 class="empty-title">
+        {{ searchTerm ? 'No se encontraron resultados' : 'No hay proveedores' }}
+      </h3>
+      <p class="empty-subtitle">
+        {{ searchTerm ? 'Intenta con otros términos de búsqueda' : 'Comienza agregando tu primer proveedor' }}
+      </p>
+      <button 
+        *ngIf="!searchTerm"
+        class="btn-primary"
+        (click)="openCreateModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        Agregar Proveedor
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Tenant Modal -->
+<app-create-tenant-modal
+  *ngIf="showCreateModal"
+  (close)="closeCreateModal()"
+  (tenantCreated)="onTenantCreated()">
+</app-create-tenant-modal>
+
+<!-- Edit Modal Placeholder -->
+<div *ngIf="showEditModal" class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-placeholder" (click)="$event.stopPropagation()">
+    <h2>Editar: {{ selectedTenant?.name }}</h2>
+    <p>Este formulario se implementará en el Paso 4.3</p>
+    <button class="btn-primary" (click)="closeEditModal()">Cerrar</button>
+  </div>
+</div>

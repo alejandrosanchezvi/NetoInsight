@@ -26,8 +26,8 @@ export interface Tenant {
   
   // Estado
   isActive: boolean;
-  contractStart?: Date;
-  contractEnd?: Date;
+  contractStart?: string;
+  contractEnd?: string;
   
   // Contacto
   adminEmail?: string;
@@ -66,8 +66,12 @@ export interface CreateTenantDTO {
   maxLicenses: number;
   features: TenantFeatures;
   tableauGroup: string;
+  bigQueryDataset?: string; 
+  bigQueryFilter?: string; 
   adminEmail?: string;
   billingEmail?: string;
+  contractStart?: Date;
+  contractEnd?: Date;
 }
 
 /**

@@ -9,6 +9,7 @@ import { Login } from './features/auth/login/login';
 import { authGuard } from './core/guards/auth.guard';
 import { UserManagement } from './features/admin/user-management/user-management';
 import { AcceptInvite } from './features/auth/accept-invite/accept-invite';
+import { TenantManagement } from './features/admin/tenant-management/tenant-management';
 
 export const routes: Routes = [
   // 🔐 Ruta pública de Login
@@ -24,7 +25,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
-    canActivate: [authGuard], 
+    canActivate: [authGuard],
     children: [
       {
         path: 'users',
@@ -54,6 +55,16 @@ export const routes: Routes = [
       {
         path: 'purchase-orders',
         component: CategorizationComponent,
+      },
+    ],
+  },
+  {
+    path: 'admin',
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: 'tenants',
+        component: TenantManagement,
       },
     ],
   },

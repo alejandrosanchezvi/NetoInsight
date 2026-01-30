@@ -1,35 +1,30 @@
 // 🏢 NetoInsight - Tenant Service
 
 import { Injectable, inject } from '@angular/core';
-import { 
-  Firestore, 
-  collection, 
-  doc, 
-  getDoc, 
+import {
+  Firestore,
+  collection,
+  doc,
+  getDoc,
   getDocs,
+  setDoc,
   addDoc,
   updateDoc,
   deleteDoc,
-  query, 
+  query,
   where,
   orderBy,
   serverTimestamp,
   increment,
-  Timestamp
+  Timestamp,
 } from '@angular/fire/firestore';
 import { Observable, BehaviorSubject, from, map } from 'rxjs';
-import { 
-  Tenant, 
-  CreateTenantDTO, 
-  UpdateTenantDTO,
-  TenantUsageStats
-} from '../models/tenant.model';
+import { Tenant, CreateTenantDTO, UpdateTenantDTO, TenantUsageStats } from '../models/tenant.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TenantService {
-  
   private firestore = inject(Firestore);
   private currentTenantSubject = new BehaviorSubject<Tenant | null>(null);
   public currentTenant$ = this.currentTenantSubject.asObservable();
@@ -43,7 +38,7 @@ export class TenantService {
    */
   async getTenantById(tenantId: string): Promise<Tenant | null> {
     console.log('🏢 [TENANT] Fetching tenant:', tenantId);
-    
+
     try {
       const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
       const tenantDoc = await getDoc(tenantDocRef);
@@ -55,10 +50,9 @@ export class TenantService {
 
       const data = tenantDoc.data();
       const tenant = this.mapDocToTenant(tenantId, data);
-      
+
       console.log('✅ [TENANT] Tenant fetched:', tenant.name);
       return tenant;
-
     } catch (error) {
       console.error('❌ [TENANT] Error fetching tenant:', error);
       throw error;
@@ -70,19 +64,18 @@ export class TenantService {
    */
   async getAllTenants(): Promise<Tenant[]> {
     console.log('🏢 [TENANT] Fetching all tenants');
-    
+
     try {
       const tenantsRef = collection(this.firestore, 'tenants');
       const q = query(tenantsRef, orderBy('name', 'asc'));
       const querySnapshot = await getDocs(q);
 
-      const tenants: Tenant[] = querySnapshot.docs.map(doc => 
-        this.mapDocToTenant(doc.id, doc.data())
+      const tenants: Tenant[] = querySnapshot.docs.map((doc) =>
+        this.mapDocToTenant(doc.id, doc.data()),
       );
 
       console.log('✅ [TENANT] Fetched tenants:', tenants.length);
       return tenants;
-
     } catch (error) {
       console.error('❌ [TENANT] Error fetching tenants:', error);
       throw error;
@@ -94,23 +87,18 @@ export class TenantService {
    */
   async getActiveTenants(): Promise<Tenant[]> {
     console.log('🏢 [TENANT] Fetching active tenants');
-    
+
     try {
       const tenantsRef = collection(this.firestore, 'tenants');
-      const q = query(
-        tenantsRef, 
-        where('isActive', '==', true),
-        orderBy('name', 'asc')
-      );
+      const q = query(tenantsRef, where('isActive', '==', true), orderBy('name', 'asc'));
       const querySnapshot = await getDocs(q);
 
-      const tenants: Tenant[] = querySnapshot.docs.map(doc => 
-        this.mapDocToTenant(doc.id, doc.data())
+      const tenants: Tenant[] = querySnapshot.docs.map((doc) =>
+        this.mapDocToTenant(doc.id, doc.data()),
       );
 
       console.log('✅ [TENANT] Active tenants:', tenants.length);
       return tenants;
-
     } catch (error) {
       console.error('❌ [TENANT] Error fetching active tenants:', error);
       throw error;
@@ -120,45 +108,50 @@ export class TenantService {
   /**
    * Crear nuevo tenant
    */
-  async createTenant(data: CreateTenantDTO, createdBy: string): Promise<Tenant> {
+  async createTenant(data: CreateTenantDTO, createdBy?: string): Promise<Tenant> {
     console.log('🏢 [TENANT] Creating tenant:', data.name);
-    
+
     try {
       const tenantId = `tenant-${data.name.toLowerCase().replace(/\s+/g, '-')}`;
       const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
 
-      // Verificar si ya existe
-      const existing = await getDoc(tenantDocRef);
-      if (existing.exists()) {
-        throw new Error(`Tenant con ID ${tenantId} ya existe`);
+      // Verificar que no exista
+      const existingDoc = await getDoc(tenantDocRef);
+      if (existingDoc.exists()) {
+        throw new Error('Ya existe un tenant con ese nombre');
       }
 
-      // Crear documento
-      const tenantData = {
+      // Construir objeto base (solo campos requeridos)
+      const tenantData: any = {
         tenantId,
         proveedorIdInterno: data.proveedorIdInterno,
         name: data.name,
-        legalName: data.legalName,
-        rfc: data.rfc,
         plan: data.plan,
         maxLicenses: data.maxLicenses,
         usedLicenses: 0,
         features: data.features,
         tableauGroup: data.tableauGroup,
         isActive: true,
-        adminEmail: data.adminEmail,
-        billingEmail: data.billingEmail,
         createdAt: serverTimestamp(),
-        createdBy
+        createdBy: createdBy || 'system',
+        adminEmail: data.adminEmail,
       };
 
-      await updateDoc(tenantDocRef, tenantData as any);
+      // Agregar campos opcionales solo si tienen valor
+      if (data.legalName) tenantData.legalName = data.legalName;
+      if (data.rfc) tenantData.rfc = data.rfc;
+      if (data.bigQueryDataset) tenantData.bigQueryDataset = data.bigQueryDataset;
+      if (data.bigQueryFilter) tenantData.bigQueryFilter = data.bigQueryFilter;
+      if (data.billingEmail) tenantData.billingEmail = data.billingEmail;
+      if (data.contractStart) tenantData.contractStart = data.contractStart;
+      if (data.contractEnd) tenantData.contractEnd = data.contractEnd;
+
+      await setDoc(tenantDocRef, tenantData);
 
       console.log('✅ [TENANT] Tenant created:', tenantId);
-      
-      // Retornar tenant creado
-      return this.getTenantById(tenantId) as Promise<Tenant>;
 
+      // Retornar tenant creado
+      return (await this.getTenantById(tenantId))!;
     } catch (error) {
       console.error('❌ [TENANT] Error creating tenant:', error);
       throw error;
@@ -168,26 +161,21 @@ export class TenantService {
   /**
    * Actualizar tenant
    */
-  async updateTenant(
-    tenantId: string, 
-    data: UpdateTenantDTO,
-    updatedBy: string
-  ): Promise<void> {
+  async updateTenant(tenantId: string, data: UpdateTenantDTO, updatedBy: string): Promise<void> {
     console.log('🏢 [TENANT] Updating tenant:', tenantId);
-    
+
     try {
       const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
-      
+
       const updateData: any = {
         ...data,
         updatedAt: serverTimestamp(),
-        updatedBy
+        updatedBy,
       };
 
       await updateDoc(tenantDocRef, updateData);
-      
-      console.log('✅ [TENANT] Tenant updated:', tenantId);
 
+      console.log('✅ [TENANT] Tenant updated:', tenantId);
     } catch (error) {
       console.error('❌ [TENANT] Error updating tenant:', error);
       throw error;
@@ -199,16 +187,15 @@ export class TenantService {
    */
   async updateUsedLicenses(tenantId: string, amount: number): Promise<void> {
     console.log('🏢 [TENANT] Updating licenses for tenant:', tenantId, 'amount:', amount);
-    
+
     try {
       const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
-      
-      await updateDoc(tenantDocRef, {
-        usedLicenses: increment(amount)
-      });
-      
-      console.log('✅ [TENANT] Licenses updated');
 
+      await updateDoc(tenantDocRef, {
+        usedLicenses: increment(amount),
+      });
+
+      console.log('✅ [TENANT] Licenses updated');
     } catch (error) {
       console.error('❌ [TENANT] Error updating licenses:', error);
       throw error;
@@ -220,7 +207,7 @@ export class TenantService {
    */
   async hasAvailableLicenses(tenantId: string): Promise<boolean> {
     const tenant = await this.getTenantById(tenantId);
-    
+
     if (!tenant) {
       return false;
     }
@@ -233,7 +220,7 @@ export class TenantService {
    */
   async getTenantUsageStats(tenantId: string): Promise<TenantUsageStats | null> {
     const tenant = await this.getTenantById(tenantId);
-    
+
     if (!tenant) {
       return null;
     }
@@ -243,7 +230,7 @@ export class TenantService {
     const activeUsersQuery = query(
       usersRef,
       where('tenantId', '==', tenantId),
-      where('isActive', '==', true)
+      where('isActive', '==', true),
     );
     const activeUsersSnapshot = await getDocs(activeUsersQuery);
 
@@ -254,7 +241,7 @@ export class TenantService {
       activeUsers: activeUsersSnapshot.size,
       licensesUsed: tenant.usedLicenses,
       licensesAvailable: tenant.maxLicenses - tenant.usedLicenses,
-      licensesPercentage: (tenant.usedLicenses / tenant.maxLicenses) * 100
+      licensesPercentage: (tenant.usedLicenses / tenant.maxLicenses) * 100,
     };
 
     return stats;
@@ -264,9 +251,22 @@ export class TenantService {
    * Activar/Desactivar tenant
    */
   async setTenantActive(tenantId: string, isActive: boolean, updatedBy: string): Promise<void> {
-    console.log('🏢 [TENANT] Setting tenant active status:', tenantId, isActive);
-    
-    await this.updateTenant(tenantId, { isActive }, updatedBy);
+    console.log(`🏢 [TENANT] Setting tenant ${isActive ? 'active' : 'inactive'}:`, tenantId);
+
+    try {
+      const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
+
+      await updateDoc(tenantDocRef, {
+        isActive,
+        updatedAt: serverTimestamp(),
+        updatedBy,
+      });
+
+      console.log(`✅ [TENANT] Tenant ${isActive ? 'activated' : 'deactivated'}`);
+    } catch (error) {
+      console.error('❌ [TENANT] Error updating tenant status:', error);
+      throw error;
+    }
   }
 
   /**
@@ -303,14 +303,14 @@ export class TenantService {
       bigQueryDataset: data['bigQueryDataset'],
       bigQueryFilter: data['bigQueryFilter'],
       isActive: data['isActive'],
-      contractStart: data['contractStart']?.toDate(),
-      contractEnd: data['contractEnd']?.toDate(),
+      contractStart: data['contractStart'],
+      contractEnd: data['contractEnd'],
       adminEmail: data['adminEmail'],
       billingEmail: data['billingEmail'],
       createdAt: data['createdAt']?.toDate() || new Date(),
       createdBy: data['createdBy'],
       updatedAt: data['updatedAt']?.toDate(),
-      updatedBy: data['updatedBy']
+      updatedBy: data['updatedBy'],
     };
   }
 }
