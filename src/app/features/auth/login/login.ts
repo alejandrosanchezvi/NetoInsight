@@ -1,119 +1,82 @@
-// 🔐 NetoInsight - Login Component (Autocompletado Nativo)
+// 🔐 NetoInsight - Login Component (CORREGIDO)
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
-export class Login {
-  
-  loginForm: FormGroup;
+export class Login implements OnInit {
+  email = '';
+  password = '';
   isLoading = false;
   errorMessage = '';
-  showPassword = false;
+  returnUrl = '/categorization';
+
+  // Usuarios disponibles para quick login
+  quickUsers = [
+    { email: 'juan.perez@bimbo.com', name: 'Juan Pérez (Bimbo)', icon: '🏭' },
+    { email: 'maria.lopez@cocacola.com', name: 'María López (Coca-Cola)', icon: '🥤' },
+    { email: 'admin@neto.com', name: 'Admin Neto (Interno)', icon: '👨‍💼' }
+  ];
 
   constructor(
-    private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
-  ) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
-    });
-  }
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    console.log('🔐 [LOGIN] Login component initialized');
+    // Obtener returnUrl de query params
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/categorization';
     
     // Si ya está autenticado, redirigir
     if (this.authService.isAuthenticated()) {
-      console.log('✅ [LOGIN] User already authenticated, redirecting...');
-      this.router.navigate(['/categorization']);
+      console.log('✅ [LOGIN] Ya autenticado, redirigiendo...');
+      this.router.navigate([this.returnUrl]);
     }
   }
 
   /**
-   * Manejar submit del formulario
+   * Login tradicional (CORREGIDO para usar Observable)
    */
-  async onSubmit(): Promise<void> {
-    if (this.loginForm.invalid) {
-      console.warn('⚠️ [LOGIN] Form is invalid');
-      this.markFormGroupTouched(this.loginForm);
+  onSubmit(): void {
+    if (!this.email || !this.password) {
+      this.errorMessage = 'Por favor ingresa email y contraseña';
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    const { email, password } = this.loginForm.value;
-    console.log('🔐 [LOGIN] Attempting login for:', email);
-
-    try {
-      const user = await this.authService.login(email, password);
-      console.log('✅ [LOGIN] Login successful:', user.email);
-      
-      // Redirigir al dashboard
-      this.router.navigate(['/categorization']);
-      
-    } catch (error: any) {
-      console.error('❌ [LOGIN] Login failed:', error);
-      this.errorMessage = error.message || 'Error al iniciar sesión';
-      this.isLoading = false;
-    }
-  }
-
-  /**
-   * Toggle mostrar/ocultar contraseña
-   */
-  togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
-  }
-
-  /**
-   * Marcar todos los campos como touched para mostrar errores
-   */
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
+    // AuthService.login() retorna Observable<User>
+    this.authService.login(this.email, this.password).subscribe({
+      next: (user) => {
+        console.log('✅ [LOGIN] Login exitoso:', user.email);
+        this.isLoading = false;
+        this.router.navigate([this.returnUrl]);
+      },
+      error: (error) => {
+        console.error('❌ [LOGIN] Error:', error);
+        this.errorMessage = error.message || 'Error al iniciar sesión';
+        this.isLoading = false;
+      }
     });
   }
 
   /**
-   * Obtener mensaje de error para un campo
+   * Quick login (para desarrollo)
    */
-  getErrorMessage(fieldName: string): string {
-    const control = this.loginForm.get(fieldName);
-    
-    if (control?.hasError('required')) {
-      return 'Este campo es requerido';
-    }
-    
-    if (control?.hasError('email')) {
-      return 'Email inválido';
-    }
-    
-    if (control?.hasError('minlength')) {
-      return 'Mínimo 6 caracteres';
-    }
-    
-    return '';
-  }
-
-  /**
-   * Verificar si un campo tiene error y fue tocado
-   */
-  hasError(fieldName: string): boolean {
-    const control = this.loginForm.get(fieldName);
-    return !!(control && control.invalid && control.touched);
+  quickLogin(email: string): void {
+    this.email = email;
+    this.password = 'demo';
+    this.onSubmit();
   }
 }

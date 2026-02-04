@@ -1,9 +1,8 @@
-// 📊 NetoInsight - Categorization
+// 📊 NetoInsight - Categorization Component (OPTIMIZADO)
 
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, CUSTOM_ELEMENTS_SCHEMA, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
-import { LoadingSpinner } from '../../shared/components/loading-spinner/loading-spinner';
 
 @Component({
   selector: 'app-categorization',
@@ -13,45 +12,65 @@ import { LoadingSpinner } from '../../shared/components/loading-spinner/loading-
   templateUrl: './categorization.component.html',
   styleUrls: ['./categorization.component.css']
 })
-export class CategorizationComponent implements OnInit, AfterViewInit {
+export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('tableauViz', { static: false }) tableauVizElement!: ElementRef;
   
-  tableauVizUrl: string = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/views/NexusProveedores/Categorizacin';
-  // tableauVizUrl: string = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/views/NexusProveedores/Categorizacin';
-  isLoading: boolean = true;
-  currentProviderName: string = '';
-  showDashboard: boolean = false;
+  // Configuración
+  tableauVizUrl = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/views/NexusProveedores/Categorizacin';
+  currentProviderName = '';
   
+  // Estados
+  isLoading = true;
+  showAuthPrompt = false;
+  isInitialized = false;
+  
+  // Filtros
   private readonly FILTER_FIELD_NAME = 'Proveedor';
-  private readonly WORKSHEETS_TO_SKIP = ['skus'];
+  private readonly WORKSHEETS_TO_SKIP: string[] = [];
   
-  private viz: any;
+  // Referencias
+  private viz: any = null;
+  private authAttempted = false;
+  private authCheckInterval: any = null;
 
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
-    console.log('🔷 [CATEGORIZATION] Inicializando componente');
+    console.log('📊 [TABLEAU] Inicializando...');
     
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
       this.currentProviderName = currentUser.tenantName;
-      console.log(`🏢 [CATEGORIZATION] Proveedor: ${this.currentProviderName}`);
+      console.log(`✅ [USER] ${currentUser.name} | ${this.currentProviderName}`);
+    } else {
+      console.error('❌ [ERROR] No hay usuario autenticado');
     }
     
     this.loadTableauScript();
   }
 
   ngAfterViewInit(): void {
-    console.log('🔷 [CATEGORIZATION] Vista inicializada');
+    console.log('📊 [LIFECYCLE] Component initialized');
   }
 
+  ngOnDestroy(): void {
+    // Limpiar intervalo si existe
+    if (this.authCheckInterval) {
+      clearInterval(this.authCheckInterval);
+    }
+  }
+
+  /**
+   * Cargar Tableau Embedding API v3
+   */
   private loadTableauScript(): void {
-    console.log('📜 [CATEGORIZATION] Cargando Tableau API...');
+    console.log('📜 [SCRIPT] Loading Tableau Embedding API v3...');
     
     const existingScript = document.getElementById('tableau-embedding-script');
     
     if (existingScript) {
-      console.log('✅ [CATEGORIZATION] Script ya existe');
+      console.log('✅ [SCRIPT] Already loaded');
+      this.isLoading = false;
       return;
     }
 
@@ -61,62 +80,139 @@ export class CategorizationComponent implements OnInit, AfterViewInit {
     script.src = 'https://us-east-1.online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js';
     
     script.onload = () => {
-      console.log('✅ [CATEGORIZATION] Tableau API cargada');
+      console.log('✅ [SCRIPT] Tableau API loaded successfully');
+      this.isLoading = false;
     };
     
     script.onerror = (error) => {
-      console.error('❌ [CATEGORIZATION] Error al cargar API:', error);
+      console.error('❌ [SCRIPT] Failed to load:', error);
       this.isLoading = false;
     };
     
     document.head.appendChild(script);
   }
 
+  /**
+   * Evento: Tableau cargado
+   */
   async onTableauLoad(event: any): Promise<void> {
-    console.log('📊 [CATEGORIZATION] Dashboard cargado');
+    console.log('📊 [TABLEAU] Dashboard loaded - firstinteractive event');
+    
     this.viz = event.target;
+    this.isInitialized = true;
     
     try {
-      await this.diagnosticarTableau();
+      // Aplicar filtros
       await this.applyProviderFilter();
       
       this.isLoading = false;
-      this.showDashboard = true;
-      console.log('✅ [CATEGORIZATION] Dashboard inicializado');
+      this.showAuthPrompt = false;
+      console.log('✅ [SUCCESS] Dashboard fully initialized');
+      
     } catch (error) {
-      console.error('❌ [CATEGORIZATION] Error al inicializar:', error);
+      console.error('❌ [ERROR] Initialization failed:', error);
       this.isLoading = false;
-      this.showDashboard = true;
     }
   }
 
+  /**
+   * Manejar errores de Tableau
+   */
+  async onTableauError(event: any): Promise<void> {
+    console.error('❌ [TABLEAU-ERROR] Error detected:', event);
+    
+    const detail = event.detail;
+    
+    // Detectar error 401 (No autenticado)
+    if (detail && (detail.errorCode === 'not-authenticated' || detail.message?.includes('401') || detail.message?.includes('redirect=auth'))) {
+      console.warn('🔒 [AUTH] 401 Unauthorized - Authentication required');
+      
+      if (!this.authAttempted) {
+        this.authAttempted = true;
+        this.showAuthPrompt = true;
+        this.isLoading = false;
+        
+        console.log('💡 [AUTH] Showing authentication prompt');
+      }
+    } else {
+      console.error('❌ [ERROR] Other error:', detail);
+      this.isLoading = false;
+    }
+  }
+
+  /**
+   * Abrir autenticación de Tableau
+   */
+  openTableauAuth(): void {
+    console.log('🔐 [AUTH] Opening Tableau authentication...');
+    
+    const authUrl = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/auth';
+    const authWindow = window.open(authUrl, 'TableauAuth', 'width=600,height=700,scrollbars=yes');
+    
+    if (!authWindow) {
+      alert('Por favor permite popups para este sitio');
+      return;
+    }
+    
+    // Polling para detectar cierre de ventana
+    this.authCheckInterval = setInterval(() => {
+      if (authWindow.closed) {
+        clearInterval(this.authCheckInterval);
+        console.log('✅ [AUTH] Auth window closed, reloading dashboard...');
+        this.reloadDashboard();
+      }
+    }, 500);
+  }
+
+  /**
+   * Recargar dashboard después de autenticación
+   */
+  private reloadDashboard(): void {
+    console.log('🔄 [RELOAD] Reloading dashboard...');
+    
+    this.isLoading = true;
+    this.showAuthPrompt = false;
+    this.authAttempted = false;
+    
+    // Forzar recarga del viz
+    if (this.viz) {
+      const timestamp = new Date().getTime();
+      this.tableauVizUrl = this.tableauVizUrl.split('?')[0] + `?refresh=${timestamp}`;
+      
+      // Esperar un momento antes de recargar
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
+  }
+
+  /**
+   * Aplicar filtro de proveedor
+   */
   private async applyProviderFilter(): Promise<void> {
-    console.log('═══════════════════════════════════════════════════');
-    console.log('🔐 [FILTER] INICIANDO APLICACIÓN DE FILTRO');
-    console.log('═══════════════════════════════════════════════════');
-    console.log(`🔍 [FILTER] Campo: "${this.FILTER_FIELD_NAME}"`);
-    console.log(`📌 [FILTER] Valor: "${this.currentProviderName}"`);
+    if (!this.currentProviderName) {
+      console.warn('⚠️ [FILTER] No provider name available');
+      return;
+    }
+
+    console.log('═══════════════════════════════════════');
+    console.log('🔍 [FILTER] Applying provider filter');
+    console.log(`📌 Field: "${this.FILTER_FIELD_NAME}"`);
+    console.log(`📌 Value: "${this.currentProviderName}"`);
+    console.log('═══════════════════════════════════════');
     
     try {
       const workbook = this.viz.workbook;
       const activeSheet = workbook.activeSheet;
-
+      
       if (activeSheet.sheetType === 'dashboard') {
         const worksheets = activeSheet.worksheets;
         console.log(`📋 [WORKSHEETS] Total: ${worksheets.length}`);
         
         let successCount = 0;
-        let skipCount = 0;
         
-        for (let i = 0; i < worksheets.length; i++) {
-          const worksheet = worksheets[i];
-          const worksheetName = worksheet.name;
-          
-          console.log(`\n📝 [WORKSHEET ${i + 1}/${worksheets.length}] ${worksheetName}`);
-          
-          if (this.WORKSHEETS_TO_SKIP.includes(worksheetName)) {
-            console.log(`⏭️ [SKIP] Omitido`);
-            skipCount++;
+        for (const worksheet of worksheets) {
+          if (this.WORKSHEETS_TO_SKIP.includes(worksheet.name)) {
             continue;
           }
           
@@ -126,115 +222,55 @@ export class CategorizationComponent implements OnInit, AfterViewInit {
               [this.currentProviderName],
               'replace'
             );
-            console.log(`✅ [SUCCESS] Filtro aplicado`);
             successCount++;
           } catch (error: any) {
-            console.warn(`⚠️ [WARNING] No se pudo aplicar filtro`);
-            if (error.message && error.message.includes('invalid-fields')) {
-              console.warn(`💡 [SUGERENCIA] Agregar "${worksheetName}" a WORKSHEETS_TO_SKIP`);
-            }
+            console.warn(`⚠️ [FILTER] Could not apply to "${worksheet.name}":`, error.message);
           }
         }
         
-        console.log('\n═══════════════════════════════════════════════════');
-        console.log('📊 [RESUMEN] RESULTADOS');
-        console.log('═══════════════════════════════════════════════════');
-        console.log(`✅ Exitosos: ${successCount}`);
-        console.log(`⏭️ Omitidos: ${skipCount}`);
-        console.log('═══════════════════════════════════════════════════\n');
+        console.log(`✅ [FILTER] Applied to ${successCount}/${worksheets.length} worksheets`);
         
       } else {
+        // Single worksheet
         await activeSheet.applyFilterAsync(
           this.FILTER_FIELD_NAME,
           [this.currentProviderName],
           'replace'
         );
-        console.log('✅ [SUCCESS] Filtro aplicado en worksheet único');
+        console.log('✅ [FILTER] Applied to single worksheet');
       }
-
-      console.log(`✅ [COMPLETE] Filtrado completado para: ${this.currentProviderName}\n`);
       
     } catch (error) {
-      console.error('❌ [ERROR] Error al aplicar filtro:', error);
-      throw error;
+      console.error('❌ [FILTER] Error applying filter:', error);
     }
   }
 
-  onTableauError(event: any): void {
-    console.error('❌ [CATEGORIZATION] Error en Tableau:', event);
-    this.isLoading = false;
-    this.showDashboard = true;
-  }
-
-  getCurrentProviderName(): string {
-    return this.currentProviderName || 'Cargando...';
-  }
-
+  /**
+   * Refrescar dashboard
+   */
   async refreshDashboard(): Promise<void> {
-    console.log('🔄 [CATEGORIZATION] Refrescando...');
+    if (!this.viz || !this.isInitialized) {
+      console.warn('⚠️ [REFRESH] Dashboard not initialized');
+      return;
+    }
+
+    console.log('🔄 [REFRESH] Refreshing data...');
     this.isLoading = true;
     
     try {
       await this.viz.refreshDataAsync();
-      console.log('✅ [CATEGORIZATION] Actualizado');
+      console.log('✅ [REFRESH] Data refreshed successfully');
     } catch (error) {
-      console.error('❌ [CATEGORIZATION] Error al actualizar:', error);
+      console.error('❌ [REFRESH] Error:', error);
     } finally {
       this.isLoading = false;
     }
   }
 
-  async diagnosticarTableau(): Promise<void> {
-    console.log('\n╔════════════════════════════════════════════════════╗');
-    console.log('║        🔍 DIAGNÓSTICO DE TABLEAU                   ║');
-    console.log('╚════════════════════════════════════════════════════╝\n');
-    
-    try {
-      const workbook = this.viz.workbook;
-      const activeSheet = workbook.activeSheet;
-      
-      console.log('📚 [WORKBOOK]', workbook.name);
-      console.log('📄 [SHEET]', activeSheet.name);
-      console.log('📄 [TIPO]', activeSheet.sheetType);
-      
-      if (activeSheet.sheetType === 'dashboard') {
-        const worksheets = activeSheet.worksheets;
-        console.log(`\n📋 [WORKSHEETS] Total: ${worksheets.length}`);
-        
-        for (let i = 0; i < worksheets.length; i++) {
-          const worksheet = worksheets[i];
-          console.log(`\n  📝 ${i + 1}. "${worksheet.name}"`);
-          
-          try {
-            const filters = await worksheet.getFiltersAsync();
-            
-            if (filters.length === 0) {
-              console.log('    🔍 Sin filtros');
-            } else {
-              filters.forEach((filter: any) => {
-                console.log(`    🔍 ${filter.fieldName} (${filter.filterType})`);
-              });
-            }
-            
-            const hasProveedorFilter = filters.some((f: any) => 
-              f.fieldName.toLowerCase() === this.FILTER_FIELD_NAME.toLowerCase()
-            );
-            
-            console.log(hasProveedorFilter ? 
-              `    ✅ Campo "${this.FILTER_FIELD_NAME}" existe` : 
-              `    ⚠️ Campo "${this.FILTER_FIELD_NAME}" no encontrado`
-            );
-            
-          } catch (error) {
-            console.warn('    ⚠️ Error al obtener filtros');
-          }
-        }
-      }
-      
-      console.log('\n╚════════════════════════════════════════════════════╝\n');
-      
-    } catch (error) {
-      console.error('❌ [DIAGNÓSTICO] Error:', error);
-    }
+  /**
+   * Obtener nombre del proveedor
+   */
+  getCurrentProviderName(): string {
+    return this.currentProviderName || 'Cargando...';
   }
 }

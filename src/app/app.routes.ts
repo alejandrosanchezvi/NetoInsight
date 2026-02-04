@@ -74,8 +74,6 @@ export const routes: Routes = [
       },
     ],
   },
-
-  // 🔄 Redirect por defecto
   {
     path: '**',
     redirectTo: 'login',

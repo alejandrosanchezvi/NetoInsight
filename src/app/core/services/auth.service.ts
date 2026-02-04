@@ -1,9 +1,9 @@
-// 🔐 NetoInsight - Authentication Service (Firebase)
+// 🔐 NetoInsight - Authentication Service (Firebase) - CORREGIDO
 
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, from, of } from 'rxjs';
-import { switchMap, map, catchError, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, from } from 'rxjs';
+import { switchMap, tap, catchError } from 'rxjs/operators';
 
 // Firebase imports
 import {
@@ -19,7 +19,6 @@ import {
   Firestore,
   doc,
   getDoc,
-  setDoc,
   updateDoc,
   serverTimestamp,
 } from '@angular/fire/firestore';
@@ -39,6 +38,18 @@ export class AuthService {
     private router: Router,
   ) {
     console.log('🔐 [AUTH] AuthService initialized');
+    
+    // ✅ IMPORTANTE: Solo cargar desde storage, NO mock
+    const storedUser = this.getUserFromStorage();
+
+    if (storedUser) {
+      console.log('✅ [AUTH] Sesión recuperada:', storedUser.email);
+      this.currentUserSubject.next(storedUser);
+    } else {
+      console.log('📭 [AUTH] No hay sesión guardada');
+    }
+
+    // Iniciar listener de Firebase
     this.initAuthListener();
   }
 
@@ -50,65 +61,73 @@ export class AuthService {
       if (firebaseUser) {
         console.log('🔐 [AUTH] Firebase user detected:', firebaseUser.email);
         const userData = await this.getUserData(firebaseUser.uid);
-        this.currentUserSubject.next(userData);
         if (userData) {
+          this.setCurrentUser(userData);
           console.log('✅ [AUTH] User data loaded:', userData.email);
         }
       } else {
         console.log('🔐 [AUTH] No Firebase user');
         this.currentUserSubject.next(null);
+        this.clearStorage();
       }
     });
   }
 
   /**
    * Login con email y password
+   * ✅ Retorna Observable<User>
    */
-  async login(email: string, password: string): Promise<User> {
+  login(email: string, password: string): Observable<User> {
     console.log('🔐 [AUTH] Login attempt for:', email);
 
-    try {
-      // 1. Autenticar con Firebase
-      const credential: UserCredential = await signInWithEmailAndPassword(
-        this.auth,
-        email,
-        password,
-      );
+    // Convertir Promise a Observable
+    return from(
+      signInWithEmailAndPassword(this.auth, email, password)
+    ).pipe(
+      // Obtener datos del usuario de Firestore
+      switchMap(async (credential: UserCredential) => {
+        console.log('✅ [AUTH] Firebase authentication successful');
 
-      console.log('✅ [AUTH] Firebase authentication successful');
+        const userData = await this.getUserData(credential.user.uid);
 
-      // 2. Obtener datos adicionales de Firestore
-      const userData = await this.getUserData(credential.user.uid);
+        if (!userData) {
+          throw new Error('User data not found in Firestore');
+        }
 
-      if (!userData) {
-        throw new Error('User data not found in Firestore');
-      }
+        // Actualizar última conexión
+        await this.updateLastLogin(credential.user.uid);
 
-      // 3. Actualizar última conexión
-      await this.updateLastLogin(credential.user.uid);
+        console.log('✅ [AUTH] Login complete:', userData.email);
+        
+        // Guardar en storage
+        this.setCurrentUser(userData);
+        
+        return userData;
+      }),
+      // Manejo de errores
+      catchError((error: any) => {
+        console.error('❌ [AUTH] Login error:', error);
 
-      console.log('✅ [AUTH] Login complete:', userData.email);
-      return userData;
-    } catch (error: any) {
-      console.error('❌ [AUTH] Login error:', error);
+        // Mensajes de error amigables
+        let errorMessage = 'Error al iniciar sesión';
 
-      // Mensajes de error amigables
-      let errorMessage = 'Error al iniciar sesión';
+        if (error.code === 'auth/user-not-found') {
+          errorMessage = 'Usuario no encontrado';
+        } else if (error.code === 'auth/wrong-password') {
+          errorMessage = 'Contraseña incorrecta';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = 'Email inválido';
+        } else if (error.code === 'auth/user-disabled') {
+          errorMessage = 'Usuario deshabilitado';
+        } else if (error.code === 'auth/too-many-requests') {
+          errorMessage = 'Demasiados intentos. Intenta más tarde';
+        } else if (error.code === 'auth/invalid-credential') {
+          errorMessage = 'Credenciales inválidas';
+        }
 
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'Usuario no encontrado';
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Contraseña incorrecta';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Email inválido';
-      } else if (error.code === 'auth/user-disabled') {
-        errorMessage = 'Usuario deshabilitado';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Demasiados intentos. Intenta más tarde';
-      }
-
-      throw new Error(errorMessage);
-    }
+        throw new Error(errorMessage);
+      })
+    );
   }
 
   /**
@@ -120,6 +139,7 @@ export class AuthService {
     try {
       await signOut(this.auth);
       this.currentUserSubject.next(null);
+      this.clearStorage();
       this.router.navigate(['/login']);
       console.log('✅ [AUTH] Logout successful');
     } catch (error) {
@@ -135,11 +155,8 @@ export class AuthService {
     console.log('📄 [AUTH] Fetching user data for UID:', uid);
 
     try {
-      console.log('uid: '+uid);
       const userDocRef = doc(this.firestore, 'users', uid);
-      console.log('uid 2: '+uid);
       const userDoc = await getDoc(userDocRef);
-      console.log('uid 3: '+uid);
 
       if (!userDoc.exists()) {
         console.warn('⚠️ [AUTH] User document not found in Firestore');
@@ -226,5 +243,62 @@ export class AuthService {
       return await firebaseUser.getIdToken();
     }
     return null;
+  }
+
+  /**
+   * Establecer usuario actual y guardar en storage
+   */
+  private setCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+    this.saveUserToStorage(user);
+  }
+
+  /**
+   * Guardar usuario en localStorage
+   */
+  private saveUserToStorage(user: User): void {
+    try {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      console.log('💾 [AUTH] Usuario guardado en storage');
+    } catch (error) {
+      console.error('❌ [AUTH] Error al guardar en storage:', error);
+    }
+  }
+
+  /**
+   * Obtener usuario desde localStorage
+   */
+  private getUserFromStorage(): User | null {
+    try {
+      const userStr = localStorage.getItem('currentUser');
+      
+      if (!userStr) {
+        return null;
+      }
+
+      const userData = JSON.parse(userStr);
+      
+      // Convertir fechas de string a Date
+      if (userData.createdAt) {
+        userData.createdAt = new Date(userData.createdAt);
+      }
+      if (userData.lastLogin) {
+        userData.lastLogin = new Date(userData.lastLogin);
+      }
+      
+      return userData as User;
+      
+    } catch (error) {
+      console.error('❌ [AUTH] Error al leer storage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Limpiar storage
+   */
+  private clearStorage(): void {
+    localStorage.removeItem('currentUser');
+    console.log('🗑️ [AUTH] Storage limpiado');
   }
 }
