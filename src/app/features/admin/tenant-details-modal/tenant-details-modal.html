@@ -1,0 +1,370 @@
+<!-- 🏢 NetoInsight - Tenant Details Modal Template -->
+
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-container" (click)="onModalClick($event)">
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <svg class="header-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <div>
+          <h2 class="modal-title">{{ tenant.name }}</h2>
+          <p class="modal-subtitle">{{ tenant.proveedorIdInterno }}</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-edit" (click)="onEdit()" title="Editar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          Editar
+        </button>
+        <button class="btn-close" (click)="onClose()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      
+      <!-- Estadísticas Principales -->
+      <section class="section">
+        <h3 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          Estadísticas
+        </h3>
+
+        <div class="stats-grid" *ngIf="!isLoadingStats && usageStats">
+          <div class="stat-card">
+            <div class="stat-icon primary">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Usuarios Totales</p>
+              <p class="stat-value">{{ usageStats.totalUsers }}</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon success">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Usuarios Activos</p>
+              <p class="stat-value">{{ usageStats.activeUsers }}</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" [ngClass]="getProgressColor()">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Licencias</p>
+              <p class="stat-value">{{ tenant.usedLicenses }} / {{ tenant.maxLicenses }}</p>
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  [ngClass]="getProgressColor()"
+                  [style.width.%]="getLicensePercentage()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" [ngClass]="tenant.isActive ? 'success' : 'danger'">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path *ngIf="tenant.isActive" d="M9 12l2 2 4-4"></path>
+                <path *ngIf="!tenant.isActive" d="M15 9l-6 6M9 9l6 6"></path>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">Estado</p>
+              <p class="stat-value">{{ tenant.isActive ? 'Activo' : 'Inactivo' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="isLoadingStats" class="loading-placeholder">
+          <div class="spinner"></div>
+          <p>Cargando estadísticas...</p>
+        </div>
+      </section>
+
+      <!-- Información del Tenant -->
+      <section class="section">
+        <h3 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          Información
+        </h3>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Plan</span>
+            <span class="info-value">
+              <span class="badge" [ngClass]="'badge-' + tenant.plan">
+                {{ formatPlan(tenant.plan) }}
+              </span>
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Proveedor ID</span>
+            <span class="info-value copyable" (click)="copyToClipboard(tenant.proveedorIdInterno, 'Proveedor ID')">
+              {{ tenant.proveedorIdInterno }}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </span>
+          </div>
+
+          <div class="info-item" *ngIf="tenant.rfc">
+            <span class="info-label">RFC</span>
+            <span class="info-value copyable" (click)="copyToClipboard(tenant.rfc, 'RFC')">
+              {{ tenant.rfc }}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </span>
+          </div>
+
+          <div class="info-item" *ngIf="tenant.legalName">
+            <span class="info-label">Razón Social</span>
+            <span class="info-value">{{ tenant.legalName }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Tableau Group</span>
+            <span class="info-value">{{ tenant.tableauGroup }}</span>
+          </div>
+
+          <div class="info-item" *ngIf="tenant.bigQueryDataset">
+            <span class="info-label">BigQuery Dataset</span>
+            <span class="info-value copyable" (click)="copyToClipboard(tenant.bigQueryDataset, 'Dataset')">
+              {{ tenant.bigQueryDataset }}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">Creado</span>
+            <span class="info-value">{{ formatDate(tenant.createdAt) }}</span>
+          </div>
+
+          <div class="info-item" *ngIf="tenant.updatedAt">
+            <span class="info-label">Última Actualización</span>
+            <span class="info-value">{{ formatDate(tenant.updatedAt) }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contacto -->
+      <section class="section">
+        <h3 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          Contacto
+        </h3>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Email Administrador</span>
+            <span class="info-value">
+              <a :href="'mailto:' + tenant.adminEmail" class="email-link">
+                {{ tenant.adminEmail }}
+              </a>
+            </span>
+          </div>
+
+          <div class="info-item" *ngIf="tenant.billingEmail">
+            <span class="info-label">Email Facturación</span>
+            <span class="info-value">
+              <a :href="'mailto:' + tenant.billingEmail" class="email-link">
+                {{ tenant.billingEmail }}
+              </a>
+            </span>
+          </div>
+
+          <div class="info-item" *ngIf="tenant.contractStart">
+            <span class="info-label">Inicio Contrato</span>
+            <span class="info-value">{{ formatContractDate(tenant.contractStart) }}</span>
+          </div>
+
+          <div class="info-item" *ngIf="tenant.contractEnd">
+            <span class="info-label">Fin Contrato</span>
+            <span class="info-value">{{ formatContractDate(tenant.contractEnd) }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboards Permitidos -->
+      <section class="section" *ngIf="tenant.features?.dashboards && tenant.features.dashboards.length > 0">
+        <h3 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          Dashboards Permitidos
+        </h3>
+
+        <div class="dashboard-list">
+          <div *ngFor="let dashboard of tenant.features.dashboards" class="dashboard-item">
+            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>{{ dashboard | titlecase }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Usuarios -->
+      <section class="section">
+        <h3 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Usuarios ({{ users.length }})
+        </h3>
+
+        <div *ngIf="!isLoadingUsers">
+          <div class="user-list" *ngIf="users.length > 0">
+            <div *ngFor="let user of displayedUsers" class="user-item">
+              <div class="user-avatar">
+                <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" [alt]="user.name">
+                <span *ngIf="!user.avatarUrl" class="avatar-initials">{{ getInitials(user.name) }}</span>
+              </div>
+              <div class="user-info">
+                <p class="user-name">{{ user.name }}</p>
+                <p class="user-email">{{ user.email }}</p>
+              </div>
+              <div class="user-badges">
+                <span class="badge badge-role">{{ formatRole(user.role) }}</span>
+                <span class="badge" [ngClass]="user.isActive ? 'badge-success' : 'badge-danger'">
+                  {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </div>
+
+            <button 
+              *ngIf="users.length > 5 && !showAllUsers"
+              class="btn-show-more"
+              (click)="toggleShowAllUsers()">
+              Ver todos ({{ users.length }})
+            </button>
+
+            <button 
+              *ngIf="showAllUsers"
+              class="btn-show-more"
+              (click)="toggleShowAllUsers()">
+              Ver menos
+            </button>
+          </div>
+
+          <div *ngIf="users.length === 0" class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+            </svg>
+            <p>No hay usuarios registrados</p>
+          </div>
+        </div>
+
+        <div *ngIf="isLoadingUsers" class="loading-placeholder">
+          <div class="spinner"></div>
+          <p>Cargando usuarios...</p>
+        </div>
+      </section>
+
+      <!-- Actividad Reciente -->
+      <section class="section">
+        <h3 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Actividad Reciente
+        </h3>
+
+        <div *ngIf="!isLoadingActivity">
+          <div class="activity-list" *ngIf="activityLog.length > 0">
+            <div *ngFor="let activity of displayedActivities" class="activity-item">
+              <div class="activity-indicator" [ngClass]="activity.type"></div>
+              <div class="activity-content">
+                <p class="activity-action">{{ activity.action }}</p>
+                <p class="activity-meta">
+                  <span class="activity-user">{{ activity.user }}</span>
+                  <span class="activity-separator">•</span>
+                  <span class="activity-time">{{ formatRelativeDate(activity.date) }}</span>
+                </p>
+              </div>
+            </div>
+
+            <button 
+              *ngIf="activityLog.length > 5 && !showAllActivities"
+              class="btn-show-more"
+              (click)="toggleShowAllActivities()">
+              Ver todas ({{ activityLog.length }})
+            </button>
+
+            <button 
+              *ngIf="showAllActivities"
+              class="btn-show-more"
+              (click)="toggleShowAllActivities()">
+              Ver menos
+            </button>
+          </div>
+
+          <div *ngIf="activityLog.length === 0" class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <p>No hay actividad reciente</p>
+          </div>
+        </div>
+
+        <div *ngIf="isLoadingActivity" class="loading-placeholder">
+          <div class="spinner"></div>
+          <p>Cargando actividad...</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

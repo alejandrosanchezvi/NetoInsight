@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../../shared/components/header/header';
 import { SidebarComponent } from '../../shared/components/sidebar/sidebar.component';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -20,6 +21,10 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar.compon
 })
 export class MainLayoutComponent implements OnInit {
   isSidebarOpen = true;
+
+  constructor(
+     private authService: AuthService,
+  ){}
 
   ngOnInit(): void {
     // En móvil, el sidebar empieza cerrado
@@ -72,4 +77,8 @@ export class MainLayoutComponent implements OnInit {
       this.isSidebarOpen = false;
     }
   }
+
+  isInternalUser(): boolean {
+  return this.authService.isInternalUser();
+}
 }

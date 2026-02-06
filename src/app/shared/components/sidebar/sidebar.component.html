@@ -23,12 +23,10 @@
     <ul class="sidebar-menu">
       <li *ngFor="let item of menuItems" class="sidebar-menu-item">
         <button
-          class="sidebar-link"
-          [class.active]="isActive(item)"
-          [attr.data-label]="item.label"
-          (click)="navigateTo(item)"
-          [attr.aria-current]="isActive(item) ? 'page' : null"
-          [attr.title]="item.label">
+       *ngIf="!item.internal || isInternalUser"
+       class="sidebar-link"
+       [class.active]="isActive(item)"
+       (click)="navigateTo(item)">
           
           <!-- Icon -->
           <svg 

@@ -1,4 +1,4 @@
-// 🏢 NetoInsight - Tenant Management Component (CON MODAL)
+// 🏢 NetoInsight - Tenant Management Component (CON MODALES COMPLETOS)
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -9,11 +9,12 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { Tenant, TenantUsageStats } from '../../../core/models/tenant.model';
 import { CreateTenantModal } from '../create-tenant-modal/create-tenant-modal';
 import { EditTenantModal } from '../edit-tenant-modal/edit-tenant-modal';
+import { TenantDetailsModal } from '../tenant-details-modal/tenant-details-modal';
 
 @Component({
   selector: 'app-tenant-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, EditTenantModal, CreateTenantModal],
+  imports: [CommonModule, FormsModule, EditTenantModal, CreateTenantModal, TenantDetailsModal],
   templateUrl: './tenant-management.html',
   styleUrls: ['./tenant-management.css']
 })
@@ -29,9 +30,10 @@ export class TenantManagement implements OnInit {
   searchTerm = '';
   statusFilter: 'all' | 'active' | 'inactive' = 'all';
   
-  // Modal
+  // Modales
   showCreateModal = false;
   showEditModal = false;
+  showDetailsModal = false;
   selectedTenant: Tenant | null = null;
 
   constructor(
@@ -153,11 +155,28 @@ export class TenantManagement implements OnInit {
   }
 
   /**
-   * Ver detalles del tenant
+   * Abrir modal de detalles
    */
   viewDetails(tenant: Tenant): void {
     console.log('👁️ [TENANT-MGMT] View details:', tenant.name);
-    alert(`Detalles de ${tenant.name}\n\nEsta funcionalidad se implementará en el paso 4.4`);
+    this.selectedTenant = tenant;
+    this.showDetailsModal = true;
+  }
+
+  /**
+   * Cerrar modal de detalles
+   */
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedTenant = null;
+  }
+
+  /**
+   * Callback desde modal de detalles para abrir edición
+   */
+  onEditFromDetails(tenant: Tenant): void {
+    this.closeDetailsModal();
+    this.openEditModal(tenant);
   }
 
   /**

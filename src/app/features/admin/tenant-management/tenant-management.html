@@ -1,4 +1,4 @@
-<!-- 🏢 NetoInsight - Tenant Management Template (CON MODAL) -->
+<!-- 🏢 NetoInsight - Tenant Management Template (CON MODAL DE DETALLES) -->
 
 <div class="tenant-management-container">
   
@@ -254,3 +254,11 @@
   (close)="closeEditModal()"
   (tenantUpdated)="onTenantUpdated()">
 </app-edit-tenant-modal>
+
+<!-- Details Modal -->
+<app-tenant-details-modal
+  *ngIf="showDetailsModal && selectedTenant"
+  [tenant]="selectedTenant"
+  (close)="closeDetailsModal()"
+  (editTenant)="onEditFromDetails($event)">
+</app-tenant-details-modal>

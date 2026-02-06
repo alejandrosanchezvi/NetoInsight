@@ -10,6 +10,7 @@ interface MenuItem {
   icon: string;
   route: string;
   badge?: number;
+  internal: boolean
 }
 
 @Component({
@@ -21,6 +22,7 @@ interface MenuItem {
 })
 export class SidebarComponent {
   @Input() isOpen = true;
+  @Input() isInternalUser = false;
   @Output() closeSidebar = new EventEmitter<void>();
 
   // 🔹 MENÚ MVP: Solo 5 opciones
@@ -30,43 +32,49 @@ export class SidebarComponent {
       label: 'Categorización',
       icon: 'grid',
       route: '/categorization',
+      internal: false,
     },
     {
       id: 'stores',
       label: 'Tiendas',
       icon: 'store',
       route: '/stores',
+      internal: false,
     },
     {
       id: 'skus',
       label: 'SKUs',
       icon: 'package',
       route: '/skus',
+      internal: false,
     },
     {
       id: 'stocks',
       label: 'Stocks',
       icon: 'box',
       route: '/stocks',
+      internal: false,
     },
     {
       id: 'purchase-orders',
       label: 'Órdenes de Compra',
       icon: 'shoppingcart',
       route: '/purchase-orders',
+      internal: false,
     },
     {
       id: 'users',
       label: 'Usuarios',
       icon: 'users',
       route: '/users',
+      internal: false,
     },
     {
       id: 'admin-tenants',
       label: 'Proveedores',
-      icon: 'supplier',
+      icon: 'truck',
       route: '/admin/tenants',
-      // internal: true, // Solo visible para usuarios internos
+      internal: true, 
     },
   ];
 
@@ -108,7 +116,9 @@ export class SidebarComponent {
       shoppingcart: 'M9 2L1 4v14l8 2 8-2 8 2V6l-8-2-8 2z M9 2v18 M17 4v18',
       users:
         'M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z',
-};
+      truck:
+        'M1 3h15v13H1z M16 8h4l3 3v5h-7V8z M5.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M18.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
+      };
 
     return icons[iconName] || '';
   }
