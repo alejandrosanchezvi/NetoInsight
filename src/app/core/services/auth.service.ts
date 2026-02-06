@@ -301,4 +301,29 @@ export class AuthService {
     localStorage.removeItem('currentUser');
     console.log('🗑️ [AUTH] Storage limpiado');
   }
+
+  // 🔑 Agregar este método al AuthService
+
+/**
+ * Obtiene el token de Firebase del usuario actual
+ * @returns Promise con el token de Firebase o null
+ */
+async getFirebaseToken(): Promise<string | null> {
+  try {
+    const user = this.auth.currentUser;
+    
+    if (!user) {
+      console.error('No hay usuario autenticado');
+      return null;
+    }
+    
+    // Obtener el token de Firebase
+    const token = await user.getIdToken();
+    return token;
+    
+  } catch (error) {
+    console.error('Error obteniendo token de Firebase:', error);
+    return null;
+  }
+}
 }

@@ -1,53 +1,59 @@
-<!-- 📊 NetoInsight - Categorization Template (CON AUTENTICACIÓN) -->
+<!-- 📊 NetoInsight - Categorization Template (JavaScript API v2 - AUTENTICACIÓN AUTOMÁTICA) -->
 
 <div class="categorization-container">
-  
-  <!-- Loading Spinner -->
-  <div *ngIf="isLoading" class="loading-overlay">
-    <div class="spinner-container">
-      <div class="spinner"></div>
-      <p class="loading-text">Cargando dashboard de {{ getCurrentProviderName() }}...</p>
+
+  <!-- Mensaje de Error de Autenticación -->
+  <div *ngIf="authError" class="auth-error-message">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <div class="error-content">
+      <strong>Error de Autenticación</strong>
+      <p>{{ authError }}</p>
+      <div class="error-actions">
+        <button class="btn-retry" (click)="refreshDashboard()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Reintentar
+        </button>
+        <button class="btn-debug" (click)="debugAuth()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6"></path>
+            <path d="m15.91 5.09 4.24-4.24M5.09 15.91 1.85 19.15"></path>
+            <path d="m20.91 15.91-4.24-4.24M8.09 5.09 3.85.85"></path>
+          </svg>
+          Ver Detalles
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Auth Prompt (cuando hay error 401) -->
-  <div *ngIf="showAuthPrompt && !isLoading" class="auth-prompt">
-    <div class="auth-content">
-      <svg class="auth-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-      </svg>
-      
-      <h2 class="auth-title">Autenticación Requerida</h2>
-      <p class="auth-message">
-        Para acceder al dashboard de Tableau, necesitas autenticarte con tus credenciales de Tableau Server.
-      </p>
-      
-      <button class="btn-auth" (click)="openTableauAuth()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"></path>
-        </svg>
-        Iniciar Sesión en Tableau
-      </button>
-      
-      <p class="auth-hint">
-        Se abrirá una ventana nueva. Después de autenticarte, cierra la ventana y el dashboard se cargará automáticamente.
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading && !authError" class="loading-overlay">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p class="loading-text">Cargando dashboard para {{ getCurrentProviderName() }}...</p>
+      <p class="loading-subtext">
+        <span class="loading-step" [class.active]="true">Verificando autenticación</span>
+        <span class="loading-step">•</span>
+        <span class="loading-step">Generando token JWT</span>
+        <span class="loading-step">•</span>
+        <span class="loading-step">Cargando Tableau</span>
       </p>
     </div>
   </div>
 
   <!-- Tableau Dashboard Container -->
-  <div class="tableau-container" [class.loading]="isLoading" [class.hidden]="showAuthPrompt">
-    <tableau-viz 
-      #tableauViz
-      id='tableau-viz' 
-      [src]='tableauVizUrl'
-      width='100%'
-      height='1240'
-      hide-tabs 
-      toolbar='bottom'
-      (firstinteractive)="onTableauLoad($event)"
-      (error)="onTableauError($event)">
-    </tableau-viz>
+  <div class="tableau-container" [class.loading]="isLoading">
+
+    <!-- Contenedor principal del dashboard -->
+    <div #tableauContainer class="tableau-viz-container"></div>
   </div>
+
 </div>

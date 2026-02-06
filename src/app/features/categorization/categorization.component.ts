@@ -1,8 +1,9 @@
-// 📊 NetoInsight - Categorization Component (OPTIMIZADO)
+// 📊 NetoInsight - Categorization Component (EMBEDDING API v3 OFICIAL)
 
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, CUSTOM_ELEMENTS_SCHEMA, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-categorization',
@@ -13,64 +14,35 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./categorization.component.css']
 })
 export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('tableauViz', { static: false }) tableauVizElement!: ElementRef;
+  @ViewChild('tableauContainer', { static: false }) tableauContainer!: ElementRef;
   
-  // Configuración
-  tableauVizUrl = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/views/NexusProveedores/Categorizacin';
-  currentProviderName = '';
+  isLoading: boolean = true;
+  currentProviderName: string = '';
+  authError: string = '';
   
-  // Estados
-  isLoading = true;
-  showAuthPrompt = false;
-  isInitialized = false;
-  
-  // Filtros
-  private readonly FILTER_FIELD_NAME = 'Proveedor';
-  private readonly WORKSHEETS_TO_SKIP: string[] = [];
-  
-  // Referencias
-  private viz: any = null;
-  private authAttempted = false;
-  private authCheckInterval: any = null;
+  private jwtToken: string = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
-    console.log('📊 [TABLEAU] Inicializando...');
-    
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
       this.currentProviderName = currentUser.tenantName;
-      console.log(`✅ [USER] ${currentUser.name} | ${this.currentProviderName}`);
-    } else {
-      console.error('❌ [ERROR] No hay usuario autenticado');
     }
-    
     this.loadTableauScript();
   }
 
-  ngAfterViewInit(): void {
-    console.log('📊 [LIFECYCLE] Component initialized');
-  }
+  ngAfterViewInit(): void {}
+  ngOnDestroy(): void {}
 
-  ngOnDestroy(): void {
-    // Limpiar intervalo si existe
-    if (this.authCheckInterval) {
-      clearInterval(this.authCheckInterval);
-    }
-  }
-
-  /**
-   * Cargar Tableau Embedding API v3
-   */
   private loadTableauScript(): void {
-    console.log('📜 [SCRIPT] Loading Tableau Embedding API v3...');
-    
     const existingScript = document.getElementById('tableau-embedding-script');
     
     if (existingScript) {
-      console.log('✅ [SCRIPT] Already loaded');
-      this.isLoading = false;
+      this.loadDashboard();
       return;
     }
 
@@ -80,197 +52,116 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
     script.src = 'https://us-east-1.online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js';
     
     script.onload = () => {
-      console.log('✅ [SCRIPT] Tableau API loaded successfully');
-      this.isLoading = false;
+      console.log('✅ Tableau Embedding API v3 cargada');
+      this.loadDashboard();
     };
     
-    script.onerror = (error) => {
-      console.error('❌ [SCRIPT] Failed to load:', error);
+    script.onerror = () => {
       this.isLoading = false;
+      this.authError = 'Error cargando Tableau Embedding API v3';
     };
     
     document.head.appendChild(script);
   }
 
-  /**
-   * Evento: Tableau cargado
-   */
-  async onTableauLoad(event: any): Promise<void> {
-    console.log('📊 [TABLEAU] Dashboard loaded - firstinteractive event');
-    
-    this.viz = event.target;
-    this.isInitialized = true;
-    
+  private async loadDashboard(): Promise<void> {
     try {
-      // Aplicar filtros
-      await this.applyProviderFilter();
+      const firebaseToken = await this.authService.getFirebaseToken();
+      if (!firebaseToken) throw new Error('No Firebase token');
       
-      this.isLoading = false;
-      this.showAuthPrompt = false;
-      console.log('✅ [SUCCESS] Dashboard fully initialized');
+      const response = await this.http.get<any>('http://localhost:8000/api/tableau/embed-url', {
+        params: { dashboard: 'categorization' },
+        headers: { 'Authorization': `Bearer ${firebaseToken}` }
+      }).toPromise();
       
-    } catch (error) {
-      console.error('❌ [ERROR] Initialization failed:', error);
-      this.isLoading = false;
-    }
-  }
-
-  /**
-   * Manejar errores de Tableau
-   */
-  async onTableauError(event: any): Promise<void> {
-    console.error('❌ [TABLEAU-ERROR] Error detected:', event);
-    
-    const detail = event.detail;
-    
-    // Detectar error 401 (No autenticado)
-    if (detail && (detail.errorCode === 'not-authenticated' || detail.message?.includes('401') || detail.message?.includes('redirect=auth'))) {
-      console.warn('🔒 [AUTH] 401 Unauthorized - Authentication required');
-      
-      if (!this.authAttempted) {
-        this.authAttempted = true;
-        this.showAuthPrompt = true;
-        this.isLoading = false;
-        
-        console.log('💡 [AUTH] Showing authentication prompt');
-      }
-    } else {
-      console.error('❌ [ERROR] Other error:', detail);
-      this.isLoading = false;
-    }
-  }
-
-  /**
-   * Abrir autenticación de Tableau
-   */
-  openTableauAuth(): void {
-    console.log('🔐 [AUTH] Opening Tableau authentication...');
-    
-    const authUrl = 'https://us-east-1.online.tableau.com/t/nexustiendasneto/auth';
-    const authWindow = window.open(authUrl, 'TableauAuth', 'width=600,height=700,scrollbars=yes');
-    
-    if (!authWindow) {
-      alert('Por favor permite popups para este sitio');
-      return;
-    }
-    
-    // Polling para detectar cierre de ventana
-    this.authCheckInterval = setInterval(() => {
-      if (authWindow.closed) {
-        clearInterval(this.authCheckInterval);
-        console.log('✅ [AUTH] Auth window closed, reloading dashboard...');
-        this.reloadDashboard();
-      }
-    }, 500);
-  }
-
-  /**
-   * Recargar dashboard después de autenticación
-   */
-  private reloadDashboard(): void {
-    console.log('🔄 [RELOAD] Reloading dashboard...');
-    
-    this.isLoading = true;
-    this.showAuthPrompt = false;
-    this.authAttempted = false;
-    
-    // Forzar recarga del viz
-    if (this.viz) {
-      const timestamp = new Date().getTime();
-      this.tableauVizUrl = this.tableauVizUrl.split('?')[0] + `?refresh=${timestamp}`;
-      
-      // Esperar un momento antes de recargar
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    }
-  }
-
-  /**
-   * Aplicar filtro de proveedor
-   */
-  private async applyProviderFilter(): Promise<void> {
-    if (!this.currentProviderName) {
-      console.warn('⚠️ [FILTER] No provider name available');
-      return;
-    }
-
-    console.log('═══════════════════════════════════════');
-    console.log('🔍 [FILTER] Applying provider filter');
-    console.log(`📌 Field: "${this.FILTER_FIELD_NAME}"`);
-    console.log(`📌 Value: "${this.currentProviderName}"`);
-    console.log('═══════════════════════════════════════');
-    
-    try {
-      const workbook = this.viz.workbook;
-      const activeSheet = workbook.activeSheet;
-      
-      if (activeSheet.sheetType === 'dashboard') {
-        const worksheets = activeSheet.worksheets;
-        console.log(`📋 [WORKSHEETS] Total: ${worksheets.length}`);
-        
-        let successCount = 0;
-        
-        for (const worksheet of worksheets) {
-          if (this.WORKSHEETS_TO_SKIP.includes(worksheet.name)) {
-            continue;
-          }
-          
-          try {
-            await worksheet.applyFilterAsync(
-              this.FILTER_FIELD_NAME,
-              [this.currentProviderName],
-              'replace'
-            );
-            successCount++;
-          } catch (error: any) {
-            console.warn(`⚠️ [FILTER] Could not apply to "${worksheet.name}":`, error.message);
-          }
-        }
-        
-        console.log(`✅ [FILTER] Applied to ${successCount}/${worksheets.length} worksheets`);
-        
+      if (response?.jwt && response?.embedUrl) {
+        this.jwtToken = response.jwt;
+        console.log('✅ JWT recibido, creando tableau-viz element');
+        await this.createTableauVizElement(response.embedUrl);
       } else {
-        // Single worksheet
-        await activeSheet.applyFilterAsync(
-          this.FILTER_FIELD_NAME,
-          [this.currentProviderName],
-          'replace'
-        );
-        console.log('✅ [FILTER] Applied to single worksheet');
+        throw new Error('JWT o URL no recibido');
       }
       
-    } catch (error) {
-      console.error('❌ [FILTER] Error applying filter:', error);
-    }
-  }
-
-  /**
-   * Refrescar dashboard
-   */
-  async refreshDashboard(): Promise<void> {
-    if (!this.viz || !this.isInitialized) {
-      console.warn('⚠️ [REFRESH] Dashboard not initialized');
-      return;
-    }
-
-    console.log('🔄 [REFRESH] Refreshing data...');
-    this.isLoading = true;
-    
-    try {
-      await this.viz.refreshDataAsync();
-      console.log('✅ [REFRESH] Data refreshed successfully');
-    } catch (error) {
-      console.error('❌ [REFRESH] Error:', error);
-    } finally {
+    } catch (error: any) {
+      console.error('❌ Error:', error);
       this.isLoading = false;
+      this.authError = error.status === 401 ? 'Error 401: Verificar Connected App' : 'Error cargando dashboard';
     }
   }
 
-  /**
-   * Obtener nombre del proveedor
-   */
+  private async createTableauVizElement(embedUrl: string): Promise<void> {
+    try {
+      const container = this.tableauContainer.nativeElement;
+      container.innerHTML = '';
+
+      // Crear elemento tableau-viz según documentación oficial
+      const viz = document.createElement('tableau-viz');
+      viz.setAttribute('id', 'tableau-viz');
+      viz.setAttribute('src', embedUrl);
+      viz.setAttribute('token', this.jwtToken); // JWT as attribute
+      viz.setAttribute('width', '100%');
+      viz.setAttribute('height', '800px');
+      viz.setAttribute('toolbar', 'hidden'); // Como recomienda la doc
+
+      // Event listeners según documentación oficial
+      viz.addEventListener('firstinteractive', () => {
+        console.log('✅ Dashboard cargado con SSO');
+        this.isLoading = false;
+        this.authError = '';
+      });
+
+      // Event listener para errores de autenticación
+      viz.addEventListener('vizloadError', (event: any) => {
+        console.error('❌ Viz Load Error:', event.detail);
+        this.isLoading = false;
+        this.authError = 'Error de autenticación Connected App: ' + (event.detail?.errorCode || 'unknown');
+      });
+
+      container.appendChild(viz);
+      console.log('📊 tableau-viz element creado con JWT token');
+
+      // Timeout
+      setTimeout(() => {
+        if (this.isLoading) {
+          this.isLoading = false;
+          this.authError = 'Timeout: Verificar Connected App configuration';
+        }
+      }, 30000);
+      
+    } catch (error: any) {
+      console.error('❌ Error creando viz element:', error);
+      this.isLoading = false;
+      this.authError = `Error: ${error.message}`;
+    }
+  }
+
   getCurrentProviderName(): string {
     return this.currentProviderName || 'Cargando...';
+  }
+
+  async refreshDashboard(): Promise<void> {
+    this.isLoading = true;
+    this.authError = '';
+    await this.loadDashboard();
+  }
+
+  async debugAuth(): Promise<void> {
+    console.log('=== DEBUG EMBEDDING API v3 ===');
+    console.log('Loading:', this.isLoading);
+    console.log('Error:', this.authError);
+    console.log('JWT Token:', this.jwtToken ? `Present (${this.jwtToken.length} chars)` : 'Missing');
+    
+    const user = this.authService.getCurrentUser();
+    console.log('User:', user ? user.email : 'Not authenticated');
+    
+    const vizElement = document.getElementById('tableau-viz');
+    console.log('Viz Element:', vizElement ? 'Created' : 'Not created');
+    
+    if (vizElement) {
+      console.log('Viz src:', vizElement.getAttribute('src'));
+      console.log('Viz token:', vizElement.getAttribute('token') ? 'Present' : 'Missing');
+    }
+    
+    console.log('Script loaded:', !!document.getElementById('tableau-embedding-script'));
   }
 }
