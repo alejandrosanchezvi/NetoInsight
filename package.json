@@ -6,7 +6,21 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:prod": "ng build --configuration production",
+    "build:staging": "ng build --configuration staging",
+    "deploy:prod": "npm run build:prod && firebase deploy --only hosting:production -P production",
+    "deploy:staging": "npm run build:staging && firebase deploy --only hosting:staging -P staging",
+    "preview:prod": "firebase hosting:channel:deploy preview-prod -P production",
+    "preview:staging": "firebase hosting:channel:deploy preview-staging -P staging",
+    "firebase:login": "firebase login",
+    "firebase:init": "firebase init hosting",
+    "firebase:list": "firebase projects:list",
+    "release:staging": "npm run build:staging && git push origin develop && firebase deploy --only hosting:staging -P staging",
+    "release:prod": "npm run build:prod && git push origin main && firebase deploy --only hosting:production -P production",
+    "version:patch": "npm version patch && git push && git push --tags",
+    "version:minor": "npm version minor && git push && git push --tags",
+    "version:major": "npm version major && git push && git push --tags"
   },
   "prettier": {
     "printWidth": 100,

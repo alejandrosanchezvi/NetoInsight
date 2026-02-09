@@ -69,7 +69,7 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
       const firebaseToken = await this.authService.getFirebaseToken();
       if (!firebaseToken) throw new Error('No Firebase token');
       
-      const response = await this.http.get<any>('http://localhost:8000/api/tableau/embed-url', {
+      const response = await this.http.get<any>('https://netoinsight-api-staging-609085902384.us-central1.run.app/api/tableau/embed-url', {
         params: { dashboard: 'categorization' },
         headers: { 'Authorization': `Bearer ${firebaseToken}` }
       }).toPromise();

@@ -79,7 +79,7 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
       if (!firebaseToken) throw new Error('No Firebase token');
 
       const response = await this.http
-        .get<any>('http://localhost:8000/api/tableau/embed-url', {
+        .get<any>('https://netoinsight-api-staging-609085902384.us-central1.run.app/api/tableau/embed-url', {
           params: { dashboard: 'skus' },
           headers: { Authorization: `Bearer ${firebaseToken}` },
         })

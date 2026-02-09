@@ -1,0 +1,33 @@
+{
+  "projects": {
+    "production": "netoinsight-prod",
+    "staging": "netoinsight-staging"
+  },
+  "targets": {
+    "netoinsight-prod": {
+      "hosting": {
+        "production": [
+          "netoinsight-prod"
+        ]
+      }
+    },
+    "netoinsight-staging": {
+      "hosting": {
+        "staging": [
+          "netoinsight-staging"
+        ]
+      }
+    },
+    "netoinsight-fed03": {
+      "hosting": {
+        "production": [
+          "netoinsight-prod"
+        ],
+        "staging": [
+          "netoinsight-staging"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
