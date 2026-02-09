@@ -1,23 +1,58 @@
-<!-- 📊 NetoInsight - Skus Template -->
 
-<app-loading-spinner 
-  [show]="isLoading"
-  [message]="'Cargando dashboard de SKUs para ' + getCurrentProviderName()"
-  submessage="Aplicando filtros personalizados...">
-</app-loading-spinner>
+<div class="skus-container">
 
-<div class="dashboard-container">
-  <div class="tableau-container" [style.visibility]="showDashboard ? 'visible' : 'hidden'">
-    <tableau-viz 
-      #tableauViz
-      id='tableau-viz-skus' 
-      [src]='tableauVizUrl'
-      width='100%'
-      height='1240'
-      hide-tabs 
-      toolbar='bottom'
-      (firstinteractive)="onTableauLoad($event)"
-      (error)="onTableauError($event)">
-    </tableau-viz>
+  <!-- Mensaje de Error de Autenticación -->
+  <div *ngIf="authError" class="auth-error-message">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <div class="error-content">
+      <strong>Error de Autenticación</strong>
+      <p>{{ authError }}</p>
+      <div class="error-actions">
+        <button class="btn-retry" (click)="refreshDashboard()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Reintentar
+        </button>
+        <button class="btn-debug" (click)="debugAuth()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6"></path>
+            <path d="m15.91 5.09 4.24-4.24M5.09 15.91 1.85 19.15"></path>
+            <path d="m20.91 15.91-4.24-4.24M8.09 5.09 3.85.85"></path>
+          </svg>
+          Ver Detalles
+        </button>
+      </div>
+    </div>
   </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading && !authError" class="loading-overlay">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p class="loading-text">Cargando dashboard para {{ getCurrentProviderName() }}...</p>
+      <p class="loading-subtext">
+        <span class="loading-step" [class.active]="true">Verificando autenticación</span>
+        <span class="loading-step">•</span>
+        <span class="loading-step">Generando token JWT</span>
+        <span class="loading-step">•</span>
+        <span class="loading-step">Cargando Tableau</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Tableau Dashboard Container -->
+  <div class="tableau-container" [class.loading]="isLoading">
+
+    <!-- Contenedor principal del dashboard -->
+    <div #tableauContainer class="tableau-viz-container"></div>
+  </div>
+
 </div>

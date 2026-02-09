@@ -1,91 +1,347 @@
-/* 📊 NetoInsight - Skus Styles */
+/* 📊 NetoInsight - Categorization Styles (JavaScript API v2 - MEJORADO) */
 
-.dashboard-container {
+.stocks-container {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   padding: 0;
+  position: relative;
+  background: #f8fafc;
 }
 
+/* ===== Auth Error Message ===== */
+.auth-error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 20px 40px rgba(220, 38, 38, 0.15);
+  border: 2px solid #dc2626;
+  max-width: 500px;
+  width: 90%;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  animation: slideIn 0.4s ease-out;
+}
+
+.auth-error-message svg {
+  flex-shrink: 0;
+  color: #dc2626;
+  margin-top: 2px;
+}
+
+.error-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.error-content strong {
+  font-size: 1.125rem;
+  color: #dc2626;
+  font-weight: 700;
+  margin: 0;
+}
+
+.error-content p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.error-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn-retry,
+.btn-debug {
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-retry {
+  background: #dc2626;
+  color: white;
+}
+
+.btn-retry:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-debug {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.btn-debug:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+/* ===== Loading Overlay ===== */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.loading-subtext {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-step {
+  transition: color 0.3s ease;
+}
+
+.loading-step.active {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* ===== Tableau Container ===== */
 .tableau-container {
   flex: 1;
-  background-color: var(--white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   position: relative;
-  min-height: 800px;
-  margin: 0.5rem;
-  
-  transform-origin: top left;
-  transform: scale(0.8);
-  width: 125%;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
-tableau-viz {
-  display: block;
+.tableau-container.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ===== Dashboard Header ===== */
+.dashboard-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dashboard-info h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.dashboard-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-refresh {
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Tableau Viz Container ===== */
+.tableau-viz-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  min-height: 600px;
+}
+
+/* Estilos para el contenido del dashboard de Tableau */
+.tableau-viz-container div[id^="tableau-viz"] {
   width: 100% !important;
   height: 100% !important;
+  border: none !important;
 }
 
-@media (min-width: 1921px) {
-  .tableau-container {
-    transform: scale(0.95);
-    width: 105.26%;
-  }
-}
-
-@media (max-width: 1920px) {
-  .tableau-container {
-    transform: scale(0.85);
-    width: 117.65%;
-  }
-}
-
-@media (max-width: 1600px) {
-  .tableau-container {
-    transform: scale(0.75);
-    width: 133.33%;
-  }
-}
-
-@media (max-width: 1366px) {
-  .tableau-container {
-    transform: scale(0.65);
-    width: 153.85%;
-  }
-}
-
-@media (max-width: 1024px) {
-  .tableau-container {
-    transform: scale(0.55);
-    width: 181.82%;
-  }
-}
-
+/* ===== Responsive Design ===== */
 @media (max-width: 768px) {
-  .tableau-container {
-    transform: scale(1);
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
+  .stocks-container {
+    height: 100vh;
   }
-  
-  tableau-viz {
-    min-width: 600px;
+
+  .tableau-container {
+    margin: 0.5rem;
+    border-radius: 8px;
+  }
+
+  .dashboard-header {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .dashboard-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .auth-error-message {
+    width: 95%;
+    padding: 1.5rem;
+    gap: 0.75rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-retry,
+  .btn-debug {
+    width: 100%;
+    justify-content: center;
   }
 }
 
-.dashboard-container {
-  animation: fadeIn 0.3s ease-out;
+/* ===== Animations ===== */
+.stocks-container {
+  animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* ===== Estado de carga del viz ===== */
+.tableau-viz-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(59, 130, 246, 0.05) 0%, 
+    rgba(59, 130, 246, 0.02) 50%, 
+    rgba(59, 130, 246, 0.05) 100%);
+  background-size: 200% 200%;
+  animation: shimmer 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Ocultar shimmer cuando el dashboard esté cargado */
+.tableau-container:not(.loading) .tableau-viz-container::before {
+  display: none;
 }
