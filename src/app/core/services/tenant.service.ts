@@ -1,4 +1,4 @@
-// 🏢 NetoInsight - Tenant Service
+// 🏢 NetoInsight - Tenant Service (CORREGIDO)
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -186,7 +186,7 @@ export class TenantService {
    * Incrementar/Decrementar licencias usadas
    */
   async updateUsedLicenses(tenantId: string, amount: number): Promise<void> {
-    console.log('🏢 [TENANT] Updating licenses for tenant:', tenantId, 'amount:', amount);
+    console.log('📊 [TENANT] Updating licenses for tenant:', tenantId, 'amount:', amount);
 
     try {
       const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
@@ -217,6 +217,11 @@ export class TenantService {
 
   /**
    * Obtener estadísticas de uso de un tenant
+   * 
+   * 🔧 CORREGIDO:
+   * - totalUsers: Cuenta TODOS los usuarios en Firestore (activos e inactivos)
+   * - activeUsers: Cuenta solo usuarios con isActive === true
+   * - licensesUsed: Se sincroniza con el total real de usuarios
    */
   async getTenantUsageStats(tenantId: string): Promise<TenantUsageStats | null> {
     const tenant = await this.getTenantById(tenantId);
@@ -225,23 +230,40 @@ export class TenantService {
       return null;
     }
 
-    // Contar usuarios activos
     const usersRef = collection(this.firestore, 'users');
+
+    // ✅ Contar TODOS los usuarios (incluyendo inactivos)
+    const allUsersQuery = query(
+      usersRef,
+      where('tenantId', '==', tenantId)
+    );
+    const allUsersSnapshot = await getDocs(allUsersQuery);
+    const totalUsersCount = allUsersSnapshot.size;
+
+    // ✅ Contar solo usuarios activos
     const activeUsersQuery = query(
       usersRef,
       where('tenantId', '==', tenantId),
-      where('isActive', '==', true),
+      where('isActive', '==', true)
     );
     const activeUsersSnapshot = await getDocs(activeUsersQuery);
+    const activeUsersCount = activeUsersSnapshot.size;
+
+    console.log('📊 [TENANT] Stats calculated:', {
+      tenantId,
+      totalUsers: totalUsersCount,
+      activeUsers: activeUsersCount,
+      tenantUsedLicenses: tenant.usedLicenses
+    });
 
     const stats: TenantUsageStats = {
       tenantId: tenant.tenantId,
       tenantName: tenant.name,
-      totalUsers: tenant.usedLicenses,
-      activeUsers: activeUsersSnapshot.size,
-      licensesUsed: tenant.usedLicenses,
-      licensesAvailable: tenant.maxLicenses - tenant.usedLicenses,
-      licensesPercentage: (tenant.usedLicenses / tenant.maxLicenses) * 100,
+      totalUsers: totalUsersCount,              // ✅ Total real de Firestore
+      activeUsers: activeUsersCount,            // ✅ Solo activos
+      licensesUsed: totalUsersCount,            // ✅ Sincronizado con total
+      licensesAvailable: tenant.maxLicenses - totalUsersCount,
+      licensesPercentage: (totalUsersCount / tenant.maxLicenses) * 100,
     };
 
     return stats;

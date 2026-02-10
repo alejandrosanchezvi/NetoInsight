@@ -1,4 +1,4 @@
-// 👥 NetoInsight - User Management Component (SIN ERRORES)
+// 👥 NetoInsight - User Management Component (CORREGIDO)
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -164,7 +164,7 @@ export class UserManagement implements OnInit {
       
       this.invitations = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        return {
+       return {
           id: doc.id,
           email: data['email'],
           role: data['role'],
@@ -191,6 +191,8 @@ export class UserManagement implements OnInit {
 
   /**
    * Eliminar usuario
+   * 
+   * 🔧 CORREGIDO: Ahora decrementa las licencias usadas del tenant
    */
   async deleteUser(user: User): Promise<void> {
     // Validaciones de seguridad
@@ -238,13 +240,19 @@ export class UserManagement implements OnInit {
     try {
       console.log('🗑️ [USER-MGMT] Deleting user:', user.email);
 
-      // Eliminar documento de Firestore
+      // 1. Eliminar documento de Firestore
       const userDocRef = doc(this.firestore, 'users', user.uid);
       await deleteDoc(userDocRef);
-
       console.log('✅ [USER-MGMT] User deleted from Firestore');
 
-      // Recargar datos
+      // 2. 🆕 Decrementar licencias usadas del tenant
+      await this.tenantService.updateUsedLicenses(
+        this.currentUser!.tenantId,
+        -1  // ← Valor negativo para decrementar
+      );
+      console.log('✅ [USER-MGMT] Tenant licenses decremented');
+
+      // 3. Recargar datos
       await this.loadData();
 
       alert(`✅ Usuario ${user.name} eliminado correctamente`);
@@ -309,6 +317,160 @@ export class UserManagement implements OnInit {
   }
 
   /**
+   * Callback cuando se envía invitación
+   */
+  async onInvitationSent(): Promise<void> {
+    this.closeInviteModal();
+    await this.loadInvitations();
+  }
+
+  /**
+   * Cancelar invitación
+   */
+  async cancelInvitation(invitation: Invitation): Promise<void> {
+    if (!confirm(`¿Cancelar invitación para ${invitation.email}?`)) {
+      return;
+    }
+
+    try {
+      console.log('🚫 [USER-MGMT] Cancelling invitation:', invitation.email);
+
+      await this.invitationService.cancelInvitation(invitation.id);
+
+      console.log('✅ [USER-MGMT] Invitation cancelled');
+      
+      // Recargar invitaciones
+      await this.loadInvitations();
+
+      alert(`✅ Invitación para ${invitation.email} cancelada`);
+
+    } catch (error) {
+      console.error('❌ [USER-MGMT] Error cancelling invitation:', error);
+      alert('❌ Error al cancelar invitación');
+    }
+  }
+
+  /**
+   * Reenviar invitación
+   */
+  async resendInvitation(invitation: Invitation): Promise<void> {
+    if (!confirm(`¿Reenviar invitación a ${invitation.email}?`)) {
+      return;
+    }
+
+    try {
+      console.log('📧 [USER-MGMT] Resending invitation:', invitation.email);
+
+      await this.invitationService.resendInvitation(invitation.id);
+
+      console.log('✅ [USER-MGMT] Invitation resent');
+      
+      alert(`✅ Invitación reenviada a ${invitation.email}`);
+
+    } catch (error) {
+      console.error('❌ [USER-MGMT] Error resending invitation:', error);
+      alert('❌ Error al reenviar invitación');
+    }
+  }
+
+  /**
+   * Cambiar tab activo
+   */
+  setActiveTab(tab: 'users' | 'invitations'): void {
+    this.activeTab = tab;
+  }
+
+  /**
+   * Verificar si se puede cambiar estado del usuario
+   */
+  canToggleUserStatus(user: User): boolean {
+    // No puede desactivarse a sí mismo
+    if (user.uid === this.currentUser?.uid) return false;
+    
+    // No puede desactivar usuarios internos
+    if (user.isInternal) return false;
+
+    return true;
+  }
+
+  /**
+   * Verificar si se puede eliminar el usuario
+   */
+  canDeleteUser(user: User): boolean {
+    // No puede eliminarse a sí mismo
+    if (user.uid === this.currentUser?.uid) return false;
+    
+    // No puede eliminar usuarios internos
+    if (user.isInternal) return false;
+
+    return true;
+  }
+
+  /**
+   * Formatear rol de usuario
+   */
+  formatRole(role: UserRole): string {
+    const roles: { [key: string]: string } = {
+      [UserRole.ADMIN]: 'Administrador',
+      [UserRole.VIEWER]: 'Visualizador'
+    };
+    return roles[role] || role;
+  }
+
+  /**
+   * Obtener iniciales del nombre
+   */
+  getInitials(name: string): string {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  }
+
+  /**
+   * Formatear fecha
+   */
+  formatDate(date: Date | undefined): string {
+    if (!date) return 'Nunca';
+    
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Ahora';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours}h`;
+    if (diffDays < 7) return `Hace ${diffDays}d`;
+
+    return new Intl.DateTimeFormat('es-MX', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+  }
+
+  /**
+   * Verificar si invitación está por expirar
+   */
+  isInvitationExpiringSoon(invitation: Invitation): boolean {
+    const now = new Date();
+    const expiresAt = new Date(invitation.expiresAt);
+    const hoursUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilExpiry < 24 && hoursUntilExpiry > 0;
+  }
+
+  /**
+   * Verificar si invitación está expirada
+   */
+  isInvitationExpired(invitation: Invitation): boolean {
+    return new Date(invitation.expiresAt) < new Date();
+  }
+
+  /**
    * Obtener porcentaje de licencias usadas
    */
   getLicensesPercentage(): number {
@@ -335,82 +497,12 @@ export class UserManagement implements OnInit {
     return 'success';
   }
 
-  /**
-   * Cambiar tab activo
+    /**
+   * Callback cuando se crea invitación exitosamente
    */
-  setActiveTab(tab: 'users' | 'invitations'): void {
-    this.activeTab = tab;
-  }
-
-  /**
-   * Formatear fecha
-   */
-  formatDate(date: Date | undefined): string {
-    if (!date) return '-';
-    
-    return new Intl.DateTimeFormat('es-MX', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  }
-
-  /**
-   * Formatear rol
-   */
-  formatRole(role: UserRole): string {
-    const roles = {
-      [UserRole.ADMIN]: 'Administrador',
-      [UserRole.VIEWER]: 'Visualizador',
-      [UserRole.INTERNAL]: 'Interno'
-    };
-    return roles[role] || role;
-  }
-
-  /**
-   * Obtener iniciales del nombre
-   */
-  getInitials(name: string): string {
-    const names = name.split(' ');
-    if (names.length >= 2) {
-      return names[0][0] + names[1][0];
-    }
-    return names[0][0];
-  }
-
-  /**
-   * Cancelar invitación
-   */
-  async cancelInvitation(invitation: Invitation): Promise<void> {
-    if (!confirm(`¿Cancelar invitación para ${invitation.email}?`)) {
-      return;
-    }
-
-    try {
-      await this.invitationService.cancelInvitation(invitation.id);
-      await this.loadInvitations();
-      console.log('✅ [USER-MGMT] Invitation cancelled');
-    } catch (error) {
-      console.error('❌ [USER-MGMT] Error cancelling invitation:', error);
-      alert('Error al cancelar invitación');
-    }
-  }
-
-  /**
-   * Reenviar invitación
-   */
-  async resendInvitation(invitation: Invitation): Promise<void> {
-    try {
-      await this.invitationService.resendInvitation(invitation.id);
-      await this.loadInvitations();
-      alert('Invitación reenviada correctamente');
-      console.log('✅ [USER-MGMT] Invitation resent');
-    } catch (error) {
-      console.error('❌ [USER-MGMT] Error resending invitation:', error);
-      alert('Error al reenviar invitación');
-    }
+  async onInvitationCreated(): Promise<void> {
+    this.closeInviteModal();
+    await this.loadData();
   }
 
   /**
@@ -425,42 +517,5 @@ export class UserManagement implements OnInit {
       console.error('Error copying to clipboard:', err);
       alert('Error al copiar link');
     });
-  }
-
-  /**
-   * Callback cuando se crea invitación exitosamente
-   */
-  async onInvitationCreated(): Promise<void> {
-    this.closeInviteModal();
-    await this.loadData();
-  }
-
-  /**
-   * Verificar si el usuario actual puede eliminar este usuario
-   */
-  canDeleteUser(user: User): boolean {
-    // No puede eliminarse a sí mismo
-    if (user.uid === this.currentUser?.uid) return false;
-    
-    // No puede eliminar usuarios internos
-    if (user.isInternal) return false;
-    
-    // Solo admin puede eliminar
-    if (this.currentUser?.role !== UserRole.ADMIN) return false;
-    
-    return true;
-  }
-
-  /**
-   * Verificar si el usuario actual puede desactivar este usuario
-   */
-  canToggleUserStatus(user: User): boolean {
-    // No puede desactivarse a sí mismo
-    if (user.uid === this.currentUser?.uid) return false;
-    
-    // Solo admin puede desactivar
-    if (this.currentUser?.role !== UserRole.ADMIN) return false;
-    
-    return true;
   }
 }
