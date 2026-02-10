@@ -1,6 +1,7 @@
-// 📧 NetoInsight - Invitation Service (CORREGIDO)
+// 📧 NetoInsight - Invitation Service (CON FASTAPI + MAILSLURP - CORREGIDO)
 
 import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { 
   Firestore, 
   collection, 
@@ -23,6 +24,8 @@ import {
 } from '../models/invitation.model';
 import { TenantService } from './tenant.service';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -30,15 +33,19 @@ import { AuthService } from './auth.service';
 export class InvitationService {
   
   private firestore = inject(Firestore);
+  private http = inject(HttpClient);
   private tenantService = inject(TenantService);
   private authService = inject(AuthService);
+  
+  // URL del backend FastAPI
+  private apiUrl = environment.apiUrl || 'http://localhost:8000';
 
   constructor() {
-    console.log('📧 [INVITATION] InvitationService initialized');
+    console.log('📧 [INVITATION] InvitationService initialized with FastAPI + MailSlurp');
   }
 
   /**
-   * Crear nueva invitación
+   * Crear nueva invitación Y enviar email
    */
   async createInvitation(data: CreateInvitationDTO): Promise<Invitation> {
     console.log('📧 [INVITATION] Creating invitation for:', data.email);
@@ -76,33 +83,59 @@ export class InvitationService {
         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       );
 
-      // 7. Crear documento de invitación
+      // 7. Preparar nombre del usuario (usar 'name' en lugar de 'displayName')
+      const invitedByName = currentUser.name || currentUser.email;
+
+      // 8. Crear documento en Firestore
       const invitationData = {
         email: data.email.toLowerCase(),
         role: data.role,
         tenantId: data.tenantId,
         tenantName: tenant.name,
-        token,
+        token: token,
         status: InvitationStatus.PENDING,
         createdAt: serverTimestamp(),
-        expiresAt, // ✅ Ahora es Timestamp
+        expiresAt: expiresAt,
         invitedBy: currentUser.uid,
         invitedByEmail: currentUser.email,
-        invitedByName: currentUser.name,
+        invitedByName: invitedByName,
         metadata: {
-          resendCount: 0
+          userAgent: navigator.userAgent,
+          createdFrom: 'web-app'
         }
       };
 
       const invitationsRef = collection(this.firestore, 'invitations');
       const docRef = await addDoc(invitationsRef, invitationData);
 
-      console.log('✅ [INVITATION] Invitation created:', docRef.id);
-      console.log('✅ [INVITATION] Token:', token);
+      console.log('✅ [INVITATION] Created in Firestore:', docRef.id);
 
-      // 8. Retornar invitación creada
-      const invitation = await this.getInvitationById(docRef.id);
-      return invitation!;
+      // 9. NUEVO: Enviar email usando FastAPI + MailSlurp
+      try {
+        await this.sendInvitationEmailViaAPI({
+          email: data.email.toLowerCase(),
+          invitation_token: token,
+          tenant_name: tenant.name,
+          invited_by_name: invitedByName,
+          invited_by_email: currentUser.email,
+          role: data.role,
+          expires_at: expiresAt.toDate().toISOString(),
+          frontend_url: window.location.origin
+        });
+
+        console.log('✅ [INVITATION] Email sent successfully via FastAPI');
+      } catch (emailError) {
+        console.warn('⚠️ [INVITATION] Email failed to send, but invitation was created:', emailError);
+        // No lanzar error - la invitación ya está creada en Firestore
+      }
+
+      // 10. Retornar invitación creada
+      return {
+        id: docRef.id,
+        ...invitationData,
+        createdAt: new Date(),
+        expiresAt: expiresAt.toDate()
+      } as Invitation;
 
     } catch (error) {
       console.error('❌ [INVITATION] Error creating invitation:', error);
@@ -111,51 +144,90 @@ export class InvitationService {
   }
 
   /**
-   * Obtener invitación por ID
+   * Enviar email de invitación usando FastAPI
    */
-  async getInvitationById(invitationId: string): Promise<Invitation | null> {
+  private async sendInvitationEmailViaAPI(data: {
+    email: string;
+    invitation_token: string;
+    tenant_name: string;
+    invited_by_name: string;
+    invited_by_email: string;
+    role: string;
+    expires_at: string;
+    frontend_url: string;
+  }): Promise<void> {
     try {
-      const invitationDocRef = doc(this.firestore, 'invitations', invitationId);
-      const invitationDoc = await getDoc(invitationDocRef);
-
-      if (!invitationDoc.exists()) {
-        return null;
+      // Obtener token de Firebase Auth
+      const idToken = await this.authService.getIdToken();
+      
+      if (!idToken) {
+        throw new Error('No se pudo obtener el token de autenticación');
       }
 
-      return this.mapDocToInvitation(invitationDoc.id, invitationDoc.data());
+      const headers = new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      });
 
-    } catch (error) {
-      console.error('❌ [INVITATION] Error fetching invitation:', error);
+      const response = await firstValueFrom(
+        this.http.post<{success: boolean, message_id?: string, error?: string}>(
+          `${this.apiUrl}/api/invitations/send-email`,
+          data,
+          { headers }
+        )
+      );
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error enviando email');
+      }
+
+      console.log('✅ [INVITATION] Email API response:', response);
+
+    } catch (error: any) {
+      console.error('❌ [INVITATION] Error calling email API:', error);
       throw error;
     }
   }
 
   /**
-   * Obtener invitación por token
+   * Reenviar invitación (solo email)
    */
-  async getInvitationByToken(token: string): Promise<Invitation | null> {
-    console.log('📧 [INVITATION] Searching for token:', token);
+  async resendInvitation(invitationId: string): Promise<void> {
+    console.log('📧 [INVITATION] Resending invitation:', invitationId);
     
     try {
-      const invitationsRef = collection(this.firestore, 'invitations');
-      const q = query(invitationsRef, where('token', '==', token));
-      const querySnapshot = await getDocs(q);
-
-      console.log('📧 [INVITATION] Query results:', querySnapshot.size);
-
-      if (querySnapshot.empty) {
-        console.warn('⚠️ [INVITATION] No invitation found with token:', token);
-        return null;
+      // 1. Obtener invitación
+      const invitation = await this.getInvitationById(invitationId);
+      
+      if (!invitation) {
+        throw new Error('Invitación no encontrada');
       }
 
-      const doc = querySnapshot.docs[0];
-      const invitation = this.mapDocToInvitation(doc.id, doc.data());
-      
-      console.log('✅ [INVITATION] Invitation found:', invitation.email);
-      return invitation;
+      if (invitation.status !== InvitationStatus.PENDING) {
+        throw new Error('Solo se pueden reenviar invitaciones pendientes');
+      }
+
+      // Verificar que no haya expirado
+      if (new Date() > invitation.expiresAt) {
+        throw new Error('Esta invitación ha expirado. Crea una nueva.');
+      }
+
+      // 2. Reenviar email
+      await this.sendInvitationEmailViaAPI({
+        email: invitation.email,
+        invitation_token: invitation.token,
+        tenant_name: invitation.tenantName,
+        invited_by_name: invitation.invitedByName,
+        invited_by_email: invitation.invitedByEmail,
+        role: invitation.role,
+        expires_at: invitation.expiresAt.toISOString(),
+        frontend_url: window.location.origin
+      });
+
+      console.log('✅ [INVITATION] Email resent successfully');
 
     } catch (error) {
-      console.error('❌ [INVITATION] Error fetching invitation by token:', error);
+      console.error('❌ [INVITATION] Error resending invitation:', error);
       throw error;
     }
   }
@@ -164,46 +236,38 @@ export class InvitationService {
    * Validar token de invitación
    */
   async validateInvitationToken(token: string): Promise<ValidateInvitationResponse> {
-    console.log('📧 [INVITATION] Validating token:', token);
+    console.log('🔍 [INVITATION] Validating token...');
     
     try {
-      const invitation = await this.getInvitationByToken(token);
+      const invitationsRef = collection(this.firestore, 'invitations');
+      const q = query(
+        invitationsRef,
+        where('token', '==', token),
+        where('status', '==', InvitationStatus.PENDING)
+      );
+      
+      const querySnapshot = await getDocs(q);
 
-      if (!invitation) {
-        console.warn('⚠️ [INVITATION] Token not found');
+      if (querySnapshot.empty) {
         return {
           valid: false,
-          error: 'Token de invitación inválido'
+          error: 'Token de invitación inválido o ya utilizado'
         };
       }
 
-      console.log('📧 [INVITATION] Invitation status:', invitation.status);
-      console.log('📧 [INVITATION] Expires at:', invitation.expiresAt);
+      const doc = querySnapshot.docs[0];
+      const invitation = this.mapDocToInvitation(doc.id, doc.data());
 
-      if (invitation.status !== InvitationStatus.PENDING) {
-        console.warn('⚠️ [INVITATION] Invitation not pending:', invitation.status);
+      // Verificar expiración
+      if (new Date() > invitation.expiresAt) {
         return {
           valid: false,
-          error: 'Esta invitación ya fue usada o cancelada',
-          invitation
+          error: 'Esta invitación ha expirado'
         };
       }
 
-      const now = new Date();
-      if (now > invitation.expiresAt) {
-        console.warn('⚠️ [INVITATION] Invitation expired');
-        
-        // Marcar como expirada
-        await this.updateInvitationStatus(invitation.id, InvitationStatus.EXPIRED);
-        
-        return {
-          valid: false,
-          error: 'Esta invitación ha expirado',
-          invitation
-        };
-      }
-
-      console.log('✅ [INVITATION] Token valid!');
+      console.log('✅ [INVITATION] Token valid');
+      
       return {
         valid: true,
         invitation
@@ -219,61 +283,19 @@ export class InvitationService {
   }
 
   /**
-   * Obtener invitaciones de un tenant
-   */
-  async getInvitationsByTenant(
-    tenantId: string, 
-    status?: InvitationStatus
-  ): Promise<Invitation[]> {
-    console.log('📧 [INVITATION] Fetching invitations for tenant:', tenantId);
-    
-    try {
-      const invitationsRef = collection(this.firestore, 'invitations');
-      
-      let q = query(
-        invitationsRef,
-        where('tenantId', '==', tenantId),
-        orderBy('createdAt', 'desc')
-      );
-
-      if (status) {
-        q = query(
-          invitationsRef,
-          where('tenantId', '==', tenantId),
-          where('status', '==', status),
-          orderBy('createdAt', 'desc')
-        );
-      }
-
-      const querySnapshot = await getDocs(q);
-      
-      const invitations = querySnapshot.docs.map(doc => 
-        this.mapDocToInvitation(doc.id, doc.data())
-      );
-
-      console.log('✅ [INVITATION] Fetched invitations:', invitations.length);
-      return invitations;
-
-    } catch (error) {
-      console.error('❌ [INVITATION] Error fetching invitations:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Marcar invitación como aceptada
    */
-  async acceptInvitation(invitationId: string): Promise<void> {
-    console.log('📧 [INVITATION] Accepting invitation:', invitationId);
+  async acceptInvitation(invitationId: string, userId: string): Promise<void> {
+    console.log('✅ [INVITATION] Accepting invitation:', invitationId);
     
     try {
       const invitationDocRef = doc(this.firestore, 'invitations', invitationId);
-      
       await updateDoc(invitationDocRef, {
         status: InvitationStatus.ACCEPTED,
-        acceptedAt: serverTimestamp()
+        acceptedAt: serverTimestamp(),
+        acceptedBy: userId
       });
-
+      
       console.log('✅ [INVITATION] Invitation accepted');
 
     } catch (error) {
@@ -286,50 +308,64 @@ export class InvitationService {
    * Cancelar invitación
    */
   async cancelInvitation(invitationId: string): Promise<void> {
-    console.log('📧 [INVITATION] Cancelling invitation:', invitationId);
+    console.log('❌ [INVITATION] Cancelling invitation:', invitationId);
     
-    await this.updateInvitationStatus(invitationId, InvitationStatus.CANCELLED);
+    try {
+      await this.updateInvitationStatus(invitationId, InvitationStatus.CANCELLED);
+      console.log('✅ [INVITATION] Invitation cancelled');
+
+    } catch (error) {
+      console.error('❌ [INVITATION] Error cancelling invitation:', error);
+      throw error;
+    }
   }
 
   /**
-   * Reenviar invitación (actualizar expiresAt y token)
+   * Obtener invitaciones por tenant
    */
-  async resendInvitation(invitationId: string): Promise<Invitation> {
-    console.log('📧 [INVITATION] Resending invitation:', invitationId);
+  async getInvitationsByTenant(tenantId: string): Promise<Invitation[]> {
+    console.log('🔍 [INVITATION] Getting invitations for tenant:', tenantId);
     
     try {
-      const invitation = await this.getInvitationById(invitationId);
+      const invitationsRef = collection(this.firestore, 'invitations');
+      const q = query(
+        invitationsRef,
+        where('tenantId', '==', tenantId),
+        where('status', '==', InvitationStatus.PENDING),
+        orderBy('createdAt', 'desc')
+      );
       
-      if (!invitation) {
-        throw new Error('Invitación no encontrada');
-      }
-
-      // Generar nuevo token
-      const newToken = this.generateInvitationToken();
-      
-      // Nueva fecha de expiración (7 días desde ahora)
-      const newExpiresAt = Timestamp.fromDate(
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      const querySnapshot = await getDocs(q);
+      const invitations = querySnapshot.docs.map(doc => 
+        this.mapDocToInvitation(doc.id, doc.data())
       );
 
-      // Actualizar documento
-      const invitationDocRef = doc(this.firestore, 'invitations', invitationId);
-      await updateDoc(invitationDocRef, {
-        token: newToken,
-        expiresAt: newExpiresAt,
-        status: InvitationStatus.PENDING,
-        'metadata.resendCount': (invitation.metadata?.resendCount || 0) + 1,
-        'metadata.lastResent': serverTimestamp()
-      });
-
-      console.log('✅ [INVITATION] Invitation resent');
-
-      // Retornar invitación actualizada
-      return (await this.getInvitationById(invitationId))!;
+      console.log('✅ [INVITATION] Found invitations:', invitations.length);
+      return invitations;
 
     } catch (error) {
-      console.error('❌ [INVITATION] Error resending invitation:', error);
-      throw error;
+      console.error('❌ [INVITATION] Error getting invitations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Obtener invitación por ID
+   */
+  async getInvitationById(invitationId: string): Promise<Invitation | null> {
+    try {
+      const invitationDocRef = doc(this.firestore, 'invitations', invitationId);
+      const docSnap = await getDoc(invitationDocRef);
+
+      if (!docSnap.exists()) {
+        return null;
+      }
+
+      return this.mapDocToInvitation(docSnap.id, docSnap.data());
+
+    } catch (error) {
+      console.error('❌ [INVITATION] Error getting invitation:', error);
+      return null;
     }
   }
 

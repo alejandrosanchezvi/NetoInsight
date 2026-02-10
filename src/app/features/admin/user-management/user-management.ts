@@ -172,8 +172,9 @@ export class UserManagement implements OnInit {
           tenantName: data['tenantName'],
           token: data['token'],
           status: data['status'],
-          invitedBy: data['invitedBy'] || data['createdBy'] || '', // ⭐ FIX: Usar invitedBy o createdBy
-          invitedByEmail: data['invitedByEmail'] || '', // ⭐ FIX: Agregar campo
+          invitedBy: data['invitedBy'] || data['createdBy'] || '', 
+          invitedByName: data['invitedByName'] || data['invitedBy'] || 'Sistema',
+          invitedByEmail: data['invitedByEmail'] || '', 
           createdAt: data['createdAt']?.toDate() || new Date(),
           expiresAt: data['expiresAt']?.toDate() || new Date(),
           acceptedAt: data['acceptedAt']?.toDate()

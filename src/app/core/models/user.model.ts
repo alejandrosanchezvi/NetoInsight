@@ -13,7 +13,7 @@ export interface User {
   mfaEnabled: boolean;
   createdAt: Date;
   lastLogin?: Date;
-  invitationId?: string;   // ← Nuevo campo (referencia a invitación)
+  invitationId?: string;   
 }
 
 export enum UserRole {

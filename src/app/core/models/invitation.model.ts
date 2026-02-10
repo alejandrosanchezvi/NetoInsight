@@ -26,7 +26,7 @@ export interface Invitation {
   // Quién invitó
   invitedBy: string;      // UID del usuario que invitó
   invitedByEmail: string; // Email del usuario que invitó
-  invitedByName?: string; // Nombre del usuario que invitó
+  invitedByName: string; // Nombre del usuario que invitó
   
   // Metadata
   metadata?: {

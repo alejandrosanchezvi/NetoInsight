@@ -201,7 +201,7 @@ export class SetupAccount implements OnInit {
 
       // 3. Marcar invitación como aceptada
       console.log('🔐 [SETUP-ACCOUNT] Marking invitation as accepted...');
-      await this.invitationService.acceptInvitation(this.invitation.id);
+      await this.invitationService.acceptInvitation(this.invitation.id, uid);
       console.log('✅ [SETUP-ACCOUNT] Invitation marked as accepted');
 
       // 4. Incrementar licencias usadas del tenant
