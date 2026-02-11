@@ -1,4 +1,4 @@
-// 📧 NetoInsight - Invite User Modal Component
+// 🔧 NetoInsight - Invite User Modal Component (CORREGIDO)
 
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -18,7 +18,7 @@ export class InviteUserModal implements OnInit {
   
   @Input() tenant!: Tenant;
   @Output() close = new EventEmitter<void>();
-  @Output() invitationCreated = new EventEmitter<void>();
+  @Output() invitationSent = new EventEmitter<void>();  // ← Nombre correcto
 
   inviteForm: FormGroup;
   isSubmitting = false;
@@ -41,7 +41,7 @@ export class InviteUserModal implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('📧 [INVITE-MODAL] Initialized for tenant:', this.tenant.name);
+    console.log('🔧 [INVITE-MODAL] Initialized for tenant:', this.tenant.name);
   }
 
   /**
@@ -59,7 +59,7 @@ export class InviteUserModal implements OnInit {
 
     const { email, role } = this.inviteForm.value;
 
-    console.log('📧 [INVITE-MODAL] Sending invitation to:', email);
+    console.log('🔧 [INVITE-MODAL] Sending invitation to:', email);
 
     try {
       const invitation = await this.invitationService.createInvitation({
@@ -72,9 +72,10 @@ export class InviteUserModal implements OnInit {
       
       this.successMessage = `Invitación enviada a ${email}`;
       
-      // Esperar 1.5 segundos para mostrar mensaje de éxito
+      // Esperar 1.5 segundos para mostrar mensaje de éxito, luego cerrar
       setTimeout(() => {
-        this.invitationCreated.emit();
+        this.invitationSent.emit();  // ← Emitir evento correcto
+        this.close.emit();            // ← Cerrar el modal
       }, 1500);
 
     } catch (error: any) {

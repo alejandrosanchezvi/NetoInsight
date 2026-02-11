@@ -1,8 +1,9 @@
-// 👥 NetoInsight - User Management Component (CON AUTENTICACIÓN CORRECTA)
+// 👥 NetoInsight - User Management Component (CALLBACKS CORREGIDOS)
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
@@ -36,6 +37,7 @@ export class UserManagement implements OnInit {
   
   // Estado
   isLoading = true;
+  isProcessing = false;  // ← Para loading de acciones (eliminar, desactivar, etc)
   currentUser: User | null = null;
   currentTenant: Tenant | null = null;
   usageStats: TenantUsageStats | null = null;
@@ -56,7 +58,8 @@ export class UserManagement implements OnInit {
     private invitationService: InvitationService,
     private notificationService: NotificationService,
     private http: HttpClient,
-    private firestore: Firestore
+    private firestore: Firestore,
+    private router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -69,7 +72,33 @@ export class UserManagement implements OnInit {
       return;
     }
 
+    // Validar que el usuario es Admin
+    if (!this.isAdmin()) {
+      console.warn('⚠️ [USER-MGMT] User is not admin, redirecting...');
+      this.notificationService.error(
+        'Acceso Denegado',
+        'Solo los administradores pueden acceder a la gestión de usuarios.'
+      );
+      this.router.navigate(['/categorization']);
+      return;
+    }
+
     await this.loadData();
+  }
+
+  /**
+   * Verificar si el usuario actual es Admin
+   */
+  isAdmin(): boolean {
+    if (!this.currentUser) return false;
+    return this.currentUser.role === UserRole.ADMIN || this.currentUser.isInternal;
+  }
+
+  /**
+   * Verificar si puede gestionar usuarios (crear, editar, eliminar)
+   */
+  canManageUsers(): boolean {
+    return this.isAdmin();
   }
 
   /**
@@ -199,6 +228,17 @@ export class UserManagement implements OnInit {
    * Eliminar usuario COMPLETAMENTE (Firestore + Firebase Auth)
    */
   async deleteUser(user: User): Promise<void> {
+    console.log('🗑️ [USER-MGMT] deleteUser called for:', user.email);
+
+    // Verificar permisos
+    if (!this.canManageUsers()) {
+      this.notificationService.error(
+        'Sin Permisos',
+        'No tienes permisos para eliminar usuarios.'
+      );
+      return;
+    }
+
     // Validaciones de seguridad
     if (user.uid === this.currentUser?.uid) {
       this.notificationService.error(
@@ -216,45 +256,36 @@ export class UserManagement implements OnInit {
       return;
     }
 
-    // Confirmación para admin (doble confirmación)
-    if (user.role === UserRole.ADMIN) {
-      this.notificationService.confirm(
-        '⚠️ Eliminar Administrador',
-        `Vas a eliminar a un ADMINISTRADOR:\n\nUsuario: ${user.name}\nEmail: ${user.email}\n\nEsta acción NO se puede deshacer.\n\n¿Estás seguro?`,
-        () => {
-          // Segunda confirmación
-          this.notificationService.confirm(
-            '⚠️ Última Confirmación',
-            `ÚLTIMA ADVERTENCIA:\n\nSe eliminará permanentemente a ${user.name} del sistema.\n\n¿Continuar con la eliminación?`,
-            () => this.performDeleteUser(user),
-            'Sí, eliminar',
-            'Cancelar',
-            'error'
-          );
-        },
-        'Continuar',
-        'Cancelar',
-        'warning'
-      );
-    } else {
-      // Confirmación simple para viewers
-      this.notificationService.confirm(
-        'Confirmar Eliminación',
-        `¿Eliminar al usuario ${user.name}?\n\nEmail: ${user.email}\nRol: ${this.formatRole(user.role)}\n\nEsta acción no se puede deshacer.`,
-        () => this.performDeleteUser(user),
-        'Eliminar',
-        'Cancelar',
-        'warning'
-      );
-    }
+    // Una sola confirmación para todos
+    const isAdmin = user.role === UserRole.ADMIN;
+    const title = isAdmin ? '⚠️ Eliminar Administrador' : 'Confirmar Eliminación';
+    const message = isAdmin 
+      ? `ATENCIÓN: Vas a eliminar a un ADMINISTRADOR\n\nUsuario: ${user.name}\nEmail: ${user.email}\n\nEsta acción NO se puede deshacer.\n\n¿Continuar?`
+      : `¿Eliminar al usuario ${user.name}?\n\nEmail: ${user.email}\nRol: ${this.formatRole(user.role)}\n\nEsta acción no se puede deshacer.`;
+    
+    console.log('🔔 [USER-MGMT] Showing confirmation...');
+    
+    this.notificationService.confirm(
+      title,
+      message,
+      async () => {
+        console.log('✅ [USER-MGMT] Confirmation accepted, executing delete...');
+        await this.performDeleteUser(user);
+      },
+      'Eliminar',
+      'Cancelar',
+      isAdmin ? 'error' : 'warning'
+    );
   }
 
   /**
    * Ejecutar eliminación de usuario
    */
   private async performDeleteUser(user: User): Promise<void> {
+    this.isProcessing = true;  // ← Activar loading
+    
     try {
-      console.log('🗑️ [USER-MGMT] Deleting user:', user.email);
+      console.log('🗑️ [USER-MGMT] performDeleteUser - Starting deletion for:', user.email);
 
       // 1. Eliminar documento de Firestore
       const userDocRef = doc(this.firestore, 'users', user.uid);
@@ -270,7 +301,6 @@ export class UserManagement implements OnInit {
 
       // 3. Eliminar de Firebase Authentication (llamada al backend)
       try {
-        // 🔑 OBTENER TOKEN DE FIREBASE
         const token = await this.authService.getIdToken();
         
         if (!token) {
@@ -280,10 +310,9 @@ export class UserManagement implements OnInit {
 
         console.log('🔑 [USER-MGMT] Firebase token obtained');
         
-        // Configurar headers con el token
         const headers = new HttpHeaders({
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`  // ← AGREGAR TOKEN
+          'Authorization': `Bearer ${token}`
         });
 
         const backendUrl = environment.apiUrl || 'http://localhost:8000';
@@ -311,11 +340,9 @@ export class UserManagement implements OnInit {
       } catch (authError: any) {
         console.warn('⚠️ [USER-MGMT] Could not delete from Auth:', authError);
         
-        // Si es un error de red o backend, informar pero continuar
         if (authError.status === 0 || authError.status >= 500) {
           console.warn('⚠️ [USER-MGMT] Backend error, but user deleted from Firestore');
         }
-        // No fallar la operación completa si el usuario ya no existe en Auth
       }
 
       // 4. Recargar datos
@@ -327,12 +354,16 @@ export class UserManagement implements OnInit {
         `${user.name} ha sido eliminado correctamente del sistema.`
       );
 
+      console.log('✅ [USER-MGMT] performDeleteUser - Deletion completed successfully');
+
     } catch (error: any) {
-      console.error('❌ [USER-MGMT] Error deleting user:', error);
+      console.error('❌ [USER-MGMT] Error in performDeleteUser:', error);
       this.notificationService.error(
         'Error al Eliminar',
         'No se pudo eliminar el usuario. Por favor intenta de nuevo.'
       );
+    } finally {
+      this.isProcessing = false;  // ← Desactivar loading
     }
   }
 
@@ -340,6 +371,15 @@ export class UserManagement implements OnInit {
    * Desactivar/Activar usuario
    */
   async toggleUserStatus(user: User): Promise<void> {
+    // Verificar permisos
+    if (!this.canManageUsers()) {
+      this.notificationService.error(
+        'Sin Permisos',
+        'No tienes permisos para modificar usuarios.'
+      );
+      return;
+    }
+
     if (user.uid === this.currentUser?.uid) {
       this.notificationService.error(
         'Operación no permitida',
@@ -357,6 +397,8 @@ export class UserManagement implements OnInit {
       action === 'desactivar' ? 'Desactivar Usuario' : 'Activar Usuario',
       confirmMsg,
       async () => {
+        this.isProcessing = true;  // ← Activar loading
+        
         try {
           console.log(`🔄 [USER-MGMT] ${action}ing user:`, user.email);
 
@@ -380,6 +422,8 @@ export class UserManagement implements OnInit {
             'Error',
             `No se pudo ${action} el usuario. Por favor intenta de nuevo.`
           );
+        } finally {
+          this.isProcessing = false;  // ← Desactivar loading
         }
       },
       action === 'desactivar' ? 'Desactivar' : 'Activar',
@@ -392,6 +436,13 @@ export class UserManagement implements OnInit {
    * Abrir modal de invitar usuario
    */
   openInviteModal(): void {
+    if (!this.canManageUsers()) {
+      this.notificationService.error(
+        'Sin Permisos',
+        'No tienes permisos para invitar usuarios.'
+      );
+      return;
+    }
     this.showInviteModal = true;
   }
 
@@ -418,6 +469,14 @@ export class UserManagement implements OnInit {
    * Cancelar invitación
    */
   async cancelInvitation(invitation: Invitation): Promise<void> {
+    if (!this.canManageUsers()) {
+      this.notificationService.error(
+        'Sin Permisos',
+        'No tienes permisos para cancelar invitaciones.'
+      );
+      return;
+    }
+
     this.notificationService.confirm(
       'Cancelar Invitación',
       `¿Cancelar la invitación para ${invitation.email}?`,
@@ -450,31 +509,35 @@ export class UserManagement implements OnInit {
    * Reenviar invitación
    */
   async resendInvitation(invitation: Invitation): Promise<void> {
-    this.notificationService.confirm(
-      'Reenviar Invitación',
-      `¿Reenviar invitación a ${invitation.email}?`,
-      async () => {
-        try {
-          console.log('📧 [USER-MGMT] Resending invitation:', invitation.email);
+    if (!this.canManageUsers()) {
+      this.notificationService.error(
+        'Sin Permisos',
+        'No tienes permisos para reenviar invitaciones.'
+      );
+      return;
+    }
 
-          await this.invitationService.resendInvitation(invitation.id);
+    this.isProcessing = true;  // ← Activar loading
+    
+    try {
+      console.log('📧 [USER-MGMT] Resending invitation:', invitation.email);
 
-          this.notificationService.success(
-            'Invitación Reenviada',
-            `La invitación ha sido reenviada a ${invitation.email}.`
-          );
+      await this.invitationService.resendInvitation(invitation.id);
 
-        } catch (error) {
-          console.error('❌ [USER-MGMT] Error resending invitation:', error);
-          this.notificationService.error(
-            'Error',
-            'No se pudo reenviar la invitación.'
-          );
-        }
-      },
-      'Reenviar',
-      'Cancelar'
-    );
+      this.notificationService.success(
+        'Invitación Reenviada',
+        `La invitación ha sido reenviada a ${invitation.email}.`
+      );
+
+    } catch (error) {
+      console.error('❌ [USER-MGMT] Error resending invitation:', error);
+      this.notificationService.error(
+        'Error',
+        'No se pudo reenviar la invitación.'
+      );
+    } finally {
+      this.isProcessing = false;  // ← Desactivar loading
+    }
   }
 
   /**
@@ -488,6 +551,7 @@ export class UserManagement implements OnInit {
    * Verificar si se puede cambiar estado del usuario
    */
   canToggleUserStatus(user: User): boolean {
+    if (!this.canManageUsers()) return false;
     if (user.uid === this.currentUser?.uid) return false;
     if (user.isInternal) return false;
     return true;
@@ -497,6 +561,7 @@ export class UserManagement implements OnInit {
    * Verificar si se puede eliminar el usuario
    */
   canDeleteUser(user: User): boolean {
+    if (!this.canManageUsers()) return false;
     if (user.uid === this.currentUser?.uid) return false;
     if (user.isInternal) return false;
     return true;
@@ -591,27 +656,5 @@ export class UserManagement implements OnInit {
     if (percentage >= 90) return 'danger';
     if (percentage >= 70) return 'warning';
     return 'success';
-  }
-
-    /**
-   * Callback cuando se crea invitación exitosamente
-   */
-  async onInvitationCreated(): Promise<void> {
-    this.closeInviteModal();
-    await this.loadData();
-  }
-
-  /**
-   * Copiar link de invitación
-   */
-  copyInvitationLink(invitation: Invitation): void {
-    const link = `${window.location.origin}/accept-invite?token=${invitation.token}`;
-    
-    navigator.clipboard.writeText(link).then(() => {
-      alert('Link copiado al portapapeles');
-    }).catch(err => {
-      console.error('Error copying to clipboard:', err);
-      alert('Error al copiar link');
-    });
   }
 }

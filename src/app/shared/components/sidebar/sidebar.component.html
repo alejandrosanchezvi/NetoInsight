@@ -1,4 +1,4 @@
-<!-- 📂 NetoInsight - Sidebar Template (MODO MINI) -->
+<!-- 📂 NetoInsight - Sidebar Template (CON FILTRO DE PERMISOS) -->
 
 <aside class="sidebar" 
        [class.sidebar-open]="isOpen"
@@ -22,11 +22,12 @@
   <nav class="sidebar-nav">
     <ul class="sidebar-menu">
       <li *ngFor="let item of menuItems" class="sidebar-menu-item">
+        <!-- Usar shouldShowItem() en lugar de la condición anterior -->
         <button
-       *ngIf="!item.internal || isInternalUser"
-       class="sidebar-link"
-       [class.active]="isActive(item)"
-       (click)="navigateTo(item)">
+          *ngIf="shouldShowItem(item)"
+          class="sidebar-link"
+          [class.active]="isActive(item)"
+          (click)="navigateTo(item)">
           
           <!-- Icon -->
           <svg 
