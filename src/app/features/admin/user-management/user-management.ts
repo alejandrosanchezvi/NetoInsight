@@ -1,14 +1,18 @@
-// 👥 NetoInsight - User Management Component (CORREGIDO)
+// 👥 NetoInsight - User Management Component (CON AUTENTICACIÓN CORRECTA)
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { InvitationService } from '../../../core/services/invitation.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { User, UserRole } from '../../../core/models/user.model';
 import { Tenant, TenantUsageStats } from '../../../core/models/tenant.model';
 import { Invitation, InvitationStatus } from '../../../core/models/invitation.model';
-import { InviteUserModal } from '../invite-user-modal/invite-user-modal'
+import { InviteUserModal } from '../invite-user-modal/invite-user-modal';
+import { environment } from '../../../../environments/environment';
 import { 
   Firestore, 
   collection, 
@@ -50,6 +54,8 @@ export class UserManagement implements OnInit {
     private authService: AuthService,
     private tenantService: TenantService,
     private invitationService: InvitationService,
+    private notificationService: NotificationService,
+    private http: HttpClient,
     private firestore: Firestore
   ) {}
 
@@ -164,7 +170,7 @@ export class UserManagement implements OnInit {
       
       this.invitations = querySnapshot.docs.map(doc => {
         const data = doc.data();
-       return {
+        return {
           id: doc.id,
           email: data['email'],
           role: data['role'],
@@ -190,53 +196,63 @@ export class UserManagement implements OnInit {
   }
 
   /**
-   * Eliminar usuario
-   * 
-   * 🔧 CORREGIDO: Ahora decrementa las licencias usadas del tenant
+   * Eliminar usuario COMPLETAMENTE (Firestore + Firebase Auth)
    */
   async deleteUser(user: User): Promise<void> {
     // Validaciones de seguridad
     if (user.uid === this.currentUser?.uid) {
-      alert('❌ No puedes eliminarte a ti mismo');
+      this.notificationService.error(
+        'Operación no permitida',
+        'No puedes eliminarte a ti mismo.'
+      );
       return;
     }
 
     if (user.isInternal) {
-      alert('❌ No puedes eliminar usuarios internos');
+      this.notificationService.error(
+        'Operación no permitida',
+        'No puedes eliminar usuarios internos del sistema.'
+      );
       return;
     }
 
-    // Confirmación doble para admin
+    // Confirmación para admin (doble confirmación)
     if (user.role === UserRole.ADMIN) {
-      const firstConfirm = confirm(
-        `⚠️ ATENCIÓN: Vas a eliminar a un ADMINISTRADOR\n\n` +
-        `Usuario: ${user.name}\n` +
-        `Email: ${user.email}\n\n` +
-        `¿Estás seguro?`
+      this.notificationService.confirm(
+        '⚠️ Eliminar Administrador',
+        `Vas a eliminar a un ADMINISTRADOR:\n\nUsuario: ${user.name}\nEmail: ${user.email}\n\nEsta acción NO se puede deshacer.\n\n¿Estás seguro?`,
+        () => {
+          // Segunda confirmación
+          this.notificationService.confirm(
+            '⚠️ Última Confirmación',
+            `ÚLTIMA ADVERTENCIA:\n\nSe eliminará permanentemente a ${user.name} del sistema.\n\n¿Continuar con la eliminación?`,
+            () => this.performDeleteUser(user),
+            'Sí, eliminar',
+            'Cancelar',
+            'error'
+          );
+        },
+        'Continuar',
+        'Cancelar',
+        'warning'
       );
-
-      if (!firstConfirm) return;
-
-      const secondConfirm = confirm(
-        `⚠️ ÚLTIMA CONFIRMACIÓN\n\n` +
-        `Esto eliminará permanentemente al usuario ${user.name}.\n` +
-        `Esta acción NO se puede deshacer.\n\n` +
-        `¿Continuar?`
-      );
-
-      if (!secondConfirm) return;
     } else {
       // Confirmación simple para viewers
-      const confirmDelete = confirm(
-        `¿Eliminar a ${user.name}?\n\n` +
-        `Email: ${user.email}\n` +
-        `Rol: ${this.formatRole(user.role)}\n\n` +
-        `Esta acción no se puede deshacer.`
+      this.notificationService.confirm(
+        'Confirmar Eliminación',
+        `¿Eliminar al usuario ${user.name}?\n\nEmail: ${user.email}\nRol: ${this.formatRole(user.role)}\n\nEsta acción no se puede deshacer.`,
+        () => this.performDeleteUser(user),
+        'Eliminar',
+        'Cancelar',
+        'warning'
       );
-
-      if (!confirmDelete) return;
     }
+  }
 
+  /**
+   * Ejecutar eliminación de usuario
+   */
+  private async performDeleteUser(user: User): Promise<void> {
     try {
       console.log('🗑️ [USER-MGMT] Deleting user:', user.email);
 
@@ -245,30 +261,90 @@ export class UserManagement implements OnInit {
       await deleteDoc(userDocRef);
       console.log('✅ [USER-MGMT] User deleted from Firestore');
 
-      // 2. 🆕 Decrementar licencias usadas del tenant
+      // 2. Decrementar licencias usadas del tenant
       await this.tenantService.updateUsedLicenses(
         this.currentUser!.tenantId,
-        -1  // ← Valor negativo para decrementar
+        -1
       );
       console.log('✅ [USER-MGMT] Tenant licenses decremented');
 
-      // 3. Recargar datos
+      // 3. Eliminar de Firebase Authentication (llamada al backend)
+      try {
+        // 🔑 OBTENER TOKEN DE FIREBASE
+        const token = await this.authService.getIdToken();
+        
+        if (!token) {
+          console.warn('⚠️ [USER-MGMT] No Firebase token available');
+          throw new Error('No se pudo obtener el token de autenticación');
+        }
+
+        console.log('🔑 [USER-MGMT] Firebase token obtained');
+        
+        // Configurar headers con el token
+        const headers = new HttpHeaders({
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`  // ← AGREGAR TOKEN
+        });
+
+        const backendUrl = environment.apiUrl || 'http://localhost:8000';
+        const deleteAuthUrl = `${backendUrl}/api/users/delete-auth-user`;
+
+        console.log('🌐 [USER-MGMT] Calling backend:', deleteAuthUrl);
+
+        const response = await firstValueFrom(
+          this.http.delete<{success: boolean, message: string}>(
+            deleteAuthUrl,
+            {
+              headers,
+              body: {
+                uid: user.uid,
+                email: user.email,
+                tenant_id: this.currentUser!.tenantId,
+                deleted_by_uid: this.currentUser!.uid
+              }
+            }
+          )
+        );
+
+        console.log('✅ [USER-MGMT] Backend response:', response);
+        
+      } catch (authError: any) {
+        console.warn('⚠️ [USER-MGMT] Could not delete from Auth:', authError);
+        
+        // Si es un error de red o backend, informar pero continuar
+        if (authError.status === 0 || authError.status >= 500) {
+          console.warn('⚠️ [USER-MGMT] Backend error, but user deleted from Firestore');
+        }
+        // No fallar la operación completa si el usuario ya no existe en Auth
+      }
+
+      // 4. Recargar datos
       await this.loadData();
 
-      alert(`✅ Usuario ${user.name} eliminado correctamente`);
+      // 5. Mostrar éxito
+      this.notificationService.success(
+        'Usuario Eliminado',
+        `${user.name} ha sido eliminado correctamente del sistema.`
+      );
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ [USER-MGMT] Error deleting user:', error);
-      alert('❌ Error al eliminar usuario. Por favor intenta de nuevo.');
+      this.notificationService.error(
+        'Error al Eliminar',
+        'No se pudo eliminar el usuario. Por favor intenta de nuevo.'
+      );
     }
   }
 
   /**
-   * Desactivar/Activar usuario (alternativa a eliminar)
+   * Desactivar/Activar usuario
    */
   async toggleUserStatus(user: User): Promise<void> {
     if (user.uid === this.currentUser?.uid) {
-      alert('❌ No puedes desactivarte a ti mismo');
+      this.notificationService.error(
+        'Operación no permitida',
+        'No puedes desactivarte a ti mismo.'
+      );
       return;
     }
 
@@ -277,29 +353,39 @@ export class UserManagement implements OnInit {
       ? `¿Desactivar a ${user.name}?\n\nEl usuario perderá acceso al sistema pero su cuenta permanecerá.`
       : `¿Activar a ${user.name}?\n\nEl usuario recuperará acceso al sistema.`;
 
-    if (!confirm(confirmMsg)) return;
+    this.notificationService.confirm(
+      action === 'desactivar' ? 'Desactivar Usuario' : 'Activar Usuario',
+      confirmMsg,
+      async () => {
+        try {
+          console.log(`🔄 [USER-MGMT] ${action}ing user:`, user.email);
 
-    try {
-      console.log(`🔄 [USER-MGMT] ${action}ing user:`, user.email);
+          const userDocRef = doc(this.firestore, 'users', user.uid);
+          await updateDoc(userDocRef, {
+            isActive: !user.isActive,
+            updatedAt: new Date(),
+            updatedBy: this.currentUser?.uid
+          });
 
-      const userDocRef = doc(this.firestore, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        isActive: !user.isActive,
-        updatedAt: new Date(),
-        updatedBy: this.currentUser?.uid
-      });
+          await this.loadData();
 
-      console.log(`✅ [USER-MGMT] User ${action}d`);
+          this.notificationService.success(
+            `Usuario ${action === 'desactivar' ? 'Desactivado' : 'Activado'}`,
+            `${user.name} ha sido ${action}do correctamente.`
+          );
 
-      // Recargar datos
-      await this.loadData();
-
-      alert(`✅ Usuario ${action}do correctamente`);
-
-    } catch (error) {
-      console.error(`❌ [USER-MGMT] Error ${action}ing user:`, error);
-      alert(`❌ Error al ${action} usuario`);
-    }
+        } catch (error) {
+          console.error(`❌ [USER-MGMT] Error ${action}ing user:`, error);
+          this.notificationService.error(
+            'Error',
+            `No se pudo ${action} el usuario. Por favor intenta de nuevo.`
+          );
+        }
+      },
+      action === 'desactivar' ? 'Desactivar' : 'Activar',
+      'Cancelar',
+      'warning'
+    );
   }
 
   /**
@@ -322,55 +408,73 @@ export class UserManagement implements OnInit {
   async onInvitationSent(): Promise<void> {
     this.closeInviteModal();
     await this.loadInvitations();
+    this.notificationService.success(
+      'Invitación Enviada',
+      'La invitación ha sido enviada correctamente.'
+    );
   }
 
   /**
    * Cancelar invitación
    */
   async cancelInvitation(invitation: Invitation): Promise<void> {
-    if (!confirm(`¿Cancelar invitación para ${invitation.email}?`)) {
-      return;
-    }
+    this.notificationService.confirm(
+      'Cancelar Invitación',
+      `¿Cancelar la invitación para ${invitation.email}?`,
+      async () => {
+        try {
+          console.log('🚫 [USER-MGMT] Cancelling invitation:', invitation.email);
 
-    try {
-      console.log('🚫 [USER-MGMT] Cancelling invitation:', invitation.email);
+          await this.invitationService.cancelInvitation(invitation.id);
+          await this.loadInvitations();
 
-      await this.invitationService.cancelInvitation(invitation.id);
+          this.notificationService.success(
+            'Invitación Cancelada',
+            `La invitación para ${invitation.email} ha sido cancelada.`
+          );
 
-      console.log('✅ [USER-MGMT] Invitation cancelled');
-      
-      // Recargar invitaciones
-      await this.loadInvitations();
-
-      alert(`✅ Invitación para ${invitation.email} cancelada`);
-
-    } catch (error) {
-      console.error('❌ [USER-MGMT] Error cancelling invitation:', error);
-      alert('❌ Error al cancelar invitación');
-    }
+        } catch (error) {
+          console.error('❌ [USER-MGMT] Error cancelling invitation:', error);
+          this.notificationService.error(
+            'Error',
+            'No se pudo cancelar la invitación.'
+          );
+        }
+      },
+      'Cancelar Invitación',
+      'Volver'
+    );
   }
 
   /**
    * Reenviar invitación
    */
   async resendInvitation(invitation: Invitation): Promise<void> {
-    if (!confirm(`¿Reenviar invitación a ${invitation.email}?`)) {
-      return;
-    }
+    this.notificationService.confirm(
+      'Reenviar Invitación',
+      `¿Reenviar invitación a ${invitation.email}?`,
+      async () => {
+        try {
+          console.log('📧 [USER-MGMT] Resending invitation:', invitation.email);
 
-    try {
-      console.log('📧 [USER-MGMT] Resending invitation:', invitation.email);
+          await this.invitationService.resendInvitation(invitation.id);
 
-      await this.invitationService.resendInvitation(invitation.id);
+          this.notificationService.success(
+            'Invitación Reenviada',
+            `La invitación ha sido reenviada a ${invitation.email}.`
+          );
 
-      console.log('✅ [USER-MGMT] Invitation resent');
-      
-      alert(`✅ Invitación reenviada a ${invitation.email}`);
-
-    } catch (error) {
-      console.error('❌ [USER-MGMT] Error resending invitation:', error);
-      alert('❌ Error al reenviar invitación');
-    }
+        } catch (error) {
+          console.error('❌ [USER-MGMT] Error resending invitation:', error);
+          this.notificationService.error(
+            'Error',
+            'No se pudo reenviar la invitación.'
+          );
+        }
+      },
+      'Reenviar',
+      'Cancelar'
+    );
   }
 
   /**
@@ -384,12 +488,8 @@ export class UserManagement implements OnInit {
    * Verificar si se puede cambiar estado del usuario
    */
   canToggleUserStatus(user: User): boolean {
-    // No puede desactivarse a sí mismo
     if (user.uid === this.currentUser?.uid) return false;
-    
-    // No puede desactivar usuarios internos
     if (user.isInternal) return false;
-
     return true;
   }
 
@@ -397,12 +497,8 @@ export class UserManagement implements OnInit {
    * Verificar si se puede eliminar el usuario
    */
   canDeleteUser(user: User): boolean {
-    // No puede eliminarse a sí mismo
     if (user.uid === this.currentUser?.uid) return false;
-    
-    // No puede eliminar usuarios internos
     if (user.isInternal) return false;
-
     return true;
   }
 
