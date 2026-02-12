@@ -11,7 +11,6 @@
 /* ===== Main Content ===== */
 .main-content {
   margin-left: 260px;
-  margin-top: 5px;
   height: calc(100vh - 55px);
   overflow-y: auto;
   overflow-x: hidden;
@@ -21,7 +20,7 @@
 
 /* Cuando el sidebar está en modo mini (70px) */
 .main-content.sidebar-mini {
-  margin-left: 65px;
+  margin-left: 70px;
 }
 
 /* Content Container (SIN PADDING PARA MÁXIMO ESPACIO) */

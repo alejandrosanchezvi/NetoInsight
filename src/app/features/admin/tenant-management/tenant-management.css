@@ -84,7 +84,7 @@
   padding: 1rem;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  margin-bottom: 1rem;
+  margin-bottom: .5rem;
 }
 
 .header-content {
