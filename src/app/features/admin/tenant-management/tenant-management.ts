@@ -1,4 +1,4 @@
-// 🏢 NetoInsight - Tenant Management Component (CON MODALES COMPLETOS)
+// 🏢 NetoInsight - Tenant Management (CON LOADING Y NOTIFICACIONES)
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -6,7 +6,8 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
-import { Tenant, TenantUsageStats } from '../../../core/models/tenant.model';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Tenant, TenantUsageStats, isTenantTrialActive, getTenantTrialDaysLeft } from '../../../core/models/tenant.model';
 import { CreateTenantModal } from '../create-tenant-modal/create-tenant-modal';
 import { EditTenantModal } from '../edit-tenant-modal/edit-tenant-modal';
 import { TenantDetailsModal } from '../tenant-details-modal/tenant-details-modal';
@@ -22,6 +23,7 @@ export class TenantManagement implements OnInit {
   
   // Estado
   isLoading = true;
+  isProcessing = false;  // ← Para loading de acciones
   tenants: Tenant[] = [];
   filteredTenants: Tenant[] = [];
   tenantsStats: Map<string, TenantUsageStats> = new Map();
@@ -39,6 +41,7 @@ export class TenantManagement implements OnInit {
   constructor(
     private authService: AuthService,
     private tenantService: TenantService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
 
@@ -47,8 +50,12 @@ export class TenantManagement implements OnInit {
     
     // Verificar que usuario sea interno
     if (!this.authService.isInternalUser()) {
-      console.error('❌ [TENANT-MGMT] User is not internal admin');
-      this.router.navigate(['/']);
+      console.warn('⚠️ [TENANT-MGMT] User is not internal, redirecting...');
+      this.notificationService.error(
+        'Acceso Denegado',
+        'Solo los administradores internos de Neto pueden acceder.'
+      );
+      this.router.navigate(['/categorization']);
       return;
     }
 
@@ -59,11 +66,11 @@ export class TenantManagement implements OnInit {
    * Cargar todos los tenants
    */
   async loadTenants(): Promise<void> {
-    console.log('🏢 [TENANT-MGMT] Loading tenants...');
     this.isLoading = true;
 
     try {
-      // Cargar todos los tenants
+      console.log('🏢 [TENANT-MGMT] Loading tenants...');
+      
       this.tenants = await this.tenantService.getAllTenants();
       
       // Cargar estadísticas para cada tenant
@@ -74,13 +81,17 @@ export class TenantManagement implements OnInit {
         }
       }
 
-      // Aplicar filtros iniciales
+      // Aplicar filtros
       this.applyFilters();
 
       console.log('✅ [TENANT-MGMT] Tenants loaded:', this.tenants.length);
 
     } catch (error) {
       console.error('❌ [TENANT-MGMT] Error loading tenants:', error);
+      this.notificationService.error(
+        'Error al Cargar',
+        'No se pudieron cargar los proveedores.'
+      );
     } finally {
       this.isLoading = false;
     }
@@ -95,7 +106,7 @@ export class TenantManagement implements OnInit {
       const matchesSearch = !this.searchTerm || 
         tenant.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         tenant.proveedorIdInterno.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        (tenant.legalName && tenant.legalName.toLowerCase().includes(this.searchTerm.toLowerCase()));
+        tenant.adminEmail?.toLowerCase().includes(this.searchTerm.toLowerCase());
 
       // Filtro de estado
       const matchesStatus = 
@@ -184,30 +195,52 @@ export class TenantManagement implements OnInit {
    */
   async toggleTenantStatus(tenant: Tenant): Promise<void> {
     const action = tenant.isActive ? 'desactivar' : 'activar';
-    
-    if (!confirm(`¿Estás seguro de ${action} a ${tenant.name}?`)) {
-      return;
-    }
+    const message = tenant.isActive
+      ? `¿Desactivar a ${tenant.name}?\n\nLos usuarios de este proveedor perderán acceso al sistema.`
+      : `¿Activar a ${tenant.name}?\n\nLos usuarios recuperarán acceso al sistema.`;
 
-    try {
-      const currentUser = this.authService.getCurrentUser();
-      if (!currentUser) return;
+    this.notificationService.confirm(
+      tenant.isActive ? 'Desactivar Proveedor' : 'Activar Proveedor',
+      message,
+      async () => {
+        this.isProcessing = true;
+        
+        try {
+          const currentUser = this.authService.getCurrentUser();
+          if (!currentUser) return;
 
-      await this.tenantService.setTenantActive(
-        tenant.tenantId, 
-        !tenant.isActive, 
-        currentUser.uid
-      );
+          console.log(`🔄 [TENANT-MGMT] ${action}ing tenant:`, tenant.name);
 
-      // Recargar tenants
-      await this.loadTenants();
+          await this.tenantService.setTenantActive(
+            tenant.tenantId, 
+            !tenant.isActive, 
+            currentUser.uid
+          );
 
-      console.log(`✅ [TENANT-MGMT] Tenant ${action}do:`, tenant.name);
+          // Recargar tenants
+          await this.loadTenants();
 
-    } catch (error) {
-      console.error('❌ [TENANT-MGMT] Error toggling tenant status:', error);
-      alert(`Error al ${action} el proveedor`);
-    }
+          this.notificationService.success(
+            `Proveedor ${action === 'desactivar' ? 'Desactivado' : 'Activado'}`,
+            `${tenant.name} ha sido ${action}do correctamente.`
+          );
+
+          console.log(`✅ [TENANT-MGMT] Tenant ${action}do:`, tenant.name);
+
+        } catch (error) {
+          console.error('❌ [TENANT-MGMT] Error toggling tenant status:', error);
+          this.notificationService.error(
+            'Error',
+            `No se pudo ${action} el proveedor.`
+          );
+        } finally {
+          this.isProcessing = false;
+        }
+      },
+      action === 'desactivar' ? 'Desactivar' : 'Activar',
+      'Cancelar',
+      'warning'
+    );
   }
 
   /**
@@ -238,7 +271,8 @@ export class TenantManagement implements OnInit {
    */
   getPlanBadgeColor(plan: string): string {
     const colors: { [key: string]: string } = {
-      'free': 'badge-gray',
+      'trial': 'badge-info',
+      'starter': 'badge-gray',
       'pro': 'badge-blue',
       'enterprise': 'badge-purple',
       'internal': 'badge-orange'
@@ -251,7 +285,8 @@ export class TenantManagement implements OnInit {
    */
   formatPlan(plan: string): string {
     const plans: { [key: string]: string } = {
-      'free': 'Gratis',
+      'trial': 'Prueba',
+      'starter': 'Starter',
       'pro': 'Pro',
       'enterprise': 'Enterprise',
       'internal': 'Interno'
@@ -301,5 +336,45 @@ export class TenantManagement implements OnInit {
    */
   getInactiveTenants(): number {
     return this.tenants.filter(t => !t.isActive).length;
+  }
+
+  /**
+   * Verificar si tenant está en trial activo
+   */
+  isTenantTrialActive(tenant: Tenant): boolean {
+    return isTenantTrialActive(tenant);
+  }
+
+  /**
+   * Obtener días restantes de trial
+   */
+  getTenantTrialDaysLeft(tenant: Tenant): number {
+    return getTenantTrialDaysLeft(tenant);
+  }
+
+  /**
+   * Obtener badge de trial
+   */
+  getTrialBadge(tenant: Tenant): string {
+    if (tenant.plan !== 'trial') return '';
+    
+    const daysLeft = this.getTenantTrialDaysLeft(tenant);
+    
+    if (daysLeft === 0) return '⏰ Expirado';
+    if (daysLeft <= 3) return `⚠️ ${daysLeft} días`;
+    return `⏰ ${daysLeft} días`;
+  }
+
+  /**
+   * Obtener clase CSS del badge de trial
+   */
+  getTrialBadgeClass(tenant: Tenant): string {
+    if (tenant.plan !== 'trial') return '';
+    
+    const daysLeft = this.getTenantTrialDaysLeft(tenant);
+    
+    if (daysLeft === 0) return 'badge-danger';
+    if (daysLeft <= 3) return 'badge-warning';
+    return 'badge-info';
   }
 }

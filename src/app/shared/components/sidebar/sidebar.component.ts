@@ -1,10 +1,11 @@
-// 📂 NetoInsight - Sidebar Component (CON FILTRO DE ROLES)
+// 📂 NetoInsight - Sidebar Component (CORREGIDO - DETECTA RUTA ACTIVA)
 
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { User, UserRole } from '../../../core/models/user.model';
+import { filter } from 'rxjs/operators';
+import { TrialInfoComponent } from './trial-banner.component';
 
 interface MenuItem {
   id: string;
@@ -12,26 +13,22 @@ interface MenuItem {
   icon: string;
   route: string;
   badge?: number;
-  internal: boolean;      // Solo usuarios internos de Neto
-  adminOnly: boolean;     // Solo usuarios con rol Admin
+  internal: boolean;
 }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TrialInfoComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css'],
 })
 export class SidebarComponent implements OnInit {
   @Input() isOpen = true;
-  @Input() isInternalUser = false;
+  @Input() isInternalUser = true;
   @Output() closeSidebar = new EventEmitter<void>();
 
-  currentUser: User | null = null;
-  activeMenuItem: string = 'categorization';
-
-  // 📋 MENÚ CON PERMISOS
+  // 🔹 MENÚ MVP
   menuItems: MenuItem[] = [
     {
       id: 'categorization',
@@ -39,7 +36,6 @@ export class SidebarComponent implements OnInit {
       icon: 'grid',
       route: '/categorization',
       internal: false,
-      adminOnly: false,
     },
     {
       id: 'stores',
@@ -47,7 +43,6 @@ export class SidebarComponent implements OnInit {
       icon: 'store',
       route: '/stores',
       internal: false,
-      adminOnly: false,
     },
     {
       id: 'skus',
@@ -55,7 +50,6 @@ export class SidebarComponent implements OnInit {
       icon: 'package',
       route: '/skus',
       internal: false,
-      adminOnly: false,
     },
     {
       id: 'stocks',
@@ -63,7 +57,6 @@ export class SidebarComponent implements OnInit {
       icon: 'box',
       route: '/stocks',
       internal: false,
-      adminOnly: false,
     },
     {
       id: 'purchase-orders',
@@ -71,7 +64,6 @@ export class SidebarComponent implements OnInit {
       icon: 'shoppingcart',
       route: '/purchase-orders',
       internal: false,
-      adminOnly: false,
     },
     {
       id: 'users',
@@ -79,52 +71,51 @@ export class SidebarComponent implements OnInit {
       icon: 'users',
       route: '/users',
       internal: false,
-      adminOnly: true,       // ← Solo Admins
     },
     {
       id: 'admin-tenants',
       label: 'Proveedores',
       icon: 'truck',
       route: '/admin/tenants',
-      internal: true,        // ← Solo Admins Internos de Neto
-      adminOnly: false,
+      internal: true,
     },
   ];
 
-  constructor(
-    private router: Router,
-    private authService: AuthService
-  ) {}
+  activeMenuItem: string = '';
+
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
-    });
+    // ✅ Detectar ruta actual al cargar
+    this.updateActiveMenuItem(this.router.url);
+
+    // ✅ Escuchar cambios de navegación
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.updateActiveMenuItem(event.urlAfterRedirects);
+      });
   }
 
   /**
-   * Verificar si el item debe mostrarse según permisos
+   * Actualizar item activo basado en la URL
    */
-  shouldShowItem(item: MenuItem): boolean {
-    // Si no hay usuario, no mostrar nada
-    if (!this.currentUser) {
-      return false;
-    }
+  private updateActiveMenuItem(url: string): void {
+    // Encontrar el item que coincida con la URL actual
+    const foundItem = this.menuItems.find(item => {
+      // Comparar rutas (ignorar query params y fragments)
+      const currentPath = url.split('?')[0].split('#')[0];
+      return currentPath === item.route || currentPath.startsWith(item.route + '/');
+    });
 
-    // Verificar permiso internal
-    if (item.internal && !this.isInternalUser) {
-      return false;
+    if (foundItem) {
+      this.activeMenuItem = foundItem.id;
+      console.log('🔹 [SIDEBAR] Active menu item:', foundItem.label, '(', foundItem.route, ')');
+    } else {
+      // Fallback a categorization si no encuentra match
+      this.activeMenuItem = 'categorization';
+      console.log('🔹 [SIDEBAR] No match found, defaulting to categorization');
     }
-
-    // Verificar permiso adminOnly
-    if (item.adminOnly) {
-      const isAdmin = this.currentUser.role === UserRole.ADMIN || this.currentUser.isInternal;
-      if (!isAdmin) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   /**
@@ -148,22 +139,35 @@ export class SidebarComponent implements OnInit {
   }
 
   /**
+   * Verificar si se debe mostrar el item (basado en permisos internos)
+   */
+  shouldShowItem(item: MenuItem): boolean {
+    // Mostrar items no internos siempre
+    if (!item.internal) {
+      return true;
+    }
+    // Mostrar items internos solo si el usuario es interno
+    return this.isInternalUser;
+  }
+
+  /**
    * Obtener SVG path según el ícono
    */
-  getIconPath(iconName: string): string {
+    getIconPath(iconName: string): string {
     const icons: { [key: string]: string } = {
       grid: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
       store:
-        'M3 21h18M5 21V7l-2-4h18l-2 4v14M9 21v-8h6v8M10 3v4M14 3v4',
-      package: 'M16 16l4-4-4-4M8 8l-4 4 4 4M12 3v18',
-      box: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z',
-      shoppingcart:
-        'M9 2L7 6M15 2l2 4M7 6h10l2 8H5l2-8zM5 14l1 8h12l1-8M10 18h4',
+        'M3 21h18M3 7v1a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0 3 3 3 3 0 0 0 3-3v-1M5 21V10.355M19 21V10.355M2 7l1.964-3.282A1 1 0 0 1 4.82 3h14.36a1 1 0 0 1 .856.518L22 7H2z',
+      package:
+        'M16.5 9.4l-9-5.19 M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12',
+      box: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12',
+      shoppingcart: 'M9 2L1 4v14l8 2 8-2 8 2V6l-8-2-8 2z M9 2v18 M17 4v18',
       users:
-        'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+        'M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z',
       truck:
-        'M16 3h5v13h-5zM16 8h5M1 8h15v13H1zM1 11h9',
+        'M1 3h15v13H1z M16 8h4l3 3v5h-7V8z M5.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M18.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
     };
+
     return icons[iconName] || '';
   }
 }

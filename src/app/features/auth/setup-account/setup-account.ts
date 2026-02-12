@@ -4,17 +4,8 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { 
-  Auth, 
-  createUserWithEmailAndPassword,
-  UserCredential 
-} from '@angular/fire/auth';
-import { 
-  Firestore, 
-  doc, 
-  setDoc,
-  serverTimestamp 
-} from '@angular/fire/firestore';
+import { Auth, createUserWithEmailAndPassword, UserCredential } from '@angular/fire/auth';
+import { Firestore, doc, setDoc, serverTimestamp } from '@angular/fire/firestore';
 import { InvitationService } from '../../../core/services/invitation.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -26,10 +17,9 @@ import { UserRole } from '../../../core/models/user.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './setup-account.html',
-  styleUrls: ['./setup-account.css']
+  styleUrls: ['./setup-account.css'],
 })
 export class SetupAccount implements OnInit {
-  
   @Input() invitation!: Invitation;
 
   setupForm: FormGroup;
@@ -48,17 +38,16 @@ export class SetupAccount implements OnInit {
     private firestore: Firestore,
     private invitationService: InvitationService,
     private tenantService: TenantService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
-    this.setupForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [
-        Validators.required,
-        Validators.minLength(12),
-        this.passwordValidator
-      ]],
-      confirmPassword: ['', Validators.required]
-    }, { validators: this.passwordMatchValidator });
+    this.setupForm = this.fb.group(
+      {
+        name: ['', [Validators.required, Validators.minLength(3)]],
+        password: ['', [Validators.required, Validators.minLength(12), this.passwordValidator]],
+        confirmPassword: ['', Validators.required],
+      },
+      { validators: this.passwordMatchValidator },
+    );
   }
 
   ngOnInit(): void {
@@ -70,7 +59,7 @@ export class SetupAccount implements OnInit {
    */
   private passwordValidator(control: any) {
     const value = control.value;
-    
+
     if (!value) return null;
 
     const hasUpperCase = /[A-Z]/.test(value);
@@ -81,8 +70,8 @@ export class SetupAccount implements OnInit {
     const valid = hasUpperCase && hasLowerCase && hasNumeric && hasSpecial;
 
     if (!valid) {
-      return { 
-        passwordStrength: 'La contraseña debe tener mayúsculas, minúsculas, números y símbolos' 
+      return {
+        passwordStrength: 'La contraseña debe tener mayúsculas, minúsculas, números y símbolos',
       };
     }
 
@@ -104,9 +93,9 @@ export class SetupAccount implements OnInit {
    */
   calculatePasswordStrength(): void {
     const password = this.setupForm.get('password')?.value || '';
-    
+
     let strength = 0;
-    
+
     if (password.length >= 12) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
@@ -173,13 +162,20 @@ export class SetupAccount implements OnInit {
       const credential: UserCredential = await createUserWithEmailAndPassword(
         this.auth,
         this.invitation.email,
-        password
+        password,
       );
 
       const uid = credential.user.uid;
       console.log('✅ [SETUP-ACCOUNT] Firebase Auth user created:', uid);
 
       // 2. Crear documento en Firestore users
+      // 2. Obtener tenant para verificar si es interno
+      console.log('🔐 [SETUP-ACCOUNT] Checking tenant...');
+      const tenant = await this.tenantService.getTenantById(this.invitation.tenantId);
+      const isInternalUser = tenant?.plan === 'internal';
+      console.log('🔐 [SETUP-ACCOUNT] Is internal user:', isInternalUser);
+
+      // 3. Crear documento en Firestore users
       console.log('🔐 [SETUP-ACCOUNT] Creating Firestore user document...');
       const userDocRef = doc(this.firestore, 'users', uid);
       await setDoc(userDocRef, {
@@ -189,12 +185,12 @@ export class SetupAccount implements OnInit {
         role: this.invitation.role,
         tenantId: this.invitation.tenantId,
         tenantName: this.invitation.tenantName,
-        isInternal: false,
+        isInternal: isInternalUser, // ✅ CORREGIDO - detecta automáticamente
         isActive: true,
         mfaEnabled: false,
         invitationId: this.invitation.id,
         createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp()
+        lastLogin: serverTimestamp(),
       });
 
       console.log('✅ [SETUP-ACCOUNT] Firestore user document created');
@@ -217,10 +213,9 @@ export class SetupAccount implements OnInit {
       // 6. Redirigir al dashboard
       console.log('✅ [SETUP-ACCOUNT] Account setup complete! Redirecting...');
       this.router.navigate(['/categorization']);
-
     } catch (error: any) {
       console.error('❌ [SETUP-ACCOUNT] Error creating account:', error);
-      
+
       // Mensajes de error amigables
       if (error.code === 'auth/email-already-in-use') {
         this.errorMessage = 'Este email ya está registrado. Intenta iniciar sesión.';
@@ -249,7 +244,7 @@ export class SetupAccount implements OnInit {
    * Marcar todos los campos como touched
    */
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
+    Object.keys(formGroup.controls).forEach((key) => {
       const control = formGroup.get(key);
       control?.markAsTouched();
     });
@@ -260,16 +255,16 @@ export class SetupAccount implements OnInit {
    */
   getErrorMessage(fieldName: string): string {
     const control = this.setupForm.get(fieldName);
-    
+
     if (control?.hasError('required')) {
       return 'Este campo es requerido';
     }
-    
+
     if (control?.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
       return `Mínimo ${minLength} caracteres`;
     }
-    
+
     if (control?.hasError('passwordStrength')) {
       return control.errors?.['passwordStrength'];
     }
@@ -277,7 +272,7 @@ export class SetupAccount implements OnInit {
     if (fieldName === 'confirmPassword' && this.setupForm.hasError('passwordMismatch')) {
       return 'Las contraseñas no coinciden';
     }
-    
+
     return '';
   }
 

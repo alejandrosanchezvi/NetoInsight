@@ -145,7 +145,9 @@ export class TenantService {
       if (data.billingEmail) tenantData.billingEmail = data.billingEmail;
       if (data.contractStart) tenantData.contractStart = data.contractStart;
       if (data.contractEnd) tenantData.contractEnd = data.contractEnd;
-
+      if (data.trialEndsAt) {
+        tenantData.trialEndsAt = Timestamp.fromDate(data.trialEndsAt);
+      }
       await setDoc(tenantDocRef, tenantData);
 
       console.log('✅ [TENANT] Tenant created:', tenantId);
@@ -217,7 +219,7 @@ export class TenantService {
 
   /**
    * Obtener estadísticas de uso de un tenant
-   * 
+   *
    * 🔧 CORREGIDO:
    * - totalUsers: Cuenta TODOS los usuarios en Firestore (activos e inactivos)
    * - activeUsers: Cuenta solo usuarios con isActive === true
@@ -233,10 +235,7 @@ export class TenantService {
     const usersRef = collection(this.firestore, 'users');
 
     // ✅ Contar TODOS los usuarios (incluyendo inactivos)
-    const allUsersQuery = query(
-      usersRef,
-      where('tenantId', '==', tenantId)
-    );
+    const allUsersQuery = query(usersRef, where('tenantId', '==', tenantId));
     const allUsersSnapshot = await getDocs(allUsersQuery);
     const totalUsersCount = allUsersSnapshot.size;
 
@@ -244,7 +243,7 @@ export class TenantService {
     const activeUsersQuery = query(
       usersRef,
       where('tenantId', '==', tenantId),
-      where('isActive', '==', true)
+      where('isActive', '==', true),
     );
     const activeUsersSnapshot = await getDocs(activeUsersQuery);
     const activeUsersCount = activeUsersSnapshot.size;
@@ -253,15 +252,15 @@ export class TenantService {
       tenantId,
       totalUsers: totalUsersCount,
       activeUsers: activeUsersCount,
-      tenantUsedLicenses: tenant.usedLicenses
+      tenantUsedLicenses: tenant.usedLicenses,
     });
 
     const stats: TenantUsageStats = {
       tenantId: tenant.tenantId,
       tenantName: tenant.name,
-      totalUsers: totalUsersCount,              // ✅ Total real de Firestore
-      activeUsers: activeUsersCount,            // ✅ Solo activos
-      licensesUsed: totalUsersCount,            // ✅ Sincronizado con total
+      totalUsers: totalUsersCount, // ✅ Total real de Firestore
+      activeUsers: activeUsersCount, // ✅ Solo activos
+      licensesUsed: totalUsersCount, // ✅ Sincronizado con total
       licensesAvailable: tenant.maxLicenses - totalUsersCount,
       licensesPercentage: (totalUsersCount / tenant.maxLicenses) * 100,
     };
@@ -319,6 +318,7 @@ export class TenantService {
       plan: data['plan'],
       maxLicenses: data['maxLicenses'],
       usedLicenses: data['usedLicenses'],
+      trialEndsAt: data['trialEndsAt']?.toDate(),
       features: data['features'],
       tableauGroup: data['tableauGroup'],
       tableauSiteId: data['tableauSiteId'],

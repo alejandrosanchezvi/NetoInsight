@@ -7,6 +7,7 @@ import { HeaderComponent } from '../../shared/components/header/header';
 import { SidebarComponent } from '../../shared/components/sidebar/sidebar.component';
 import { AuthService } from '../../core/services/auth.service';
 
+
 @Component({
   selector: 'app-main-layout',
   standalone: true,
@@ -15,7 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
     RouterOutlet,
     HeaderComponent,
     SidebarComponent
-  ],
+    ],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.css']
 })

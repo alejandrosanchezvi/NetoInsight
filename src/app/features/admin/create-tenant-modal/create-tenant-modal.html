@@ -1,7 +1,7 @@
-<!-- 🏢 NetoInsight - Create Tenant Modal Template -->
+<!-- 🏢 NetoInsight - Create Tenant Modal Template (SIMPLIFICADO) -->
 
 <div class="modal-overlay" (click)="onClose()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+  <div class="modal-container" (click)="onModalClick($event)">
     
     <!-- Modal Header -->
     <div class="modal-header">
@@ -72,7 +72,6 @@
       <div class="form-section" *ngIf="currentStep === 1">
         <h3 class="section-title">Información Básica</h3>
 
-        <!-- Nombre -->
         <div class="form-group">
           <label for="name" class="form-label">
             Nombre del Proveedor
@@ -84,37 +83,32 @@
             formControlName="name"
             class="form-input"
             [class.error]="hasError('name')"
-            placeholder="Ej: Pepsico">
+            placeholder="Ej: Comercial ABC">
           <span *ngIf="hasError('name')" class="error-message">
             {{ getErrorMessage('name') }}
           </span>
         </div>
 
-        <!-- Razón Social -->
         <div class="form-group">
-          <label for="legalName" class="form-label">
-            Razón Social
-          </label>
+          <label for="legalName" class="form-label">Razón Social</label>
           <input
             id="legalName"
             type="text"
             formControlName="legalName"
             class="form-input"
-            placeholder="Ej: COMERCIALIZADORA PEPSICO MEXICO S D">
+            placeholder="Opcional - Se usa el nombre si se deja vacío">
+          <span class="field-hint">Opcional - Si no se especifica, se usará el nombre</span>
         </div>
 
-        <!-- RFC -->
         <div class="form-group">
-          <label for="rfc" class="form-label">
-            RFC
-          </label>
+          <label for="rfc" class="form-label">RFC</label>
           <input
             id="rfc"
             type="text"
             formControlName="rfc"
             class="form-input"
             [class.error]="hasError('rfc')"
-            placeholder="Ej: WAL850101XXX"
+            placeholder="ABC123456XYZ"
             maxlength="13"
             style="text-transform: uppercase;">
           <span *ngIf="hasError('rfc')" class="error-message">
@@ -131,26 +125,37 @@
         <!-- Plan -->
         <div class="form-group">
           <label class="form-label">
-            Plan
+            Plan de Suscripción
             <span class="required">*</span>
           </label>
           <div class="radio-group">
             <label 
               *ngFor="let plan of planOptions" 
-              class="radio-option">
+              class="radio-option"
+              [class.plan-trial]="plan.value === 'trial'"
+              [class.plan-recommended]="plan.value === 'starter'">
               <input
                 type="radio"
                 formControlName="plan"
                 [value]="plan.value">
               <div class="radio-content">
-                <span class="radio-label">{{ plan.label }}</span>
-                <span class="radio-hint">{{ plan.maxLicenses }} licencias</span>
+                <div class="radio-header">
+                  <span class="radio-label">{{ plan.label }}</span>
+                  <span *ngIf="plan.value === 'trial'" class="badge-trial">Gratis</span>
+                  <span *ngIf="plan.value === 'starter'" class="badge-recommended">Recomendado</span>
+                </div>
+                <span class="radio-description">{{ plan.description }}</span>
+                <div class="radio-details">
+                  <span class="radio-licenses">👥 {{ plan.maxLicenses }} {{ plan.maxLicenses === 1 ? 'usuario' : 'usuarios' }}</span>
+                  <span *ngIf="plan.trialDays" class="radio-duration">⏰ {{ plan.trialDays }} días</span>
+                  <span *ngIf="!plan.trialDays" class="radio-duration">✓ {{ plan.price }}</span>
+                </div>
               </div>
             </label>
           </div>
         </div>
 
-        <!-- Licencias Máximas -->
+        <!-- Licencias Máximas (readonly) -->
         <div class="form-group">
           <label for="maxLicenses" class="form-label">
             Licencias Máximas
@@ -161,11 +166,8 @@
             type="number"
             formControlName="maxLicenses"
             class="form-input"
-            [class.error]="hasError('maxLicenses')"
-            min="1">
-          <span *ngIf="hasError('maxLicenses')" class="error-message">
-            {{ getErrorMessage('maxLicenses') }}
-          </span>
+            readonly>
+          <span class="field-hint">Se ajusta automáticamente según el plan seleccionado</span>
         </div>
 
         <!-- Proveedor ID -->
@@ -183,11 +185,11 @@
               [class.error]="hasError('proveedorIdInterno')"
               placeholder="PROV-001"
               style="text-transform: uppercase;">
-            <button
-              type="button"
+            <button 
+              type="button" 
               class="btn-generate"
               (click)="generateProveedorId()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="23 4 23 10 17 10"></polyline>
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
               </svg>
@@ -197,63 +199,6 @@
           <span *ngIf="hasError('proveedorIdInterno')" class="error-message">
             {{ getErrorMessage('proveedorIdInterno') }}
           </span>
-          <span class="field-hint">Formato: PROV-XXX</span>
-        </div>
-
-        <!-- Tableau Group -->
-        <div class="form-group">
-          <label for="tableauGroup" class="form-label">
-            Tableau Group
-          </label>
-          <input
-            id="tableauGroup"
-            type="text"
-            formControlName="tableauGroup"
-            class="form-input"
-            placeholder="Ej: Pepsico_Viewers">
-          <span class="field-hint">Se auto-completa basado en el nombre</span>
-        </div>
-
-        <!-- BigQuery Dataset -->
-        <div class="form-group">
-          <label for="bigQueryDataset" class="form-label">
-            BigQuery Dataset
-          </label>
-          <input
-            id="bigQueryDataset"
-            type="text"
-            formControlName="bigQueryDataset"
-            class="form-input"
-            placeholder="Ej: proveedores_pepsico">
-        </div>
-
-        <!-- BigQuery Filter -->
-        <div class="form-group">
-          <label for="bigQueryFilter" class="form-label">
-            BigQuery Filter
-          </label>
-          <input
-            id="bigQueryFilter"
-            type="text"
-            formControlName="bigQueryFilter"
-            class="form-input"
-            placeholder="Ej: proveedor_id = 'PROV-001'">
-        </div>
-
-        <!-- Dashboards Permitidos -->
-        <div class="form-group">
-          <label class="form-label">Dashboards Permitidos</label>
-          <div class="checkbox-group">
-            <label 
-              *ngFor="let dashboard of dashboardOptions"
-              class="checkbox-option">
-              <input
-                type="checkbox"
-                [checked]="dashboard.checked"
-                (change)="toggleDashboard(dashboard.id)">
-              <span>{{ dashboard.label }}</span>
-            </label>
-          </div>
         </div>
       </div>
 
@@ -261,7 +206,6 @@
       <div class="form-section" *ngIf="currentStep === 3">
         <h3 class="section-title">Información de Contacto</h3>
 
-        <!-- Admin Email -->
         <div class="form-group">
           <label for="adminEmail" class="form-label">
             Email del Administrador
@@ -277,14 +221,11 @@
           <span *ngIf="hasError('adminEmail')" class="error-message">
             {{ getErrorMessage('adminEmail') }}
           </span>
-          <span class="field-hint">Se enviará invitación a este email</span>
+          <span class="field-hint">Se enviará una invitación a este email</span>
         </div>
 
-        <!-- Billing Email -->
         <div class="form-group">
-          <label for="billingEmail" class="form-label">
-            Email de Facturación
-          </label>
+          <label for="billingEmail" class="form-label">Email de Facturación</label>
           <input
             id="billingEmail"
             type="email"
@@ -295,84 +236,51 @@
           <span *ngIf="hasError('billingEmail')" class="error-message">
             {{ getErrorMessage('billingEmail') }}
           </span>
-        </div>
-
-        <!-- Fecha de Inicio de Contrato -->
-        <div class="form-group">
-          <label for="contractStart" class="form-label">
-            Inicio de Contrato
-          </label>
-          <input
-            id="contractStart"
-            type="date"
-            formControlName="contractStart"
-            class="form-input">
-        </div>
-
-        <!-- Fecha de Fin de Contrato -->
-        <div class="form-group">
-          <label for="contractEnd" class="form-label">
-            Fin de Contrato
-          </label>
-          <input
-            id="contractEnd"
-            type="date"
-            formControlName="contractEnd"
-            class="form-input">
+          <span class="field-hint">Opcional - Para temas de facturación</span>
         </div>
       </div>
     </form>
 
     <!-- Modal Footer -->
     <div class="modal-footer">
-      <button
-        type="button"
-        class="btn-secondary"
-        (click)="onClose()"
-        [disabled]="isSubmitting">
-        Cancelar
-      </button>
-
+      <div class="step-indicator">
+        Paso {{ currentStep }} de {{ totalSteps }}
+      </div>
       <div class="footer-actions">
-        <button
+        <button 
           *ngIf="currentStep > 1"
           type="button"
           class="btn-secondary"
           (click)="prevStep()"
           [disabled]="isSubmitting">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
           Anterior
         </button>
 
-        <button
+        <button 
           *ngIf="currentStep < totalSteps"
           type="button"
           class="btn-primary"
           (click)="nextStep()">
           Siguiente
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
 
-        <button
+        <button 
           *ngIf="currentStep === totalSteps"
-          type="submit"
+          type="button"
           class="btn-primary"
           (click)="onSubmit()"
-          [disabled]="isSubmitting || createForm.invalid">
-          <span *ngIf="!isSubmitting">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Crear Proveedor
-          </span>
-          <span *ngIf="isSubmitting" class="loading-text">
-            <span class="spinner-sm"></span>
-            Creando...
-          </span>
+          [disabled]="isSubmitting">
+          <div *ngIf="isSubmitting" class="spinner"></div>
+          <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          {{ isSubmitting ? 'Creando...' : 'Crear Proveedor' }}
         </button>
       </div>
     </div>

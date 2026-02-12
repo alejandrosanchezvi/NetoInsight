@@ -1,11 +1,12 @@
-// 🏢 NetoInsight - Create Tenant Modal Component
+// 🏢 NetoInsight - Create Tenant Modal (CON TRIAL Y NOTIFICACIONES)
 
 import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TenantService } from '../../../core/services/tenant.service';
 import { InvitationService } from '../../../core/services/invitation.service';
-import { TenantPlan, CreateTenantDTO } from '../../../core/models/tenant.model';
+import { NotificationService } from '../../../core/services/notification.service';
+import { TenantPlan, CreateTenantDTO, PLAN_CONFIGS } from '../../../core/models/tenant.model';
 import { UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -27,14 +28,10 @@ export class CreateTenantModal implements OnInit {
   currentStep = 1;
   totalSteps = 3;
 
-  // Opciones
-  planOptions = [
-    { value: 'free', label: 'Gratis', maxLicenses: 3 },
-    { value: 'pro', label: 'Pro', maxLicenses: 10 },
-    { value: 'enterprise', label: 'Enterprise', maxLicenses: 50 },
-    { value: 'internal', label: 'Interno', maxLicenses: 100 }
-  ];
+  // Opciones de planes (ACTUALIZADAS)
+  planOptions = PLAN_CONFIGS;
 
+  // Dashboards disponibles
   dashboardOptions = [
     { id: 'categorization', label: 'Categorización', checked: true },
     { id: 'stores', label: 'Tiendas', checked: true },
@@ -47,7 +44,8 @@ export class CreateTenantModal implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private tenantService: TenantService,
-    private invitationService: InvitationService
+    private invitationService: InvitationService,
+    private notificationService: NotificationService
   ) {
     this.createForm = this.fb.group({
       // Paso 1: Información Básica
@@ -56,8 +54,8 @@ export class CreateTenantModal implements OnInit {
       rfc: ['', [Validators.pattern(/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/)]],
       
       // Paso 2: Configuración
-      plan: ['pro', Validators.required],
-      maxLicenses: [10, [Validators.required, Validators.min(1)]],
+      plan: ['starter', Validators.required],  // Starter por defecto
+      maxLicenses: [5, [Validators.required, Validators.min(1)]],
       proveedorIdInterno: ['', [Validators.required, Validators.pattern(/^PROV-\d{3}$/)]],
       
       // Integraciones
@@ -69,7 +67,7 @@ export class CreateTenantModal implements OnInit {
       adminEmail: ['', [Validators.required, Validators.email]],
       billingEmail: ['', Validators.email],
       
-      // Fechas de contrato
+      // Fechas de contrato (opcional)
       contractStart: [''],
       contractEnd: ['']
     });
@@ -213,6 +211,16 @@ export class CreateTenantModal implements OnInit {
   }
 
   /**
+   * Calcular fecha de expiración del trial (30 días)
+   */
+  private calculateTrialEndDate(): any {
+    const now = new Date();
+    const trialEnd = new Date(now);
+    trialEnd.setDate(trialEnd.getDate() + 30);
+    return trialEnd;  // Firestore lo convertirá automáticamente a Timestamp
+  }
+
+  /**
    * Enviar formulario
    */
   async onSubmit(): Promise<void> {
@@ -229,6 +237,7 @@ export class CreateTenantModal implements OnInit {
 
     try {
       const formValue = this.createForm.value;
+      const selectedPlan = formValue.plan as TenantPlan;
 
       // Preparar DTO
       const createDTO: CreateTenantDTO = {
@@ -236,13 +245,13 @@ export class CreateTenantModal implements OnInit {
         name: formValue.name.trim(),
         legalName: formValue.legalName?.trim() || formValue.name.trim(),
         rfc: formValue.rfc?.trim() || undefined,
-        plan: formValue.plan as TenantPlan,
+        plan: selectedPlan,
         maxLicenses: formValue.maxLicenses,
         features: {
           dashboards: this.getSelectedDashboards(),
           exports: true,
-          api: formValue.plan === 'enterprise' || formValue.plan === 'internal',
-          customReports: formValue.plan === 'enterprise' || formValue.plan === 'internal'
+          api: selectedPlan === TenantPlan.ENTERPRISE || selectedPlan === TenantPlan.INTERNAL,
+          customReports: selectedPlan === TenantPlan.ENTERPRISE || selectedPlan === TenantPlan.INTERNAL
         },
         tableauGroup: formValue.tableauGroup.trim(),
         bigQueryDataset: formValue.bigQueryDataset?.trim(),
@@ -250,41 +259,62 @@ export class CreateTenantModal implements OnInit {
         adminEmail: formValue.adminEmail.trim(),
         billingEmail: formValue.billingEmail?.trim(),
         contractStart: formValue.contractStart || undefined,
-        contractEnd: formValue.contractEnd || undefined
+        contractEnd: formValue.contractEnd || undefined,
+        trialEndsAt: selectedPlan === TenantPlan.TRIAL ? this.calculateTrialEndDate() : undefined
       };
 
       // Obtener usuario actual para createdBy
       const currentUser = this.authService.getCurrentUser();
+
       // 1. Crear tenant
       console.log('🏢 [CREATE-TENANT] Creating tenant in Firestore...');
-      const tenant = await this.tenantService.createTenant(createDTO,  currentUser?.uid || 'system');
+      const tenant = await this.tenantService.createTenant(createDTO, currentUser?.uid || 'system');
       console.log('✅ [CREATE-TENANT] Tenant created:', tenant.tenantId);
 
-      // 2. Crear invitación para el admin
+      // 2. Crear invitación para el admin (esto ya envía el email automáticamente)
       console.log('📧 [CREATE-TENANT] Creating invitation for admin...');
       const invitation = await this.invitationService.createInvitation({
         email: formValue.adminEmail.trim(),
         role: UserRole.ADMIN,
         tenantId: tenant.tenantId
       });
-      console.log('✅ [CREATE-TENANT] Invitation created:', invitation.id);
+      console.log('✅ [CREATE-TENANT] Invitation created and email sent:', invitation.id);
 
       // 3. Emitir evento de éxito
       this.tenantCreated.emit();
-      
-      alert(`✅ Proveedor creado exitosamente!\n\n` +
-            `Tenant: ${tenant.name}\n` +
-            `ID: ${tenant.tenantId}\n\n` +
-            `Se envió invitación a: ${formValue.adminEmail}\n` +
-            `Link: ${window.location.origin}/accept-invite?token=${invitation.token}\n\n` +
-            `(En producción, esto se enviará automáticamente por email)`);
+
+      // 4. Mostrar modal de éxito
+      const trialMessage = selectedPlan === TenantPlan.TRIAL 
+        ? '\n\n⏰ Trial válido por 30 días desde hoy' 
+        : '';
+
+      this.notificationService.success(
+        'Proveedor Creado',
+        `${tenant.name} ha sido creado exitosamente.\n\n` +
+        `📧 Invitación enviada a: ${formValue.adminEmail}\n` +
+        `📦 Plan: ${this.getPlanLabel(selectedPlan)}\n` +
+        `👥 Licencias: ${formValue.maxLicenses}${trialMessage}`
+      );
 
     } catch (error: any) {
       console.error('❌ [CREATE-TENANT] Error:', error);
       this.errorMessage = error.message || 'Error al crear proveedor';
-    } finally {
+      
+      this.notificationService.error(
+        'Error al Crear Proveedor',
+        this.errorMessage
+      );
+      
       this.isSubmitting = false;
     }
+  }
+
+  /**
+   * Obtener label del plan
+   */
+  private getPlanLabel(plan: TenantPlan): string {
+    const planConfig = this.planOptions.find(p => p.value === plan);
+    return planConfig?.label || plan;
   }
 
   /**
@@ -313,12 +343,26 @@ export class CreateTenantModal implements OnInit {
     if (this.isSubmitting) return;
 
     if (this.createForm.dirty) {
-      if (!confirm('¿Estás seguro de cancelar? Los cambios se perderán.')) {
-        return;
-      }
+      this.notificationService.confirm(
+        'Cancelar Creación',
+        '¿Estás seguro de cancelar? Los cambios se perderán.',
+        () => {
+          this.close.emit();
+        },
+        'Sí, cancelar',
+        'Continuar editando',
+        'warning'
+      );
+    } else {
+      this.close.emit();
     }
+  }
 
-    this.close.emit();
+  /**
+   * Prevenir cierre al hacer click dentro del modal
+   */
+  onModalClick(event: MouseEvent): void {
+    event.stopPropagation();
   }
 
   /**
@@ -360,17 +404,13 @@ export class CreateTenantModal implements OnInit {
     
     if (control?.hasError('pattern')) {
       if (fieldName === 'rfc') {
-        return 'RFC inválido (ej: ABC123456XYZ)';
+        return 'Formato de RFC inválido';
       }
       if (fieldName === 'proveedorIdInterno') {
-        return 'Formato inválido (ej: PROV-001)';
+        return 'Formato debe ser PROV-XXX';
       }
     }
     
-    if (control?.hasError('min')) {
-      return 'Debe ser mayor a 0';
-    }
-    
-    return '';
+    return 'Campo inválido';
   }
 }

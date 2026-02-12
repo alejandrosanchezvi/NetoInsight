@@ -408,3 +408,12 @@
   outline: 2px solid var(--neto-orange);
   outline-offset: 2px;
 }
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+app-trial-info {
+  margin-top: auto;  /* Empuja el componente hasta abajo */
+}
