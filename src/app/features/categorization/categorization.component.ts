@@ -30,10 +30,14 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
   // Opción 1: Filtrar por NOMBRE (true) o por ID (false)
   private readonly FILTER_BY_NAME = true; // ← CAMBIAR AQUÍ
   
+  // Opción 2: Aplicar filtro ALL (todos los valores) vs. un valor específico
+  private readonly FILTER_ALL_VALUES = false; // ← true = mostrar TODOS, false = filtrar uno solo
+  private readonly FILTER_ALL_VALUES_NETO = 'Tiendas Neto'; // ← true = mostrar TODOS, false = filtrar uno solo
+  
   // Hardcoded para pruebas (dejar vacío '' para usar datos del tenant)
   // private readonly HARDCODED_PROVIDER_NAME = 'BIMBO, S.A. DE C.V.'; // ← Para pruebas por nombre
-  // private readonly HARDCODED_PROVIDER_NAME = 'PROPIMEX  S DE R.L DE C.V.'; // ← Para pruebas por nombre
-  private readonly HARDCODED_PROVIDER_NAME = '4E GLOBAL'; // ← Para pruebas por nombre
+  private readonly HARDCODED_PROVIDER_NAME = 'PROPIMEX  S DE R.L DE C.V.'; // ← Para pruebas por nombre
+  // private readonly HARDCODED_PROVIDER_NAME = '4E GLOBAL'; // ← Para pruebas por nombre
   private readonly HARDCODED_PROVIDER_ID = '1000006'; // ← Para pruebas por ID
   
   // Campos de filtro
@@ -202,13 +206,16 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
       viz.style.height = '100%';
       viz.style.display = 'block';
       viz.style.minHeight = '100%';
+      
+      // 🔒 OCULTAR EL DASHBOARD HASTA QUE SE APLIQUEN LOS FILTROS
+      viz.style.opacity = '0';
+      viz.style.visibility = 'hidden';
 
       this.vizElement = viz;
 
       viz.addEventListener('firstinteractive', async () => {
-        console.log('✅ Dashboard cargado con SSO');
-        this.isLoading = false;
-        this.authError = '';
+        console.log('✅ Dashboard cargado - APLICANDO FILTROS...');
+        // 👉 MANTENER LOADING ACTIVO
         this.adjustDashboardSize();
         
         // 🔍 EJECUTAR DIAGNÓSTICO
@@ -216,12 +223,22 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
         
         // 🎯 APLICAR FILTRO SEGÚN CONFIGURACIÓN
         if (this.FILTER_BY_NAME) {
-          console.log('🔧 [CONFIG] Usando filtro por NOMBRE');
+          console.log('🔧 [CONFIG] Aplicando filtro por NOMBRE');
           await this.applyProviderFilterByName();
         } else {
-          console.log('🔧 [CONFIG] Usando filtro por ID');
+          console.log('🔧 [CONFIG] Aplicando filtro por ID');
           await this.applyProviderFilterById();
         }
+        
+        // ✅ MOSTRAR EL DASHBOARD DESPUÉS DE APLICAR FILTROS
+        console.log('👁️ [DISPLAY] Mostrando dashboard con filtros aplicados');
+        viz.style.opacity = '1';
+        viz.style.visibility = 'visible';
+        viz.style.transition = 'opacity 0.3s ease-in-out';
+        
+        // 🎉 AHORA SÍ QUITAR EL LOADING
+        this.isLoading = false;
+        this.authError = '';
       });
 
       viz.addEventListener('vizloadError', (event: any) => {
@@ -231,7 +248,7 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
       });
 
       container.appendChild(viz);
-      console.log('📊 tableau-viz element creado con JWT token');
+      console.log('📊 tableau-viz element creado (oculto hasta aplicar filtros)');
 
       setTimeout(() => {
         if (this.isLoading) {
@@ -342,13 +359,19 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
     console.log('╚═══════════════════════════════════════════════════╝');
     console.log(`🔎 [FILTER] Campo: "${this.FILTER_FIELD_NAME_TEXT}"`);
     
-    const providerName = this.HARDCODED_PROVIDER_NAME || this.currentProviderName;
-    console.log(`📌 [FILTER] Proveedor: "${providerName}"`);
-    console.log(`🔧 [FILTER] Modo: ${this.HARDCODED_PROVIDER_NAME ? '⚡ HARDCODED' : '📋 Del Tenant'}`);
-    
-    if (!providerName) {
-      console.error('❌ No hay nombre de proveedor disponible');
-      return;
+    if (this.FILTER_ALL_VALUES) {
+      console.log(`🌐 [FILTER] Modo: TODOS LOS VALORES (ALL)`);
+      console.log(`📌 [FILTER] Se mostrarán TODOS los proveedores`);
+    } else {
+      // const providerName = this.HARDCODED_PROVIDER_NAME || this.currentProviderName;
+      const providerName =  this.currentProviderName;
+      console.log(`📌 [FILTER] Proveedor: "${providerName}"`);
+      console.log(`🔧 [FILTER] Modo: ${this.HARDCODED_PROVIDER_NAME ? '⚡ HARDCODED' : '📋 Del Tenant'}`);
+      
+      if (!providerName) {
+        console.error('❌ No hay nombre de proveedor disponible');
+        return;
+      }
     }
     
     try {
@@ -363,7 +386,6 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
         let skipCount = 0;
         let failCount = 0;
         
-        // for (let i = 0; i < worksheets.length; i++) {
         for (let i = 0; i < 1; i++) {
           const worksheet = worksheets[i];
           const worksheetName = worksheet.name;
@@ -377,8 +399,17 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
           }
           
           try {
-            await worksheet.applyFilterAsync(this.FILTER_FIELD_NAME_TEXT, [providerName], 'replace');
-            console.log(`   ✅ APLICADO: "${providerName}"`);
+            // if (this.FILTER_ALL_VALUES) {
+            if (this.FILTER_ALL_VALUES_NETO == this.currentProviderName) {
+              // LIMPIAR FILTRO = Mostrar TODOS los valores
+              await worksheet.clearFilterAsync(this.FILTER_FIELD_NAME_TEXT);
+              console.log(`   ✅ FILTRO LIMPIADO: Mostrando TODOS`);
+            } else {
+              // APLICAR FILTRO ESPECÍFICO
+              const providerName = this.currentProviderName;
+              await worksheet.applyFilterAsync(this.FILTER_FIELD_NAME_TEXT, [providerName], 'replace');
+              console.log(`   ✅ APLICADO: "${providerName}"`);
+            }
             successCount++;
           } catch (error: any) {
             console.warn(`   ⚠️ FALLÓ: ${error.message || 'Error'}`);
@@ -389,6 +420,12 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
         console.log('\n╔═══════════════════════════════════════════════════╗');
         console.log('📊 RESUMEN - FILTRADO POR NOMBRE');
         console.log('╚═══════════════════════════════════════════════════╝');
+        if (this.FILTER_ALL_VALUES) {
+          console.log(`🌐 Modo: TODOS LOS VALORES`);
+        } else {
+          const providerName = this.HARDCODED_PROVIDER_NAME || this.currentProviderName;
+          console.log(`🏢 Proveedor filtrado: "${providerName}"`);
+        }
         console.log(`✅ Exitosos: ${successCount} | ⭕ Omitidos: ${skipCount} | ⚠️ Fallidos: ${failCount}`);
         console.log('╚═══════════════════════════════════════════════════╝\n');
       }
@@ -406,14 +443,19 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
     console.log('╚═══════════════════════════════════════════════════╝');
     console.log(`🔎 [FILTER] Campo: "${this.FILTER_FIELD_NAME_ID}"`);
     
-    const providerId = this.HARDCODED_PROVIDER_ID || this.currentProviderId;
-    console.log(`🆔 [FILTER] ID: "${providerId}"`);
-    console.log(`🏢 [FILTER] Proveedor: "${this.currentProviderName}"`);
-    console.log(`🔧 [FILTER] Modo: ${this.HARDCODED_PROVIDER_ID ? '⚡ HARDCODED' : '📋 Del Tenant'}`);
-    
-    if (!providerId) {
-      console.error('❌ No hay ID de proveedor disponible');
-      return;
+    if (this.FILTER_ALL_VALUES) {
+      console.log(`🌐 [FILTER] Modo: TODOS LOS VALORES (ALL)`);
+      console.log(`📌 [FILTER] Se mostrarán TODOS los proveedores`);
+    } else {
+      const providerId = this.HARDCODED_PROVIDER_ID || this.currentProviderId;
+      console.log(`🆔 [FILTER] ID: "${providerId}"`);
+      console.log(`🏢 [FILTER] Proveedor: "${this.currentProviderName}"`);
+      console.log(`🔧 [FILTER] Modo: ${this.HARDCODED_PROVIDER_ID ? '⚡ HARDCODED' : '📋 Del Tenant'}`);
+      
+      if (!providerId) {
+        console.error('❌ No hay ID de proveedor disponible');
+        return;
+      }
     }
     
     try {
@@ -428,7 +470,7 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
         let skipCount = 0;
         let failCount = 0;
         
-        for (let i = 0; i < worksheets.length; i++) {
+        for (let i = 0; i < 0; i++) {
           const worksheet = worksheets[i];
           const worksheetName = worksheet.name;
           
@@ -441,8 +483,16 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
           }
           
           try {
-            await worksheet.applyFilterAsync(this.FILTER_FIELD_NAME_ID, [providerId], 'replace');
-            console.log(`   ✅ APLICADO: ${providerId}`);
+            if (this.FILTER_ALL_VALUES) {
+              // LIMPIAR FILTRO = Mostrar TODOS los valores
+              await worksheet.clearFilterAsync(this.FILTER_FIELD_NAME_ID);
+              console.log(`   ✅ FILTRO LIMPIADO: Mostrando TODOS`);
+            } else {
+              // APLICAR FILTRO ESPECÍFICO
+              const providerId = this.HARDCODED_PROVIDER_ID || this.currentProviderId;
+              await worksheet.applyFilterAsync(this.FILTER_FIELD_NAME_ID, [providerId], 'replace');
+              console.log(`   ✅ APLICADO: ${providerId}`);
+            }
             successCount++;
           } catch (error: any) {
             console.warn(`   ⚠️ FALLÓ: ${error.message || 'Error'}`);
@@ -453,6 +503,13 @@ export class CategorizationComponent implements OnInit, AfterViewInit, OnDestroy
         console.log('\n╔═══════════════════════════════════════════════════╗');
         console.log('📊 RESUMEN - FILTRADO POR ID');
         console.log('╚═══════════════════════════════════════════════════╝');
+        if (this.FILTER_ALL_VALUES) {
+          console.log(`🌐 Modo: TODOS LOS VALORES`);
+        } else {
+          const providerId = this.HARDCODED_PROVIDER_ID || this.currentProviderId;
+          console.log(`🏢 Proveedor: "${this.currentProviderName}"`);
+          console.log(`🆔 ID filtrado: ${providerId}`);
+        }
         console.log(`✅ Exitosos: ${successCount} | ⭕ Omitidos: ${skipCount} | ⚠️ Fallidos: ${failCount}`);
         console.log('╚═══════════════════════════════════════════════════╝\n');
       }
