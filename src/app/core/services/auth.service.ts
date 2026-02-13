@@ -178,6 +178,7 @@ export class AuthService {
         mfaEnabled: data['mfaEnabled'] || false,
         createdAt: data['createdAt']?.toDate() || new Date(),
         lastLogin: data['lastLogin']?.toDate(),
+        proveedorIdInterno: data['proveedorIdInterno']
       };
 
       console.log('✅ [AUTH] User data fetched:', user.email);

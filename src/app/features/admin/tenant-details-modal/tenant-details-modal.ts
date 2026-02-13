@@ -108,7 +108,8 @@ export class TenantDetailsModal implements OnInit {
           isActive: data['isActive'] !== false,
           mfaEnabled: data['mfaEnabled'] || false,
           createdAt: data['createdAt']?.toDate() || new Date(),
-          lastLogin: data['lastLogin']?.toDate()
+          lastLogin: data['lastLogin']?.toDate(),
+          proveedorIdInterno: data['proveedorIdInterno']
         };
       });
 

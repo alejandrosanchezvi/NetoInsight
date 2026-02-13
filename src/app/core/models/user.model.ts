@@ -13,7 +13,8 @@ export interface User {
   mfaEnabled: boolean;
   createdAt: Date;
   lastLogin?: Date;
-  invitationId?: string;   
+  invitationId?: string;
+  proveedorIdInterno: string;
 }
 
 export enum UserRole {
