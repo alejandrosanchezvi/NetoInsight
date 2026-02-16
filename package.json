@@ -10,7 +10,7 @@
     "build:prod": "ng build --configuration production",
     "build:staging": "ng build --configuration staging",
     "deploy:prod": "npm run build:prod && firebase deploy --only hosting:production -P production",
-    "deploy:staging": "npm run build:staging && firebase deploy --only hosting:staging -P staging",
+    "deploy:staging": "npm run build:staging && firebase deploy --only hosting:staging",
     "preview:prod": "firebase hosting:channel:deploy preview-prod -P production",
     "preview:staging": "firebase hosting:channel:deploy preview-staging -P staging",
     "firebase:login": "firebase login",

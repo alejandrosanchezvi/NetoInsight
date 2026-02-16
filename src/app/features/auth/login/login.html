@@ -1,67 +1,139 @@
-<!-- 🔐 NetoInsight - Login Template -->
+<!-- 🔐 NetoInsight - Login Template (MODERN GLASSMORPHISM REDESIGN) -->
 
-<div class="login-container">
+<div class="login-wrapper">
+  <!-- Animated Background -->
+  <div class="animated-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Login Card -->
   <div class="login-card">
-    
-    <!-- Logo -->
+    <!-- Header -->
     <div class="login-header">
-      <img src="/assets/images/logoNeto.png" alt="Neto Logo" class="login-logo">
-      <h1 class="login-title">NetoInsight</h1>
-      <p class="login-subtitle">Portal de Proveedores</p>
+      <div class="brand-logo">
+        <img src="/assets/images/logoNeto.png" alt="Neto" class="logo-img">
+      </div>
+      <h1 class="welcome-title">¡Bienvenido!</h1>
+      <p class="welcome-subtitle">Ingresa a tu cuenta</p>
     </div>
 
-    <!-- Error Message -->
-    <div *ngIf="errorMessage" class="alert-error">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="8" x2="12" y2="12"></line>
-        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-      </svg>
-      <span>{{ errorMessage }}</span>
+    <!-- Error Alert -->
+    <div *ngIf="errorMessage" class="error-alert">
+      <div class="error-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <span class="error-text">{{ errorMessage }}</span>
     </div>
 
     <!-- Login Form -->
     <form (ngSubmit)="onSubmit()" class="login-form">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          [(ngModel)]="email"
-          name="email"
-          class="form-input"
-          placeholder="usuario@empresa.com"
-          [disabled]="isLoading"
-          autocomplete="email"
-          required>
+      <!-- Email Input -->
+      <div class="input-group">
+        <label class="input-label">Email</label>
+        <div class="input-container">
+          <input
+            id="email"
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            class="input-field"
+            placeholder="tu@email.com"
+            [disabled]="isLoading"
+            autocomplete="email"
+            required>
+          <div class="input-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="password">Contraseña</label>
-        <input
-          id="password"
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          class="form-input"
-          placeholder="••••••••"
-          [disabled]="isLoading"
-          autocomplete="current-password"
-          required>
+      <!-- Password Input -->
+      <div class="input-group">
+        <label class="input-label">Contraseña</label>
+        <div class="input-container">
+          <input
+            id="password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            class="input-field"
+            placeholder="••••••••"
+            [disabled]="isLoading"
+            autocomplete="current-password"
+            required>
+          <div class="input-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+        </div>
       </div>
 
-      <button type="submit" class="btn-login" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Iniciar Sesión</span>
-        <span *ngIf="isLoading" class="loading-text">
-          <span class="spinner-sm"></span>
-          Iniciando...
+      <!-- Login Button -->
+      <button type="submit" class="btn-submit" [disabled]="isLoading">
+        <span *ngIf="!isLoading" class="btn-text">Iniciar Sesión</span>
+        <span *ngIf="isLoading" class="btn-loading">
+          <span class="loading-spinner"></span>
+          <span>Iniciando...</span>
         </span>
       </button>
     </form>
 
     <!-- Footer -->
-    <div class="login-footer">
+    <div class="card-footer">
       <p class="footer-text">© 2026 Neto. Todos los derechos reservados.</p>
     </div>
+  </div>
+
+  <!-- Floating Particles -->
+  <div class="particles">
+   <!-- Fila 1: Parte superior (10 partículas) -->
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  
+  <!-- Fila 2: Parte media (10 partículas) -->
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  
+  <!-- Fila 3: Parte inferior (10 partículas) -->
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
+  <span class="particle"></span>
   </div>
 </div>

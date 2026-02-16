@@ -38,7 +38,8 @@ export class InvitationService {
   private authService = inject(AuthService);
   
   // URL del backend FastAPI
-  private apiUrl = environment.apiUrl || 'http://localhost:8000';
+  private apiUrl = environment.apiUrl || 'https://netoinsight-api-staging-609085902384.us-central1.run.app';
+    // private apiUrl = environment.apiUrl || 'https://netoinsight-api-staging-609085902384.us-central1.run.app';
 
   constructor() {
     console.log('📧 [INVITATION] InvitationService initialized with FastAPI + MailSlurp');

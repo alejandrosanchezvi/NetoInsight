@@ -16,7 +16,8 @@ interface TableauEmbedResponse {
   providedIn: 'root'
 })
 export class TableauService {
-  private readonly API_URL = 'https://netoinsight-api-staging-217656192913.us-central1.run.app';
+  // private readonly API_URL = 'https://netoinsight-api-staging-217656192913.us-central1.run.app';
+  private readonly API_URL = 'https://netoinsight-api-staging-609085902384.us-central1.run.app';
   private auth = inject(Auth);
   private http = inject(HttpClient);
 

@@ -1,4 +1,4 @@
-/* 🔄 NetoInsight - Loading Spinner Styles */
+/* 🔄 NetoInsight - Loading Spinner Styles (GLASSMORPHISM) */
 
 .loading-overlay-fullscreen {
   position: fixed;
@@ -8,47 +8,148 @@
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(255, 255, 255, 0.85);
+  
+  /* Glassmorphism backdrop */
+  background: rgba(26, 42, 78, 0.5);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  backdrop-filter: blur(3px);
+  
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .spinner-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
+  padding: 3rem 2.5rem;
+  
+  /* Glassmorphism card */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .spinner {
-  width: 60px;
-  height: 60px;
-  border: 6px solid #e5e7eb;
-  border-top-color: #F58220;
+  width: 64px;
+  height: 64px;
+  border: 5px solid rgba(232, 116, 59, 0.15);
+  border-top-color: #e8743b;
+  border-right-color: #e8743b;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+  
+  box-shadow: 
+    0 0 0 4px rgba(255, 255, 255, 0.8),
+    0 4px 16px rgba(232, 116, 59, 0.2);
+  
+  position: relative;
+}
+
+.spinner::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border: 3px solid transparent;
+  border-top-color: rgba(232, 116, 59, 0.4);
+  border-radius: 50%;
+  animation: spin-reverse 0.6s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes spin-reverse {
+  to { 
+    transform: translate(-50%, -50%) rotate(-360deg); 
+  }
 }
 
 .loading-text {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #0E3B83;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a2a4e;
   margin: 0;
   text-align: center;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .loading-subtext {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 500;
   color: #6b7280;
   margin: 0;
-  margin-top: -0.75rem;
+  margin-top: -1rem;
   text-align: center;
+  letter-spacing: 0.2px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .spinner-container {
+    padding: 2.5rem 2rem;
+    gap: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .spinner {
+    width: 56px;
+    height: 56px;
+  }
+
+  .spinner::before {
+    width: 40px;
+    height: 40px;
+  }
+
+  .loading-text {
+    font-size: 1.125rem;
+  }
+
+  .loading-subtext {
+    font-size: 0.9375rem;
+  }
 }
