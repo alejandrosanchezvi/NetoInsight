@@ -1,10 +1,11 @@
-// 🔐 NetoInsight - Login Component (CORREGIDO)
+// 🔐 NetoInsight - Login Component (CON SESSION SERVICE)
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { SessionService } from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-login',
@@ -20,23 +21,16 @@ export class Login implements OnInit {
   errorMessage = '';
   returnUrl = '/categorization';
 
-  // Usuarios disponibles para quick login
-  quickUsers = [
-    { email: 'juan.perez@bimbo.com', name: 'Juan Pérez (Bimbo)', icon: '🏭' },
-    { email: 'maria.lopez@cocacola.com', name: 'María López (Coca-Cola)', icon: '🥤' },
-    { email: 'admin@neto.com', name: 'Admin Neto (Interno)', icon: '👨‍💼' }
-  ];
-
   constructor(
     private authService: AuthService,
+    private sessionService: SessionService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    // Obtener returnUrl de query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/categorization';
-    
+
     // Si ya está autenticado, redirigir
     if (this.authService.isAuthenticated()) {
       console.log('✅ [LOGIN] Ya autenticado, redirigiendo...');
@@ -44,9 +38,6 @@ export class Login implements OnInit {
     }
   }
 
-  /**
-   * Login tradicional (CORREGIDO para usar Observable)
-   */
   onSubmit(): void {
     if (!this.email || !this.password) {
       this.errorMessage = 'Por favor ingresa email y contraseña';
@@ -56,11 +47,12 @@ export class Login implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // AuthService.login() retorna Observable<User>
     this.authService.login(this.email, this.password).subscribe({
       next: (user) => {
         console.log('✅ [LOGIN] Login exitoso:', user.email);
         this.isLoading = false;
+        // ⏱️ Iniciar contador de sesión
+        this.sessionService.startSession();
         this.router.navigate([this.returnUrl]);
       },
       error: (error) => {
@@ -71,9 +63,6 @@ export class Login implements OnInit {
     });
   }
 
-  /**
-   * Quick login (para desarrollo)
-   */
   quickLogin(email: string): void {
     this.email = email;
     this.password = 'demo';

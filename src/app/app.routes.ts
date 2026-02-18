@@ -2,7 +2,7 @@
 
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './features/main-layout/main-layout.component';
-import { CategorizationComponent } from './features/categorization/categorization.component';
+import { Categorization } from './features/categorization/categorization';
 import { Skus } from './features/skus/skus';
 import { Stocks } from './features/stocks/stocks';
 import { Login } from './features/auth/login/login';
@@ -43,11 +43,11 @@ export const routes: Routes = [
       // 📊 Dashboards - Todos los usuarios
       {
         path: 'categorization',
-        component: CategorizationComponent,
+        component: Categorization,
       },
       {
         path: 'stores',
-        component: CategorizationComponent,
+        component: Categorization,
       },
       {
         path: 'skus',
@@ -59,7 +59,7 @@ export const routes: Routes = [
       },
       {
         path: 'purchase-orders',
-        component: CategorizationComponent,
+        component: Categorization,
       },
       // 🏢 Gestión de Proveedores - Solo para Admins Internos de Neto
       {

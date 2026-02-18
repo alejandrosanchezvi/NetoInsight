@@ -1,8 +1,9 @@
-<!-- 🏠 NetoInsight - Main Layout Template (CON SIDEBAR MINI) -->
+<!-- 🏠 NetoInsight - Main Layout Template (CON SESSION TIMEOUT) -->
 
 <div class="main-layout">
   <!-- Header -->
   <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+
   <!-- Sidebar -->
   <app-sidebar 
     [isOpen]="isSidebarOpen"
@@ -13,8 +14,10 @@
   <!-- Main Content Area -->
   <main class="main-content" [class.sidebar-mini]="!isSidebarOpen">
     <div class="content-container">
-      <!-- Router Outlet para las rutas hijas -->
       <router-outlet></router-outlet>
     </div>
   </main>
 </div>
+
+<!-- ⏱️ Session Timeout Modal (warning + expired) -->
+<app-session-timeout-modal></app-session-timeout-modal>

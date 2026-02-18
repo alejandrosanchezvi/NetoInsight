@@ -1,4 +1,4 @@
-// 📦 NetoInsight - SKUs Component (EMBEDDING API v3 - CON FILTRADO ESPECIAL)
+// 📊 NetoInsight - Skus Component (EMBEDDING API v3 - OPTIMIZADO)
 
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy, CUSTOM_ELEMENTS_SCHEMA, HostListener, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -27,8 +27,8 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
   // 🔧 CONFIGURACIÓN DE FILTROS
   // ═══════════════════════════════════════════════════════════
   
-  // Usuario especial que ve TODO
-  private readonly TIENDAS_NETO_NAME = 'Tiendas Neto';
+  private readonly FILTER_BY_NAME = true;
+  private readonly FILTER_ALL_VALUES_NETO = 'Tiendas Neto';
   
   // Campos de filtro
   private readonly FILTER_FIELD_NAME_TEXT = 'Proveedor';
@@ -50,19 +50,10 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('📦 [SKUS] Inicializando componente');
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
       this.currentProviderName = currentUser.tenantName;
       this.currentProviderId = currentUser.proveedorIdInterno || '';
-      
-      console.log(`🏢 [SKUS] Proveedor: ${this.currentProviderName}`);
-      console.log(`🆔 [SKUS] Proveedor ID: ${this.currentProviderId}`);
-      
-      // Detectar si es Tiendas Neto
-      if (this.currentProviderName === this.TIENDAS_NETO_NAME) {
-        console.log(`⭐ [SKUS] Usuario ESPECIAL: ${this.TIENDAS_NETO_NAME} - Verá TODOS los datos`);
-      }
     }
     this.loadTableauScript();
     this.observeSidebarChanges();
@@ -131,11 +122,9 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadTableauScript(): void {
-    console.log('📜 [SKUS] Cargando Tableau API...');
     const existingScript = document.getElementById('tableau-embedding-script');
     
     if (existingScript) {
-      console.log('✅ [SKUS] Script ya existe');
       this.loadDashboard();
       return;
     }
@@ -146,7 +135,6 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
     script.src = 'https://us-east-1.online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js';
     
     script.onload = () => {
-      console.log('✅ Tableau Embedding API v3 cargada');
       this.loadDashboard();
     };
     
@@ -170,14 +158,13 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
       
       if (response?.jwt && response?.embedUrl) {
         this.jwtToken = response.jwt;
-        console.log('✅ JWT recibido, creando tableau-viz element');
         await this.createTableauVizElement(response.embedUrl);
       } else {
         throw new Error('JWT o URL no recibido');
       }
       
     } catch (error: any) {
-      console.error('❌ Error:', error);
+      console.error('Error cargando dashboard:', error);
       this.isLoading = false;
       this.authError = error.status === 401 ? 'Error 401: Verificar Connected App' : 'Error cargando dashboard';
     }
@@ -201,39 +188,35 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
       viz.style.height = '100%';
       viz.style.display = 'block';
       viz.style.minHeight = '100%';
-      
-      // 🔒 OCULTAR hasta aplicar filtros
       viz.style.opacity = '0';
       viz.style.visibility = 'hidden';
 
       this.vizElement = viz;
 
       viz.addEventListener('firstinteractive', async () => {
-        console.log('✅ Dashboard SKUs cargado - APLICANDO FILTROS...');
         this.adjustDashboardSize();
         
-        // 🎯 APLICAR FILTRO CON LÓGICA ESPECIAL
-        await this.applyProviderFilter();
+        if (this.FILTER_BY_NAME) {
+          await this.applyProviderFilterByName();
+        } else {
+          await this.applyProviderFilterById();
+        }
         
-        // ✅ MOSTRAR DASHBOARD
-        console.log('👁️ [DISPLAY] Mostrando dashboard SKUs con filtros aplicados');
         viz.style.opacity = '1';
         viz.style.visibility = 'visible';
         viz.style.transition = 'opacity 0.3s ease-in-out';
         
-        // 🎉 QUITAR LOADING
         this.isLoading = false;
         this.authError = '';
       });
 
       viz.addEventListener('vizloadError', (event: any) => {
-        console.error('❌ Viz Load Error:', event.detail);
+        console.error('Viz Load Error:', event.detail);
         this.isLoading = false;
         this.authError = 'Error de autenticación Connected App: ' + (event.detail?.errorCode || 'unknown');
       });
 
       container.appendChild(viz);
-      console.log('📦 tableau-viz element creado (SKUs - oculto hasta aplicar filtros)');
 
       setTimeout(() => {
         if (this.isLoading) {
@@ -243,30 +226,93 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
       }, 30000);
       
     } catch (error: any) {
-      console.error('❌ Error creando viz element:', error);
+      console.error('Error creando viz element:', error);
       this.isLoading = false;
       this.authError = `Error: ${error.message}`;
     }
   }
 
   /**
-   * 🎯 APLICAR FILTRO CON LÓGICA ESPECIAL
-   * - Si es "Tiendas Neto" → clearFilterAsync (mostrar TODO)
-   * - Si es otro proveedor → filtrar por su nombre
+   * 🔍 DIAGNÓSTICO COMPLETO DEL TABLEAU (Solo para debug manual)
    */
-  private async applyProviderFilter(): Promise<void> {
-    console.log('\n╔═══════════════════════════════════════════════════╗');
-    console.log('🔎 [SKUS FILTER] APLICANDO FILTRO');
-    console.log('╚═══════════════════════════════════════════════════╝');
-    
-    const isTiendasNeto = this.currentProviderName === this.TIENDAS_NETO_NAME;
-    
-    if (isTiendasNeto) {
-      console.log(`⭐ [SPECIAL] Usuario: "${this.TIENDAS_NETO_NAME}"`);
-      console.log(`🌐 [ACTION] Se LIMPIARÁN todos los filtros (clearFilterAsync)`);
-    } else {
-      console.log(`📌 [FILTER] Proveedor: "${this.currentProviderName}"`);
-      console.log(`🔧 [ACTION] Se FILTRARÁ por: "${this.currentProviderName}"`);
+  private async diagnosticarTableau(): Promise<void> {
+    try {
+      const workbook = await this.vizElement.workbook;
+      const activeSheet = await workbook.activeSheet;
+      
+      console.log('📚 Workbook:', workbook.name);
+      console.log('📄 Sheet:', activeSheet.name, '| Tipo:', activeSheet.sheetType);
+      
+      if (activeSheet.sheetType === 'dashboard') {
+        const worksheets = activeSheet.worksheets;
+        console.log(`\n📋 Worksheets: ${worksheets.length}`);
+        
+        for (const worksheet of worksheets) {
+          console.log(`\n📝 "${worksheet.name}"`);
+          
+          try {
+            const filters = await worksheet.getFiltersAsync();
+            
+            if (filters.length === 0) {
+              console.log('  🔍 Sin filtros disponibles');
+            } else {
+              console.log(`  🔍 Filtros: ${filters.length}`);
+              filters.forEach((filter: any) => {
+                console.log(`     - ${filter.fieldName} (${filter.filterType})`);
+                
+                if (filter.appliedValues && filter.appliedValues.length > 0) {
+                  const values = filter.appliedValues.map((v: any) => {
+                    if (typeof v === 'object' && v !== null) {
+                      return v.value || v.formattedValue || JSON.stringify(v);
+                    }
+                    return v;
+                  }).slice(0, 5);
+                  
+                  const moreCount = filter.appliedValues.length - 5;
+                  const valuesStr = values.join(', ');
+                  const moreStr = moreCount > 0 ? ` ... y ${moreCount} más` : '';
+                  
+                  console.log(`       Valores: ${valuesStr}${moreStr}`);
+                }
+              });
+            }
+            
+            const hasProveedorIdFilter = filters.some((f: any) => 
+              f.fieldName.toLowerCase() === this.FILTER_FIELD_NAME_ID.toLowerCase()
+            );
+            
+            const hasProveedorFilter = filters.some((f: any) => 
+              f.fieldName.toLowerCase() === this.FILTER_FIELD_NAME_TEXT.toLowerCase()
+            );
+            
+            if (this.FILTER_BY_NAME) {
+              console.log(hasProveedorFilter ? 
+                `  ✅ Campo "${this.FILTER_FIELD_NAME_TEXT}" existe` : 
+                `  ❌ Campo "${this.FILTER_FIELD_NAME_TEXT}" no existe`);
+            } else {
+              console.log(hasProveedorIdFilter ? 
+                `  ✅ Campo "${this.FILTER_FIELD_NAME_ID}" existe` : 
+                `  ❌ Campo "${this.FILTER_FIELD_NAME_ID}" no existe`);
+            }
+            
+          } catch (error) {
+            console.warn('  ⚠️ Error al obtener filtros de este worksheet');
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error en diagnóstico:', error);
+    }
+  }
+
+  /**
+   * 🎯 MÉTODO 1: FILTRAR POR NOMBRE DE PROVEEDOR
+   */
+  private async applyProviderFilterByName(): Promise<void> {
+    if (!this.currentProviderName) {
+      console.error('No hay nombre de proveedor disponible');
+      return;
     }
     
     try {
@@ -275,56 +321,63 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
 
       if (activeSheet.sheetType === 'dashboard') {
         const worksheets = activeSheet.worksheets;
-        console.log(`\n📋 Procesando ${worksheets.length} worksheets...\n`);
+        const worksheet = worksheets[0]; // Solo procesamos el primer worksheet
         
-        let successCount = 0;
-        let failCount = 0;
-        
-        for (let i = 0; i < worksheets.length; i++) {
-          const worksheet = worksheets[i];
-          const worksheetName = worksheet.name;
-          
-          console.log(`📝 [${i + 1}/${worksheets.length}] "${worksheetName}"`);
-          
-          if (this.WORKSHEETS_TO_SKIP.includes(worksheetName)) {
-            console.log(`   ⭕ OMITIDO`);
-            continue;
-          }
-          
-          try {
-            if (isTiendasNeto) {
-              // ⭐ TIENDAS NETO: Limpiar filtro (mostrar TODO)
-              await worksheet.clearFilterAsync(this.FILTER_FIELD_NAME_TEXT);
-              console.log(`   ✅ FILTRO LIMPIADO: Mostrando TODOS`);
-            } else {
-              // 🔧 OTROS: Filtrar por proveedor
-              await worksheet.applyFilterAsync(
-                this.FILTER_FIELD_NAME_TEXT,
-                [this.currentProviderName],
-                'replace'
-              );
-              console.log(`   ✅ FILTRO APLICADO: "${this.currentProviderName}"`);
-            }
-            successCount++;
-          } catch (error: any) {
-            console.warn(`   ⚠️ FALLÓ: ${error.message || 'Error'}`);
-            failCount++;
-          }
+        if (this.WORKSHEETS_TO_SKIP.includes(worksheet.name)) {
+          console.log('Worksheet omitido:', worksheet.name);
+          return;
         }
         
-        console.log('\n╔═══════════════════════════════════════════════════╗');
-        console.log('📊 RESUMEN - FILTRADO SKUS');
-        console.log('╚═══════════════════════════════════════════════════╝');
-        if (isTiendasNeto) {
-          console.log(`⭐ Usuario: ${this.TIENDAS_NETO_NAME} - Mostrando TODO`);
-        } else {
-          console.log(`🏢 Proveedor filtrado: "${this.currentProviderName}"`);
+        try {
+          if (this.FILTER_ALL_VALUES_NETO === this.currentProviderName) {
+            // LIMPIAR FILTRO = Mostrar TODOS los valores para Tiendas Neto
+            await worksheet.clearFilterAsync(this.FILTER_FIELD_NAME_TEXT);
+            console.log('✅ Filtro limpiado - Mostrando TODOS los proveedores');
+          } else {
+            // APLICAR FILTRO ESPECÍFICO para otros proveedores
+            await worksheet.applyFilterAsync(this.FILTER_FIELD_NAME_TEXT, [this.currentProviderName], 'replace');
+            console.log('✅ Filtro aplicado:', this.currentProviderName);
+          }
+        } catch (error: any) {
+          console.warn('Error aplicando filtro:', error.message);
         }
-        console.log(`✅ Exitosos: ${successCount} | ⚠️ Fallidos: ${failCount}`);
-        console.log('╚═══════════════════════════════════════════════════╝\n');
       }
     } catch (error) {
-      console.error('❌ Error al aplicar filtro:', error);
+      console.error('Error al filtrar por nombre:', error);
+    }
+  }
+
+  /**
+   * 🎯 MÉTODO 2: FILTRAR POR ID DE PROVEEDOR
+   */
+  private async applyProviderFilterById(): Promise<void> {
+    if (!this.currentProviderId) {
+      console.error('No hay ID de proveedor disponible');
+      return;
+    }
+    
+    try {
+      const workbook = await this.vizElement.workbook;
+      const activeSheet = await workbook.activeSheet;
+
+      if (activeSheet.sheetType === 'dashboard') {
+        const worksheets = activeSheet.worksheets;
+        const worksheet = worksheets[0]; // Solo procesamos el primer worksheet
+        
+        if (this.WORKSHEETS_TO_SKIP.includes(worksheet.name)) {
+          console.log('Worksheet omitido:', worksheet.name);
+          return;
+        }
+        
+        try {
+          await worksheet.applyFilterAsync(this.FILTER_FIELD_NAME_ID, [this.currentProviderId], 'replace');
+          console.log('✅ Filtro por ID aplicado:', this.currentProviderId);
+        } catch (error: any) {
+          console.warn('Error aplicando filtro por ID:', error.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error al filtrar por ID:', error);
     }
   }
 
@@ -351,8 +404,12 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
     try {
       if (this.vizElement) {
         await this.vizElement.revertAllAsync();
-        console.log('✅ Dashboard refrescado');
-        await this.applyProviderFilter();
+        
+        if (this.FILTER_BY_NAME) {
+          await this.applyProviderFilterByName();
+        } else {
+          await this.applyProviderFilterById();
+        }
       } else {
         await this.loadDashboard();
       }
@@ -373,7 +430,7 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
       }
       await this.vizElement.displayDialogAsync('export-pdf');
     } catch (error: any) {
-      console.error('❌ Error exportando a PDF:', error);
+      console.error('Error exportando a PDF:', error);
       alert('Error al exportar a PDF. Verifica los permisos en Tableau.');
     }
   }
@@ -387,7 +444,7 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
       }
       await this.vizElement.displayDialogAsync('export-image');
     } catch (error: any) {
-      console.error('❌ Error exportando a imagen:', error);
+      console.error('Error exportando a imagen:', error);
       alert('Error al exportar imagen. Verifica los permisos en Tableau.');
     }
   }
@@ -401,7 +458,7 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
       }
       await this.vizElement.displayDialogAsync('export-data');
     } catch (error: any) {
-      console.error('❌ Error exportando datos:', error);
+      console.error('Error exportando datos:', error);
       alert('Error al exportar datos. Verifica los permisos en Tableau.');
     }
   }
@@ -436,5 +493,28 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
         (document as any).msExitFullscreen();
       }
     }
+  }
+
+  async debugAuth(): Promise<void> {
+    console.log('\n═══════════════════════════════════════════════════');
+    console.log('🔧 DEBUG EMBEDDING API v3');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('🔧 Método filtro:', this.FILTER_BY_NAME ? 'POR NOMBRE' : 'POR ID');
+    console.log('Provider Name:', this.currentProviderName);
+    console.log('Provider ID:', this.currentProviderId);
+    
+    const user = this.authService.getCurrentUser();
+    console.log('User Data:', user);
+    
+    if (this.vizElement) {
+      try {
+        console.log('\n🔍 Ejecutando diagnóstico...\n');
+        await this.diagnosticarTableau();
+      } catch (error) {
+        console.warn('Error:', error);
+      }
+    }
+    
+    console.log('═══════════════════════════════════════════════════\n');
   }
 }
