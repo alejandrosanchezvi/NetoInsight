@@ -1,4 +1,4 @@
-// 🗺️ NetoInsight - App Routes (CON PERMISOS CORREGIDOS)
+// 🗺️ NetoInsight - App Routes (CON RESET PASSWORD)
 
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './features/main-layout/main-layout.component';
@@ -12,9 +12,10 @@ import { UserManagement } from './features/admin/user-management/user-management
 import { AcceptInvite } from './features/auth/accept-invite/accept-invite';
 import { TenantManagement } from './features/admin/tenant-management/tenant-management';
 import { internalAdminGuard } from './core/guards/internal-admin.guard';
+import { ResetPassword } from './features/auth/reset-password/reset-password';
 
 export const routes: Routes = [
-  // 🔓 Ruta pública de Login
+  // 🔓 Rutas públicas
   {
     path: 'login',
     component: Login,
@@ -23,24 +24,27 @@ export const routes: Routes = [
     path: 'accept-invite',
     component: AcceptInvite,
   },
-  // 🏠 Rutas protegidas del Portal
+  // 🔑 Reset de contraseña — Firebase redirige aquí con ?mode=resetPassword&oobCode=XXX
+  {
+    path: 'reset-password',
+    component: ResetPassword,
+  },
+  // 🏠 Rutas protegidas
   {
     path: '',
     component: MainLayoutComponent,
     canActivate: [authGuard],
     children: [
-      // 👥 Gestión de Usuarios - Solo para Admins
       {
         path: 'users',
         component: UserManagement,
-        canActivate: [adminGuard],  // ← AGREGAR adminGuard
+        canActivate: [adminGuard],
       },
       {
         path: '',
         redirectTo: 'categorization',
         pathMatch: 'full',
       },
-      // 📊 Dashboards - Todos los usuarios
       {
         path: 'categorization',
         component: Categorization,
@@ -61,7 +65,6 @@ export const routes: Routes = [
         path: 'purchase-orders',
         component: Categorization,
       },
-      // 🏢 Gestión de Proveedores - Solo para Admins Internos de Neto
       {
         path: 'admin/tenants',
         component: TenantManagement,

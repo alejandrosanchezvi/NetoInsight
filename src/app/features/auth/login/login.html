@@ -1,4 +1,4 @@
-<!-- 🔐 NetoInsight - Login Template (MODERN GLASSMORPHISM REDESIGN) -->
+<!-- 🔐 NetoInsight - Login Template (CON FORGOT PASSWORD) -->
 
 <div class="login-wrapper">
   <!-- Animated Background -->
@@ -58,7 +58,16 @@
 
       <!-- Password Input -->
       <div class="input-group">
-        <label class="input-label">Contraseña</label>
+        <div class="password-label-row">
+          <label class="input-label">Contraseña</label>
+          <!-- 🔑 Link de recuperación -->
+          <button
+            type="button"
+            class="forgot-link"
+            (click)="openForgotPassword()">
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
         <div class="input-container">
           <input
             id="password"
@@ -97,43 +106,44 @@
 
   <!-- Floating Particles -->
   <div class="particles">
-   <!-- Fila 1: Parte superior (10 partículas) -->
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  
-  <!-- Fila 2: Parte media (10 partículas) -->
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  
-  <!-- Fila 3: Parte inferior (10 partículas) -->
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
+    <span class="particle"></span>
   </div>
 </div>
+
+<!-- 🔑 Forgot Password Modal -->
+<app-forgot-password-modal
+  *ngIf="showForgotPassword"
+  (closeModal)="closeForgotPassword()">
+</app-forgot-password-modal>

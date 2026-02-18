@@ -1,4 +1,4 @@
-// 🔐 NetoInsight - Login Component (CON SESSION SERVICE)
+// 🔐 NetoInsight - Login Component (CON FORGOT PASSWORD)
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -6,20 +6,24 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SessionService } from '../../../core/services/session.service';
+import { ForgotPasswordModal } from '../forgot-password/forgot-password-modal';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ForgotPasswordModal],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
 export class Login implements OnInit {
-  email = '';
-  password = '';
-  isLoading = false;
+  email       = '';
+  password    = '';
+  isLoading   = false;
   errorMessage = '';
-  returnUrl = '/categorization';
+  returnUrl   = '/categorization';
+
+  // Modal de recuperación
+  showForgotPassword = false;
 
   constructor(
     private authService: AuthService,
@@ -31,9 +35,7 @@ export class Login implements OnInit {
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/categorization';
 
-    // Si ya está autenticado, redirigir
     if (this.authService.isAuthenticated()) {
-      console.log('✅ [LOGIN] Ya autenticado, redirigiendo...');
       this.router.navigate([this.returnUrl]);
     }
   }
@@ -44,14 +46,13 @@ export class Login implements OnInit {
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading    = true;
     this.errorMessage = '';
 
     this.authService.login(this.email, this.password).subscribe({
       next: (user) => {
         console.log('✅ [LOGIN] Login exitoso:', user.email);
         this.isLoading = false;
-        // ⏱️ Iniciar contador de sesión
         this.sessionService.startSession();
         this.router.navigate([this.returnUrl]);
       },
@@ -64,8 +65,16 @@ export class Login implements OnInit {
   }
 
   quickLogin(email: string): void {
-    this.email = email;
+    this.email    = email;
     this.password = 'demo';
     this.onSubmit();
+  }
+
+  openForgotPassword(): void {
+    this.showForgotPassword = true;
+  }
+
+  closeForgotPassword(): void {
+    this.showForgotPassword = false;
   }
 }

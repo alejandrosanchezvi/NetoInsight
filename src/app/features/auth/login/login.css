@@ -883,3 +883,29 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Fila label + link */
+.password-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0; /* ya tiene gap en .input-group */
+}
+
+/* Link de recuperación */
+.forgot-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 0;
+  transition: color 0.2s ease;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.forgot-link:hover {
+  color: #f58220;
+}
