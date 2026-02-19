@@ -2,9 +2,10 @@
 
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './features/main-layout/main-layout.component';
-import { Categorization } from './features/categorization/categorization';
-import { Skus } from './features/skus/skus';
-import { Stocks } from './features/stocks/stocks';
+import { Categorization } from './features/pages-dashboard/categorization/categorization';
+import { Skus } from './features/pages-dashboard/skus/skus';
+import { Stocks } from './features/pages-dashboard/stocks/stocks';
+import { Ordenescompra } from './features/pages-dashboard/ordenes-compra/ordenes-compra';
 import { Login } from './features/auth/login/login';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
@@ -24,7 +25,6 @@ export const routes: Routes = [
     path: 'accept-invite',
     component: AcceptInvite,
   },
-  // 🔑 Reset de contraseña — Firebase redirige aquí con ?mode=resetPassword&oobCode=XXX
   {
     path: 'reset-password',
     component: ResetPassword,
@@ -63,7 +63,7 @@ export const routes: Routes = [
       },
       {
         path: 'purchase-orders',
-        component: Categorization,
+        component: Ordenescompra,
       },
       {
         path: 'admin/tenants',

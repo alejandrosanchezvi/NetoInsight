@@ -223,7 +223,7 @@
 .sidebar:not(.mini) .sidebar-link.active::after {
   content: '';
   position: absolute;
-  right: 1rem;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
   width: 6px;

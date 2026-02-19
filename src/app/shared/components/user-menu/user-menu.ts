@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { User } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 interface MenuItem {
   id: string;
@@ -30,14 +31,12 @@ export class UserMenu {
 
   constructor(
     private authService: AuthService,
+    private notificationService: NotificationService,
     private router: Router
   ) {
     this.initializeMenuItems();
   }
 
-  /**
-   * Inicializar items del menú
-   */
   private initializeMenuItems(): void {
     this.menuItems = [
       {
@@ -68,42 +67,50 @@ export class UserMenu {
         id: 'logout',
         label: 'Cerrar Sesión',
         icon: 'log-out',
-        action: () => this.onLogout(),
+        action: () => this.confirmLogout(),
         divider: true,
         danger: true
       }
     ];
   }
 
-  /**
-   * Navegar a ruta específica
-   */
   private navigateTo(path: string): void {
     this.router.navigate([path]);
     this.closeMenu.emit();
   }
 
   /**
-   * Manejar logout
+   * ✅ Cierre de sesión con modal genérico de la app
    */
-  private onLogout(): void {
-    if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-      this.authService.logout();
-      this.router.navigate(['/login']);
-      this.closeMenu.emit();
-    }
+  private confirmLogout(): void {
+    // Cerrar el menú primero para que el modal se vea limpio
+    this.closeMenu.emit();
+
+    this.notificationService.confirm(
+      'Cerrar sesión',
+      '¿Estás seguro que deseas cerrar sesión? Tendrás que volver a ingresar tus credenciales para acceder.',
+      async () => {
+        try {
+          await this.authService.logout();
+          this.router.navigate(['/login']);
+        } catch (error) {
+          console.error('Error al cerrar sesión:', error);
+          this.notificationService.error(
+            'Error al cerrar sesión',
+            'No se pudo cerrar la sesión correctamente. Por favor intenta de nuevo.'
+          );
+        }
+      },
+      'Sí, cerrar sesión',
+      'Cancelar',
+      'warning'
+    );
   }
 
-  /**
-   * Manejar click en item del menú
-   */
   onMenuItemClick(item: MenuItem): void {
     item.action();
   }
 
-  /**
-   * Cerrar menú al hacer click fuera
-   */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
@@ -112,9 +119,6 @@ export class UserMenu {
     }
   }
 
-  /**
-   * Obtener SVG path según el ícono
-   */
   getIconPath(iconName: string): string {
     const icons: { [key: string]: string } = {
       'user': 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
@@ -123,7 +127,6 @@ export class UserMenu {
       'eye': 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
       'log-out': 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9',
     };
-
     return icons[iconName] || '';
   }
 }
