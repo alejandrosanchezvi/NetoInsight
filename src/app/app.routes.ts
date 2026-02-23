@@ -5,7 +5,7 @@ import { MainLayoutComponent } from './features/main-layout/main-layout.componen
 import { Categorization } from './features/pages-dashboard/categorization/categorization';
 import { Skus } from './features/pages-dashboard/skus/skus';
 import { Stocks } from './features/pages-dashboard/stocks/stocks';
-import { Ordenescompra } from './features/pages-dashboard/ordenes-compra/ordenes-compra';
+import { OrdenesDeCompra } from './features/pages-dashboard/ordenes-compra/ordenes-compra';
 import { Login } from './features/auth/login/login';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
@@ -63,7 +63,7 @@ export const routes: Routes = [
       },
       {
         path: 'purchase-orders',
-        component: Ordenescompra,
+        component: OrdenesDeCompra,
       },
       {
         path: 'admin/tenants',

@@ -149,7 +149,9 @@ export class AuthService {
   }
 
   /**
-   * Obtener datos del usuario desde Firestore
+   * Obtener datos del usuario desde Firestore.
+   * Si el usuario no tiene proveedorIdInterno en su documento,
+   * lo busca en el documento del tenant como fallback.
    */
   private async getUserData(uid: string): Promise<User | null> {
     console.log('📄 [AUTH] Fetching user data for UID:', uid);
@@ -165,6 +167,24 @@ export class AuthService {
 
       const data = userDoc.data();
 
+      // ── Intentar obtener proveedorIdInterno del doc del usuario ──
+      let proveedorIdInterno: string = data['proveedorIdInterno'] || '';
+
+      // ── Fallback: buscarlo en el tenant si el usuario no lo tiene ──
+      if (!proveedorIdInterno && data['tenantId']) {
+        try {
+          console.log('🔍 [AUTH] proveedorIdInterno no encontrado en user doc, buscando en tenant:', data['tenantId']);
+          const tenantDocRef = doc(this.firestore, 'tenants', data['tenantId']);
+          const tenantDoc = await getDoc(tenantDocRef);
+          if (tenantDoc.exists()) {
+            proveedorIdInterno = tenantDoc.data()['proveedorIdInterno'] || '';
+            console.log('✅ [AUTH] proveedorIdInterno obtenido del tenant:', proveedorIdInterno);
+          }
+        } catch (tenantError) {
+          console.warn('⚠️ [AUTH] No se pudo leer tenant para obtener proveedorIdInterno:', tenantError);
+        }
+      }
+
       const user: User = {
         uid: uid,
         email: data['email'],
@@ -178,10 +198,10 @@ export class AuthService {
         mfaEnabled: data['mfaEnabled'] || false,
         createdAt: data['createdAt']?.toDate() || new Date(),
         lastLogin: data['lastLogin']?.toDate(),
-        proveedorIdInterno: data['proveedorIdInterno']
+        proveedorIdInterno: proveedorIdInterno
       };
 
-      console.log('✅ [AUTH] User data fetched:', user.email);
+      console.log('✅ [AUTH] User data fetched:', user.email, '| proveedorIdInterno:', user.proveedorIdInterno || '(vacío)');
       return user;
     } catch (error) {
       console.error('❌ [AUTH] Error fetching user data:', error);
@@ -267,7 +287,9 @@ export class AuthService {
   }
 
   /**
-   * Obtener usuario desde localStorage
+   * Obtener usuario desde localStorage.
+   * Si el objeto guardado no tiene campos requeridos del modelo actual,
+   * se descarta el cache para forzar recarga desde Firestore.
    */
   private getUserFromStorage(): User | null {
     try {
@@ -278,6 +300,22 @@ export class AuthService {
       }
 
       const userData = JSON.parse(userStr);
+
+      // ✅ Validar que el cache tiene los campos requeridos del modelo actual.
+      // Si falta alguno, descartamos el cache — Firestore tiene la verdad.
+      const requiredFields: (keyof User)[] = [
+        'uid', 'email', 'tenantId', 'tenantName', 'proveedorIdInterno'
+      ];
+      const missingFields = requiredFields.filter(
+        f => userData[f] === undefined || userData[f] === null
+      );
+
+      if (missingFields.length > 0) {
+        console.warn('⚠️ [AUTH] Cache de usuario desactualizado, campos faltantes:', missingFields);
+        console.warn('⚠️ [AUTH] Descartando cache — se recargará desde Firestore');
+        localStorage.removeItem('currentUser');
+        return null;
+      }
       
       // Convertir fechas de string a Date
       if (userData.createdAt) {

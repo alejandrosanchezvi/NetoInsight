@@ -37,13 +37,13 @@ export class SidebarComponent implements OnInit {
       route: '/categorization',
       internal: false,
     },
-    {
-      id: 'stores',
-      label: 'Tiendas',
-      icon: 'store',
-      route: '/stores',
-      internal: false,
-    },
+    // {
+    //   id: 'stores',
+    //   label: 'Tiendas',
+    //   icon: 'store',
+    //   route: '/stores',
+    //   internal: false,
+    // },
     {
       id: 'skus',
       label: 'SKUs',

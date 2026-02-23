@@ -27,7 +27,7 @@ export class Stocks implements OnInit, AfterViewInit, OnDestroy {
   // 🔧 CONFIGURACIÓN DE FILTROS
   // ═══════════════════════════════════════════════════════════
   private readonly FILTER_BY_NAME = true;
-  private readonly FILTER_ALL_VALUES_NETO = 'Tiendas Neto';
+  private readonly FILTER_ALL_VALUES_NETO = 'Tiendas neto';
   private readonly FILTER_FIELD_NAME_TEXT = 'Proveedor';
   private readonly FILTER_FIELD_NAME_ID = 'Proveedor Id';
   private readonly WORKSHEETS_TO_SKIP: string[] = [];
