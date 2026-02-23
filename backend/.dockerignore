@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Credentials (IMPORTANTE)
+*.json
+credentials/
+service-account*.json
+*-firebase-adminsdk-*.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+README.md
+docs/
+
+# Git
+.git/
+.gitignore
+
+# Others
+.DS_Store
+Thumbs.db
