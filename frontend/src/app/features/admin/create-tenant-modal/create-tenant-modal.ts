@@ -18,7 +18,7 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./create-tenant-modal.css']
 })
 export class CreateTenantModal implements OnInit {
-  
+
   @Output() close = new EventEmitter<void>();
   @Output() tenantCreated = new EventEmitter<void>();
 
@@ -52,21 +52,21 @@ export class CreateTenantModal implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2)]],
       legalName: [''],
       rfc: ['', [Validators.pattern(/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/)]],
-      
+
       // Paso 2: Configuración
       plan: ['starter', Validators.required],  // Starter por defecto
       maxLicenses: [5, [Validators.required, Validators.min(1)]],
       proveedorIdInterno: ['', [Validators.required, Validators.pattern(/^PROV-\d{3}$/)]],
-      
+
       // Integraciones
       tableauGroup: [''],
       bigQueryDataset: [''],
       bigQueryFilter: [''],
-      
+
       // Paso 3: Contacto
       adminEmail: ['', [Validators.required, Validators.email]],
       billingEmail: ['', Validators.email],
-      
+
       // Fechas de contrato (opcional)
       contractStart: [''],
       contractEnd: ['']
@@ -118,7 +118,7 @@ export class CreateTenantModal implements OnInit {
     try {
       // Obtener todos los tenants
       const tenants = await this.tenantService.getAllTenants();
-      
+
       // Extraer números de IDs existentes
       const existingIds = tenants
         .map(t => t.proveedorIdInterno)
@@ -133,8 +133,8 @@ export class CreateTenantModal implements OnInit {
       this.createForm.patchValue({ proveedorIdInterno: proveedorId });
 
       // Auto-generar filtro BigQuery
-      this.createForm.patchValue({ 
-        bigQueryFilter: `proveedor_id = '${proveedorId}'` 
+      this.createForm.patchValue({
+        bigQueryFilter: `proveedor_id = '${proveedorId}'`
       });
 
       console.log('✅ [CREATE-TENANT] Generated Proveedor ID:', proveedorId);
@@ -278,14 +278,14 @@ export class CreateTenantModal implements OnInit {
         role: UserRole.ADMIN,
         tenantId: tenant.tenantId
       });
-      console.log('✅ [CREATE-TENANT] Invitation created and email sent:', invitation.id);
+      // console.log('✅ [CREATE-TENANT] Invitation created and email sent:', invitation.id);
 
       // 3. Emitir evento de éxito
       this.tenantCreated.emit();
 
       // 4. Mostrar modal de éxito
-      const trialMessage = selectedPlan === TenantPlan.TRIAL 
-        ? '\n\n⏰ Trial válido por 30 días desde hoy' 
+      const trialMessage = selectedPlan === TenantPlan.TRIAL
+        ? '\n\n⏰ Trial válido por 30 días desde hoy'
         : '';
 
       this.notificationService.success(
@@ -299,12 +299,12 @@ export class CreateTenantModal implements OnInit {
     } catch (error: any) {
       console.error('❌ [CREATE-TENANT] Error:', error);
       this.errorMessage = error.message || 'Error al crear proveedor';
-      
+
       this.notificationService.error(
         'Error al Crear Proveedor',
         this.errorMessage
       );
-      
+
       this.isSubmitting = false;
     }
   }
@@ -388,20 +388,20 @@ export class CreateTenantModal implements OnInit {
    */
   getErrorMessage(fieldName: string): string {
     const control = this.createForm.get(fieldName);
-    
+
     if (control?.hasError('required')) {
       return 'Este campo es requerido';
     }
-    
+
     if (control?.hasError('email')) {
       return 'Email inválido';
     }
-    
+
     if (control?.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
       return `Mínimo ${minLength} caracteres`;
     }
-    
+
     if (control?.hasError('pattern')) {
       if (fieldName === 'rfc') {
         return 'Formato de RFC inválido';
@@ -410,7 +410,7 @@ export class CreateTenantModal implements OnInit {
         return 'Formato debe ser PROV-XXX';
       }
     }
-    
+
     return 'Campo inválido';
   }
 }

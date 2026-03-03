@@ -1,4 +1,8 @@
-/* 📧 NetoInsight - Invite User Modal Styles */
+/* 📧 NetoInsight - Invite User Modal v3.0 Styles */
+
+/* ══════════════════════════════════════════
+   OVERLAY & CONTAINER
+══════════════════════════════════════════ */
 
 .modal-overlay {
   position: fixed;
@@ -21,15 +25,18 @@
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   width: 100%;
-  max-width: 560px;
-  max-height: 90vh;
+  max-width: 580px;
+  max-height: 92vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   animation: slideUp 0.3s ease;
 }
 
-/* Header */
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+
 .modal-header {
   padding: 1.5rem;
   border-bottom: 1px solid var(--border-color);
@@ -46,14 +53,26 @@
   flex: 1;
 }
 
-.header-icon {
+.header-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--neto-blue);
   flex-shrink: 0;
-  margin-top: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.header-icon-wrap.success {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  color: #2e7d32;
 }
 
 .modal-title {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   font-weight: 700;
   color: var(--neto-blue-dark);
   margin: 0;
@@ -87,26 +106,33 @@
   cursor: not-allowed;
 }
 
-/* Body */
+/* ══════════════════════════════════════════
+   BODY
+══════════════════════════════════════════ */
+
 .modal-body {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
 }
 
-/* Alerts */
+/* ══════════════════════════════════════════
+   ALERTS
+══════════════════════════════════════════ */
+
 .alert {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
   border-radius: var(--radius-md);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   font-size: 0.9375rem;
 }
 
 .alert svg {
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .alert-success {
@@ -115,13 +141,22 @@
   border: 1px solid #a5d6a7;
 }
 
+.alert-warning {
+  background: #fff8e1;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+}
+
 .alert-error {
   background: #ffebee;
   color: #c62828;
   border: 1px solid #ef9a9a;
 }
 
-/* Form */
+/* ══════════════════════════════════════════
+   FORM
+══════════════════════════════════════════ */
+
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -146,6 +181,7 @@
   font-size: 0.9375rem;
   transition: all 0.2s ease;
   outline: none;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -170,7 +206,10 @@
   margin: 0.375rem 0 0 0;
 }
 
-/* Role Options */
+/* ══════════════════════════════════════════
+   ROLES
+══════════════════════════════════════════ */
+
 .role-options {
   display: flex;
   flex-direction: column;
@@ -228,7 +267,10 @@
   margin: 0;
 }
 
-/* Info Box */
+/* ══════════════════════════════════════════
+   INFO BOX
+══════════════════════════════════════════ */
+
 .info-box {
   display: flex;
   gap: 0.75rem;
@@ -257,11 +299,162 @@
   margin: 0;
 }
 
-/* Actions */
+/* ══════════════════════════════════════════
+   RESULTADO — INFO DESTINATARIO
+══════════════════════════════════════════ */
+
+.result-info {
+  background: #f8f9fa;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.result-label {
+  font-weight: 600;
+  color: var(--text-gray);
+  min-width: 60px;
+}
+
+.result-value {
+  color: var(--text-dark);
+}
+
+/* ══════════════════════════════════════════
+   MAGIC LINK SECTION
+══════════════════════════════════════════ */
+
+.magic-link-section,
+.slack-section {
+  margin-bottom: 1.25rem;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.section-label svg {
+  color: var(--neto-blue);
+}
+
+.link-box {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 2px solid var(--neto-blue);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #f0f4ff;
+}
+
+.link-text {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--neto-blue-dark);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: all;
+}
+
+.btn-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.75rem 1rem;
+  background: var(--neto-blue);
+  color: white;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-copy:hover {
+  background: var(--neto-blue-dark);
+}
+
+.btn-copy.copied {
+  background: #2e7d32;
+}
+
+/* ══════════════════════════════════════════
+   SLACK MESSAGE SECTION
+══════════════════════════════════════════ */
+
+.slack-box {
+  background: #1a1d21;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 1rem 1.25rem;
+  overflow: hidden;
+}
+
+.slack-text {
+  font-family: 'Slack-Lato', 'Lato', system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: #d1d2d3;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.btn-copy-slack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #4a154b;
+  color: white;
+  border: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-copy-slack:hover {
+  background: #611f64;
+}
+
+.btn-copy-slack.copied {
+  background: #2e7d32;
+}
+
+/* ══════════════════════════════════════════
+   ACTIONS
+══════════════════════════════════════════ */
+
 .modal-actions {
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
+  margin-top: 1.25rem;
 }
 
 .btn-secondary {
@@ -320,11 +513,15 @@
   animation: spin 0.8s linear infinite;
 }
 
-/* Animations */
+/* ══════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -335,6 +532,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -347,19 +545,22 @@
   }
 }
 
-/* Responsive */
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+
 @media (max-width: 640px) {
   .modal-container {
     max-width: 100%;
-    margin: 0;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     max-height: 95vh;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
   }
 
-  .modal-header {
-    padding: 1.25rem;
-  }
-
+  .modal-header,
   .modal-body {
     padding: 1.25rem;
   }
@@ -369,7 +570,21 @@
   }
 
   .btn-secondary,
-  .btn-primary {
+  .btn-primary,
+  .btn-copy-slack {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .link-box {
+    flex-direction: column;
+  }
+
+  .link-text {
+    width: 100%;
+  }
+
+  .btn-copy {
     width: 100%;
     justify-content: center;
   }

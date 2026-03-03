@@ -1,11 +1,13 @@
-// 🔧 NetoInsight - Invite User Modal Component (CORREGIDO)
+// 📧 NetoInsight - Invite User Modal v3.0 — Magic Link + Email
 
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { InvitationService } from '../../../core/services/invitation.service';
+import { InvitationService, InvitationResult } from '../../../core/services/invitation.service';
 import { Tenant } from '../../../core/models/tenant.model';
 import { UserRole } from '../../../core/models/user.model';
+
+type ModalStep = 'form' | 'result';
 
 @Component({
   selector: 'app-invite-user-modal',
@@ -15,15 +17,20 @@ import { UserRole } from '../../../core/models/user.model';
   styleUrls: ['./invite-user-modal.css']
 })
 export class InviteUserModal implements OnInit {
-  
+
   @Input() tenant!: Tenant;
   @Output() close = new EventEmitter<void>();
-  @Output() invitationSent = new EventEmitter<void>();  // ← Nombre correcto
+  @Output() invitationSent = new EventEmitter<void>();
 
   inviteForm: FormGroup;
   isSubmitting = false;
   errorMessage = '';
-  successMessage = '';
+  step: ModalStep = 'form';
+
+  // Resultado tras crear invitación
+  result: InvitationResult | null = null;
+  linkCopied = false;
+  slackCopied = false;
 
   roles = [
     { value: UserRole.VIEWER, label: 'Visualizador', description: 'Solo puede ver dashboards' },
@@ -41,12 +48,13 @@ export class InviteUserModal implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('🔧 [INVITE-MODAL] Initialized for tenant:', this.tenant.name);
+    console.log('🔧 [INVITE-MODAL] v3.0 initialized for tenant:', this.tenant.name);
   }
 
-  /**
-   * Enviar invitación
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  SUBMIT
+  // ─────────────────────────────────────────────────────────────
+
   async onSubmit(): Promise<void> {
     if (this.inviteForm.invalid) {
       this.markFormGroupTouched(this.inviteForm);
@@ -55,84 +63,110 @@ export class InviteUserModal implements OnInit {
 
     this.isSubmitting = true;
     this.errorMessage = '';
-    this.successMessage = '';
 
     const { email, role } = this.inviteForm.value;
 
-    console.log('🔧 [INVITE-MODAL] Sending invitation to:', email);
-
     try {
-      const invitation = await this.invitationService.createInvitation({
+      const result = await this.invitationService.createInvitation({
         email: email.toLowerCase(),
         role,
         tenantId: this.tenant.tenantId
       });
 
-      console.log('✅ [INVITE-MODAL] Invitation created:', invitation.id);
-      
-      this.successMessage = `Invitación enviada a ${email}`;
-      
-      // Esperar 1.5 segundos para mostrar mensaje de éxito, luego cerrar
-      setTimeout(() => {
-        this.invitationSent.emit();  // ← Emitir evento correcto
-        this.close.emit();            // ← Cerrar el modal
-      }, 1500);
+      this.result = result;
+      this.step = 'result';
+      this.invitationSent.emit();
+
+      console.log('✅ [INVITE-MODAL] Invitation created. Email sent:', result.emailSent);
 
     } catch (error: any) {
-      console.error('❌ [INVITE-MODAL] Error creating invitation:', error);
-      this.errorMessage = error.message || 'Error al enviar la invitación';
+      console.error('❌ [INVITE-MODAL] Error:', error);
+      this.errorMessage = error.message || 'Error al crear la invitación';
+    } finally {
       this.isSubmitting = false;
     }
   }
 
-  /**
-   * Cerrar modal
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  COPY ACTIONS
+  // ─────────────────────────────────────────────────────────────
+
+  async copyMagicLink(): Promise<void> {
+    if (!this.result?.magicLink) return;
+    try {
+      await navigator.clipboard.writeText(this.result.magicLink);
+      this.linkCopied = true;
+      setTimeout(() => (this.linkCopied = false), 2500);
+    } catch {
+      this.fallbackCopy(this.result.magicLink);
+    }
+  }
+
+  async copySlackMessage(): Promise<void> {
+    if (!this.result?.slackMessage) return;
+    try {
+      await navigator.clipboard.writeText(this.result.slackMessage);
+      this.slackCopied = true;
+      setTimeout(() => (this.slackCopied = false), 2500);
+    } catch {
+      this.fallbackCopy(this.result.slackMessage);
+    }
+  }
+
+  private fallbackCopy(text: string): void {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  NAVIGATION
+  // ─────────────────────────────────────────────────────────────
+
   onClose(): void {
     if (!this.isSubmitting) {
       this.close.emit();
     }
   }
 
-  /**
-   * Prevenir cierre al hacer click dentro del modal
-   */
   onModalClick(event: MouseEvent): void {
     event.stopPropagation();
   }
 
-  /**
-   * Marcar todos los campos como touched
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  FORM HELPERS
+  // ─────────────────────────────────────────────────────────────
+
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
+      formGroup.get(key)?.markAsTouched();
     });
   }
 
-  /**
-   * Obtener mensaje de error para un campo
-   */
   getErrorMessage(fieldName: string): string {
     const control = this.inviteForm.get(fieldName);
-    
-    if (control?.hasError('required')) {
-      return 'Este campo es requerido';
-    }
-    
-    if (control?.hasError('email')) {
-      return 'Email inválido';
-    }
-    
+    if (control?.hasError('required')) return 'Este campo es requerido';
+    if (control?.hasError('email')) return 'Email inválido';
     return '';
   }
 
-  /**
-   * Verificar si un campo tiene error
-   */
   hasError(fieldName: string): boolean {
     const control = this.inviteForm.get(fieldName);
     return !!(control && control.invalid && control.touched);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  DISPLAY HELPERS
+  // ─────────────────────────────────────────────────────────────
+
+  getExpiresFormatted(): string {
+    if (!this.result) return '';
+    return new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' })
+      .format(this.result.invitation.expiresAt);
   }
 }

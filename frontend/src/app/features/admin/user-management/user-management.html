@@ -1,7 +1,7 @@
 <!-- 👥 NetoInsight - User Management Template (CON PERMISOS Y LOADING) -->
 
 <div class="user-management-container">
-  
+
   <!-- Loading Overlay para acciones -->
   <div *ngIf="isProcessing" class="processing-overlay">
     <div class="processing-spinner">
@@ -9,12 +9,13 @@
       <p>Procesando...</p>
     </div>
   </div>
-  
+
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
       <div class="header-left">
-        <svg class="header-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="header-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -25,12 +26,9 @@
           <p class="page-subtitle">{{ currentTenant?.name }}</p>
         </div>
       </div>
-      
+
       <!-- Botón Invitar Usuario - Solo si puede gestionar -->
-      <button 
-        *ngIf="canManageUsers()"
-        class="btn-primary"
-        (click)="openInviteModal()"
+      <button *ngIf="canManageUsers()" class="btn-primary" (click)="openInviteModal()"
         [disabled]="!hasAvailableLicenses()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
@@ -50,10 +48,10 @@
 
   <!-- Main Content -->
   <div *ngIf="!isLoading" class="content">
-    
+
     <!-- Stats Cards -->
     <div class="stats-grid">
-      
+
       <!-- Total Users -->
       <div class="stat-card">
         <div class="stat-icon stat-icon-primary">
@@ -98,9 +96,7 @@
             {{ usageStats?.licensesUsed || 0 }} / {{ currentTenant?.maxLicenses || 0 }}
           </h3>
           <div class="progress-bar">
-            <div 
-              class="progress-fill"
-              [ngClass]="'progress-' + getProgressColor()"
+            <div class="progress-fill" [ngClass]="'progress-' + getProgressColor()"
               [style.width.%]="getLicensesPercentage()">
             </div>
           </div>
@@ -125,10 +121,7 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <button 
-        class="tab-button"
-        [class.active]="activeTab === 'users'"
-        (click)="setActiveTab('users')">
+      <button class="tab-button" [class.active]="activeTab === 'users'" (click)="setActiveTab('users')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
@@ -139,10 +132,7 @@
       </button>
 
       <!-- Tab de Invitaciones - Solo si puede gestionar -->
-      <button 
-        *ngIf="canManageUsers()"
-        class="tab-button"
-        [class.active]="activeTab === 'invitations'"
+      <button *ngIf="canManageUsers()" class="tab-button" [class.active]="activeTab === 'invitations'"
         (click)="setActiveTab('invitations')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -195,12 +185,8 @@
             <td>
               <div class="action-buttons">
                 <!-- ⭐ Botón Desactivar/Activar - Solo si puede gestionar -->
-                <button
-                  *ngIf="canToggleUserStatus(user)"
-                  class="btn-action"
-                  [class.btn-warning]="user.isActive"
-                  [class.btn-success]="!user.isActive"
-                  (click)="toggleUserStatus(user)"
+                <button *ngIf="canToggleUserStatus(user)" class="btn-action" [class.btn-warning]="user.isActive"
+                  [class.btn-success]="!user.isActive" (click)="toggleUserStatus(user)"
                   [title]="user.isActive ? 'Desactivar usuario' : 'Activar usuario'">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
@@ -213,10 +199,7 @@
                 </button>
 
                 <!-- ⭐ Botón Eliminar - Solo si puede gestionar -->
-                <button
-                  *ngIf="canDeleteUser(user)"
-                  class="btn-action btn-danger"
-                  (click)="deleteUser(user)"
+                <button *ngIf="canDeleteUser(user)" class="btn-action btn-danger" (click)="deleteUser(user)"
                   title="Eliminar usuario permanentemente">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -228,9 +211,7 @@
                 </button>
 
                 <!-- Indicador si no puede hacer nada -->
-                <span 
-                  *ngIf="!canToggleUserStatus(user) && !canDeleteUser(user)"
-                  class="text-muted small">
+                <span *ngIf="!canToggleUserStatus(user) && !canDeleteUser(user)" class="text-muted small">
                   {{ user.uid === currentUser?.uid ? '(Tú)' : '' }}
                   {{ user.isInternal ? '(Usuario Interno)' : '' }}
                   {{ !canManageUsers() ? '(Solo lectura)' : '' }}
@@ -269,16 +250,61 @@
             <td class="text-muted">{{ invitation.invitedByName || 'N/A' }}</td>
             <td class="text-muted">{{ formatDate(invitation.createdAt) }}</td>
             <td>
-              <span 
-                class="text-muted"
-                [class.text-warning]="isInvitationExpiringSoon(invitation)"
+              <span class="text-muted" [class.text-warning]="isInvitationExpiringSoon(invitation)"
                 [class.text-danger]="isInvitationExpired(invitation)">
                 {{ formatDate(invitation.expiresAt) }}
               </span>
             </td>
             <td>
               <div class="action-buttons">
-                <button
+                <button class="btn-action btn-link" [class.btn-copied]="copyStates[invitation.id]?.linkCopied"
+                  (click)="copyInvitationLink(invitation)" [title]="'Copiar liga de acceso para ' + invitation.email">
+                  <svg *ngIf="!copyStates[invitation.id]?.linkCopied" width="14" height="14" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  <svg *ngIf="copyStates[invitation.id]?.linkCopied" width="14" height="14" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  {{ copyStates[invitation.id]?.linkCopied ? 'Liga copiada' : 'Copiar liga' }}
+                </button>
+
+                <!-- Copiar mensaje Slack -->
+                <button class="btn-action btn-slack" [class.btn-copied]="copyStates[invitation.id]?.slackCopied"
+                  (click)="copyInvitationSlack(invitation)" [title]="'Copiar mensaje Slack para ' + invitation.email">
+                  <svg *ngIf="!copyStates[invitation.id]?.slackCopied" width="14" height="14" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <svg *ngIf="copyStates[invitation.id]?.slackCopied" width="14" height="14" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  {{ copyStates[invitation.id]?.slackCopied ? 'Copiado' : 'Slack' }}
+                </button>
+
+                <!-- Reenviar (ya existente) -->
+                <button class="btn-action btn-resend" (click)="resendInvitation(invitation)" [disabled]="isProcessing"
+                  title="Reenviar invitación">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 .49-3.36"></path>
+                  </svg>
+                  Reenviar
+                </button>
+
+                <!-- Cancelar (ya existente) -->
+                <button class="btn-action btn-cancel" (click)="cancelInvitation(invitation)"
+                  title="Cancelar invitación">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  Cancelar
+                </button>
+                <!-- <button
                   class="btn-action btn-secondary"
                   (click)="resendInvitation(invitation)"
                   title="Reenviar invitación">
@@ -298,7 +324,7 @@
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                   <span class="btn-text">Cancelar</span>
-                </button>
+                </button> -->
               </div>
             </td>
           </tr>
@@ -314,9 +340,6 @@
 </div>
 
 <!-- Invite User Modal - Solo si puede gestionar -->
-<app-invite-user-modal
-  *ngIf="showInviteModal && canManageUsers()"
-  [tenant]="currentTenant!"
-  (close)="closeInviteModal()"
-  (invitationSent)="onInvitationSent()">
-</app-invite-user-modal>  
+<app-invite-user-modal *ngIf="showInviteModal && canManageUsers()" [tenant]="currentTenant!"
+  (close)="closeInviteModal()" (invitationSent)="onInvitationSent()">
+</app-invite-user-modal>

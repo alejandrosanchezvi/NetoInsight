@@ -1,4 +1,4 @@
-// 👥 NetoInsight - User Management Component (CALLBACKS CORREGIDOS)
+// 👥 NetoInsight - User Management v3.0 — Magic Link integrado
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -14,11 +14,11 @@ import { Tenant, TenantUsageStats } from '../../../core/models/tenant.model';
 import { Invitation, InvitationStatus } from '../../../core/models/invitation.model';
 import { InviteUserModal } from '../invite-user-modal/invite-user-modal';
 import { environment } from '../../../../environments/environment';
-import { 
-  Firestore, 
-  collection, 
-  query, 
-  where, 
+import {
+  Firestore,
+  collection,
+  query,
+  where,
   getDocs,
   orderBy,
   doc,
@@ -34,23 +34,22 @@ import {
   styleUrls: ['./user-management.css']
 })
 export class UserManagement implements OnInit {
-  
-  // Estado
+
   isLoading = true;
-  isProcessing = false;  // ← Para loading de acciones (eliminar, desactivar, etc)
+  isProcessing = false;
   currentUser: User | null = null;
   currentTenant: Tenant | null = null;
   usageStats: TenantUsageStats | null = null;
-  
-  // Datos
+
   users: User[] = [];
   invitations: Invitation[] = [];
-  
-  // Modal
+
   showInviteModal = false;
-  
-  // Tabs
   activeTab: 'users' | 'invitations' = 'users';
+
+  // ── Magic Link en tabla ────────────────────────────────
+  /** Mapa invitationId → { linkCopied, slackCopied } */
+  copyStates: Record<string, { linkCopied: boolean; slackCopied: boolean }> = {};
 
   constructor(
     private authService: AuthService,
@@ -60,25 +59,16 @@ export class UserManagement implements OnInit {
     private http: HttpClient,
     private firestore: Firestore,
     private router: Router
-  ) {}
+  ) { }
 
   async ngOnInit(): Promise<void> {
-    console.log('👥 [USER-MGMT] Initializing...');
-    
-    this.currentUser = this.authService.getCurrentUser();
-    
-    if (!this.currentUser) {
-      console.error('❌ [USER-MGMT] No current user');
-      return;
-    }
+    console.log('👥 [USER-MGMT] v3.0 Initializing...');
 
-    // Validar que el usuario es Admin
+    this.currentUser = this.authService.getCurrentUser();
+    if (!this.currentUser) return;
+
     if (!this.isAdmin()) {
-      console.warn('⚠️ [USER-MGMT] User is not admin, redirecting...');
-      this.notificationService.error(
-        'Acceso Denegado',
-        'Solo los administradores pueden acceder a la gestión de usuarios.'
-      );
+      this.notificationService.error('Acceso Denegado', 'Solo los administradores pueden acceder.');
       this.router.navigate(['/categorization']);
       return;
     }
@@ -86,47 +76,45 @@ export class UserManagement implements OnInit {
     await this.loadData();
   }
 
-  /**
-   * Verificar si el usuario actual es Admin
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  PERMISOS
+  // ─────────────────────────────────────────────────────────────
+
   isAdmin(): boolean {
     if (!this.currentUser) return false;
     return this.currentUser.role === UserRole.ADMIN || this.currentUser.isInternal;
   }
 
-  /**
-   * Verificar si puede gestionar usuarios (crear, editar, eliminar)
-   */
-  canManageUsers(): boolean {
-    return this.isAdmin();
+  canManageUsers(): boolean { return this.isAdmin(); }
+
+  canToggleUserStatus(user: User): boolean {
+    if (!this.canManageUsers()) return false;
+    if (user.uid === this.currentUser?.uid) return false;
+    if (user.role === UserRole.INTERNAL) return false;
+    return true;
   }
 
-  /**
-   * Cargar todos los datos
-   */
+  canDeleteUser(user: User): boolean {
+    if (!this.canManageUsers()) return false;
+    if (user.uid === this.currentUser?.uid) return false;
+    if (user.role === UserRole.INTERNAL) return false;
+    return true;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  CARGA DE DATOS
+  // ─────────────────────────────────────────────────────────────
+
   async loadData(): Promise<void> {
     this.isLoading = true;
-
     try {
-      // Cargar tenant actual
       this.currentTenant = await this.tenantService.getTenantById(this.currentUser!.tenantId);
-      
-      if (!this.currentTenant) {
-        console.error('❌ [USER-MGMT] No current tenant');
-        return;
-      }
+      if (!this.currentTenant) return;
 
-      // Cargar estadísticas de uso
       this.usageStats = await this.tenantService.getTenantUsageStats(this.currentTenant.tenantId);
-
-      // Cargar usuarios e invitaciones en paralelo
-      await Promise.all([
-        this.loadUsers(),
-        this.loadInvitations()
-      ]);
+      await Promise.all([this.loadUsers(), this.loadInvitations()]);
 
       console.log('✅ [USER-MGMT] Data loaded');
-
     } catch (error) {
       console.error('❌ [USER-MGMT] Error loading data:', error);
     } finally {
@@ -134,28 +122,19 @@ export class UserManagement implements OnInit {
     }
   }
 
-  /**
-   * Cargar usuarios del tenant
-   */
   async loadUsers(): Promise<void> {
     if (!this.currentTenant) return;
-
-    console.log('👥 [USER-MGMT] Loading users...');
-
     try {
-      const usersRef = collection(this.firestore, 'users');
       const q = query(
-        usersRef,
+        collection(this.firestore, 'users'),
         where('tenantId', '==', this.currentTenant.tenantId),
         orderBy('createdAt', 'desc')
       );
-
-      const querySnapshot = await getDocs(q);
-      
-      this.users = querySnapshot.docs.map(doc => {
-        const data = doc.data();
+      const snap = await getDocs(q);
+      this.users = snap.docs.map(d => {
+        const data = d.data();
         return {
-          uid: doc.id,
+          uid: d.id,
           email: data['email'],
           name: data['name'],
           role: data['role'],
@@ -170,261 +149,167 @@ export class UserManagement implements OnInit {
           proveedorIdInterno: data['proveedorIdInterno']
         };
       });
-
-      console.log('✅ [USER-MGMT] Users loaded:', this.users.length);
-
     } catch (error) {
       console.error('❌ [USER-MGMT] Error loading users:', error);
       this.users = [];
     }
   }
 
-  /**
-   * Cargar invitaciones pendientes
-   */
   async loadInvitations(): Promise<void> {
     if (!this.currentTenant) return;
-
-    console.log('📧 [USER-MGMT] Loading invitations...');
-
     try {
-      const invitationsRef = collection(this.firestore, 'invitations');
       const q = query(
-        invitationsRef,
+        collection(this.firestore, 'invitations'),
         where('tenantId', '==', this.currentTenant.tenantId),
         where('status', '==', InvitationStatus.PENDING),
         orderBy('createdAt', 'desc')
       );
-
-      const querySnapshot = await getDocs(q);
-      
-      this.invitations = querySnapshot.docs.map(doc => {
-        const data = doc.data();
+      const snap = await getDocs(q);
+      this.invitations = snap.docs.map(d => {
+        const data = d.data();
         return {
-          id: doc.id,
+          id: d.id,
           email: data['email'],
           role: data['role'],
           tenantId: data['tenantId'],
           tenantName: data['tenantName'],
           token: data['token'],
           status: data['status'],
-          invitedBy: data['invitedBy'] || data['createdBy'] || '', 
-          invitedByName: data['invitedByName'] || data['invitedBy'] || 'Sistema',
-          invitedByEmail: data['invitedByEmail'] || '', 
+          invitedBy: data['invitedBy'] || data['createdBy'] || '',
+          invitedByName: data['invitedByName'] || 'Sistema',
+          invitedByEmail: data['invitedByEmail'] || '',
           createdAt: data['createdAt']?.toDate() || new Date(),
           expiresAt: data['expiresAt']?.toDate() || new Date(),
           acceptedAt: data['acceptedAt']?.toDate()
         };
       });
 
-      console.log('✅ [USER-MGMT] Invitations loaded:', this.invitations.length);
+      // Inicializar estados de copia para cada invitación
+      this.invitations.forEach(inv => {
+        if (!this.copyStates[inv.id]) {
+          this.copyStates[inv.id] = { linkCopied: false, slackCopied: false };
+        }
+      });
 
+      console.log('✅ [USER-MGMT] Invitations loaded:', this.invitations.length);
     } catch (error) {
       console.error('❌ [USER-MGMT] Error loading invitations:', error);
       this.invitations = [];
     }
   }
 
-  /**
-   * Eliminar usuario COMPLETAMENTE (Firestore + Firebase Auth)
-   */
-  async deleteUser(user: User): Promise<void> {
-    console.log('🗑️ [USER-MGMT] deleteUser called for:', user.email);
+  // ─────────────────────────────────────────────────────────────
+  //  MAGIC LINK — desde tabla de invitaciones
+  // ─────────────────────────────────────────────────────────────
 
-    // Verificar permisos
-    if (!this.canManageUsers()) {
-      this.notificationService.error(
-        'Sin Permisos',
-        'No tienes permisos para eliminar usuarios.'
-      );
-      return;
-    }
+  async copyInvitationLink(invitation: Invitation): Promise<void> {
+    const { magicLink } = this.invitationService.getMagicLinkForInvitation(invitation);
+    await this.copyToClipboard(magicLink);
 
-    // Validaciones de seguridad
-    if (user.uid === this.currentUser?.uid) {
-      this.notificationService.error(
-        'Operación no permitida',
-        'No puedes eliminarte a ti mismo.'
-      );
-      return;
-    }
-
-    if (user.isInternal) {
-      this.notificationService.error(
-        'Operación no permitida',
-        'No puedes eliminar usuarios internos del sistema.'
-      );
-      return;
-    }
-
-    // Una sola confirmación para todos
-    const isAdmin = user.role === UserRole.ADMIN;
-    const title = isAdmin ? '⚠️ Eliminar Administrador' : 'Confirmar Eliminación';
-    const message = isAdmin 
-      ? `ATENCIÓN: Vas a eliminar a un ADMINISTRADOR\n\nUsuario: ${user.name}\nEmail: ${user.email}\n\nEsta acción NO se puede deshacer.\n\n¿Continuar?`
-      : `¿Eliminar al usuario ${user.name}?\n\nEmail: ${user.email}\nRol: ${this.formatRole(user.role)}\n\nEsta acción no se puede deshacer.`;
-    
-    console.log('🔔 [USER-MGMT] Showing confirmation...');
-    
-    this.notificationService.confirm(
-      title,
-      message,
-      async () => {
-        console.log('✅ [USER-MGMT] Confirmation accepted, executing delete...');
-        await this.performDeleteUser(user);
-      },
-      'Eliminar',
-      'Cancelar',
-      isAdmin ? 'error' : 'warning'
-    );
+    this.copyStates[invitation.id].linkCopied = true;
+    setTimeout(() => (this.copyStates[invitation.id].linkCopied = false), 2500);
   }
 
-  /**
-   * Ejecutar eliminación de usuario
-   */
-  private async performDeleteUser(user: User): Promise<void> {
-    this.isProcessing = true;  // ← Activar loading
-    
+  async copyInvitationSlack(invitation: Invitation): Promise<void> {
+    const { slackMessage } = this.invitationService.getMagicLinkForInvitation(invitation);
+    await this.copyToClipboard(slackMessage);
+
+    this.copyStates[invitation.id].slackCopied = true;
+    setTimeout(() => (this.copyStates[invitation.id].slackCopied = false), 2500);
+  }
+
+  private async copyToClipboard(text: string): Promise<void> {
     try {
-      console.log('🗑️ [USER-MGMT] performDeleteUser - Starting deletion for:', user.email);
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
 
-      // 1. Eliminar documento de Firestore
-      const userDocRef = doc(this.firestore, 'users', user.uid);
-      await deleteDoc(userDocRef);
-      console.log('✅ [USER-MGMT] User deleted from Firestore');
+  // ─────────────────────────────────────────────────────────────
+  //  ACCIONES DE USUARIO
+  // ─────────────────────────────────────────────────────────────
 
-      // 2. Decrementar licencias usadas del tenant
-      await this.tenantService.updateUsedLicenses(
-        this.currentUser!.tenantId,
-        -1
-      );
-      console.log('✅ [USER-MGMT] Tenant licenses decremented');
+  async deleteUser(user: User): Promise<void> {
+    if (!this.canManageUsers()) {
+      this.notificationService.error('Sin Permisos', 'No tienes permisos para eliminar usuarios.');
+      return;
+    }
+    if (user.uid === this.currentUser?.uid) {
+      this.notificationService.error('Operación no permitida', 'No puedes eliminarte a ti mismo.');
+      return;
+    }
+    if (user.isInternal) {
+      this.notificationService.error('Operación no permitida', 'No puedes eliminar usuarios internos.');
+      return;
+    }
 
-      // 3. Eliminar de Firebase Authentication (llamada al backend)
+    const isAdmin = user.role === UserRole.ADMIN;
+    const title = isAdmin ? '⚠️ Eliminar Administrador' : 'Confirmar Eliminación';
+    const message = isAdmin
+      ? `ATENCIÓN: Vas a eliminar a un ADMINISTRADOR\n\nUsuario: ${user.name}\nEmail: ${user.email}\n\nEsta acción NO se puede deshacer.\n\n¿Continuar?`
+      : `¿Eliminar al usuario ${user.name}?\n\nEmail: ${user.email}\n\nEsta acción no se puede deshacer.`;
+
+    this.notificationService.confirm(title, message, async () => {
+      this.isProcessing = true;
       try {
-        const token = await this.authService.getIdToken();
-        
-        if (!token) {
-          console.warn('⚠️ [USER-MGMT] No Firebase token available');
-          throw new Error('No se pudo obtener el token de autenticación');
-        }
+        const idToken = await this.authService.getIdToken();
+        const apiUrl = environment.apiUrl;
 
-        console.log('🔑 [USER-MGMT] Firebase token obtained');
-        
-        const headers = new HttpHeaders({
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        });
-
-        const backendUrl = environment.apiUrl || 'http://localhost:8000';
-        const deleteAuthUrl = `${backendUrl}/api/users/delete-auth-user`;
-
-        console.log('🌐 [USER-MGMT] Calling backend:', deleteAuthUrl);
-
-        const response = await firstValueFrom(
-          this.http.delete<{success: boolean, message: string}>(
-            deleteAuthUrl,
-            {
-              headers,
-              body: {
-                uid: user.uid,
-                email: user.email,
-                tenant_id: this.currentUser!.tenantId,
-                deleted_by_uid: this.currentUser!.uid
-              }
-            }
+        await firstValueFrom(
+          this.http.post<any>(
+            `${apiUrl}/api/users/delete`,
+            { uid: user.uid, email: user.email, tenant_id: user.tenantId, deleted_by_uid: this.currentUser?.uid },
+            { headers: new HttpHeaders({ 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' }) }
           )
         );
 
-        console.log('✅ [USER-MGMT] Backend response:', response);
-        
-      } catch (authError: any) {
-        console.warn('⚠️ [USER-MGMT] Could not delete from Auth:', authError);
-        
-        if (authError.status === 0 || authError.status >= 500) {
-          console.warn('⚠️ [USER-MGMT] Backend error, but user deleted from Firestore');
-        }
+        await this.loadData();
+        this.notificationService.success('Usuario Eliminado', `${user.name} ha sido eliminado correctamente.`);
+      } catch (error) {
+        console.error('❌ [USER-MGMT] Error deleting user:', error);
+        this.notificationService.error('Error', 'No se pudo eliminar el usuario.');
+      } finally {
+        this.isProcessing = false;
       }
-
-      // 4. Recargar datos
-      await this.loadData();
-
-      // 5. Mostrar éxito
-      this.notificationService.success(
-        'Usuario Eliminado',
-        `${user.name} ha sido eliminado correctamente del sistema.`
-      );
-
-      console.log('✅ [USER-MGMT] performDeleteUser - Deletion completed successfully');
-
-    } catch (error: any) {
-      console.error('❌ [USER-MGMT] Error in performDeleteUser:', error);
-      this.notificationService.error(
-        'Error al Eliminar',
-        'No se pudo eliminar el usuario. Por favor intenta de nuevo.'
-      );
-    } finally {
-      this.isProcessing = false;  // ← Desactivar loading
-    }
+    }, 'Eliminar', 'Cancelar', isAdmin ? 'error' : 'warning');
   }
 
-  /**
-   * Desactivar/Activar usuario
-   */
   async toggleUserStatus(user: User): Promise<void> {
-    // Verificar permisos
     if (!this.canManageUsers()) {
-      this.notificationService.error(
-        'Sin Permisos',
-        'No tienes permisos para modificar usuarios.'
-      );
-      return;
-    }
-
-    if (user.uid === this.currentUser?.uid) {
-      this.notificationService.error(
-        'Operación no permitida',
-        'No puedes desactivarte a ti mismo.'
-      );
+      this.notificationService.error('Sin Permisos', 'No tienes permisos para cambiar el estado de usuarios.');
       return;
     }
 
     const action = user.isActive ? 'desactivar' : 'activar';
     const confirmMsg = user.isActive
-      ? `¿Desactivar a ${user.name}?\n\nEl usuario perderá acceso al sistema pero su cuenta permanecerá.`
+      ? `¿Desactivar a ${user.name}?\n\nEl usuario perderá acceso al sistema.`
       : `¿Activar a ${user.name}?\n\nEl usuario recuperará acceso al sistema.`;
 
     this.notificationService.confirm(
       action === 'desactivar' ? 'Desactivar Usuario' : 'Activar Usuario',
       confirmMsg,
       async () => {
-        this.isProcessing = true;  // ← Activar loading
-        
+        this.isProcessing = true;
         try {
-          console.log(`🔄 [USER-MGMT] ${action}ing user:`, user.email);
-
           const userDocRef = doc(this.firestore, 'users', user.uid);
-          await updateDoc(userDocRef, {
-            isActive: !user.isActive,
-            updatedAt: new Date(),
-            updatedBy: this.currentUser?.uid
-          });
-
+          await updateDoc(userDocRef, { isActive: !user.isActive, updatedAt: new Date(), updatedBy: this.currentUser?.uid });
           await this.loadData();
-
           this.notificationService.success(
             `Usuario ${action === 'desactivar' ? 'Desactivado' : 'Activado'}`,
             `${user.name} ha sido ${action}do correctamente.`
           );
-
         } catch (error) {
-          console.error(`❌ [USER-MGMT] Error ${action}ing user:`, error);
-          this.notificationService.error(
-            'Error',
-            `No se pudo ${action} el usuario. Por favor intenta de nuevo.`
-          );
+          this.notificationService.error('Error', `No se pudo ${action} el usuario.`);
         } finally {
-          this.isProcessing = false;  // ← Desactivar loading
+          this.isProcessing = false;
         }
       },
       action === 'desactivar' ? 'Desactivar' : 'Activar',
@@ -433,48 +318,35 @@ export class UserManagement implements OnInit {
     );
   }
 
-  /**
-   * Abrir modal de invitar usuario
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  MODAL INVITAR
+  // ─────────────────────────────────────────────────────────────
+
   openInviteModal(): void {
     if (!this.canManageUsers()) {
-      this.notificationService.error(
-        'Sin Permisos',
-        'No tienes permisos para invitar usuarios.'
-      );
+      this.notificationService.error('Sin Permisos', 'No tienes permisos para invitar usuarios.');
       return;
     }
     this.showInviteModal = true;
   }
 
-  /**
-   * Cerrar modal de invitar
-   */
   closeInviteModal(): void {
     this.showInviteModal = false;
   }
 
-  /**
-   * Callback cuando se envía invitación
-   */
+  /** El modal ya emitió invitationSent — recargamos invitaciones */
   async onInvitationSent(): Promise<void> {
-    this.closeInviteModal();
     await this.loadInvitations();
-    this.notificationService.success(
-      'Invitación Enviada',
-      'La invitación ha sido enviada correctamente.'
-    );
+    // No cerrar el modal aquí — el modal ahora muestra el step de resultado
   }
 
-  /**
-   * Cancelar invitación
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  ACCIONES DE INVITACIÓN
+  // ─────────────────────────────────────────────────────────────
+
   async cancelInvitation(invitation: Invitation): Promise<void> {
     if (!this.canManageUsers()) {
-      this.notificationService.error(
-        'Sin Permisos',
-        'No tienes permisos para cancelar invitaciones.'
-      );
+      this.notificationService.error('Sin Permisos', 'No tienes permisos para cancelar invitaciones.');
       return;
     }
 
@@ -483,22 +355,11 @@ export class UserManagement implements OnInit {
       `¿Cancelar la invitación para ${invitation.email}?`,
       async () => {
         try {
-          console.log('🚫 [USER-MGMT] Cancelling invitation:', invitation.email);
-
           await this.invitationService.cancelInvitation(invitation.id);
           await this.loadInvitations();
-
-          this.notificationService.success(
-            'Invitación Cancelada',
-            `La invitación para ${invitation.email} ha sido cancelada.`
-          );
-
-        } catch (error) {
-          console.error('❌ [USER-MGMT] Error cancelling invitation:', error);
-          this.notificationService.error(
-            'Error',
-            'No se pudo cancelar la invitación.'
-          );
+          this.notificationService.success('Invitación Cancelada', `La invitación para ${invitation.email} fue cancelada.`);
+        } catch {
+          this.notificationService.error('Error', 'No se pudo cancelar la invitación.');
         }
       },
       'Cancelar Invitación',
@@ -506,99 +367,60 @@ export class UserManagement implements OnInit {
     );
   }
 
-  /**
-   * Reenviar invitación
-   */
   async resendInvitation(invitation: Invitation): Promise<void> {
     if (!this.canManageUsers()) {
-      this.notificationService.error(
-        'Sin Permisos',
-        'No tienes permisos para reenviar invitaciones.'
-      );
+      this.notificationService.error('Sin Permisos', 'No tienes permisos para reenviar invitaciones.');
       return;
     }
 
-    this.isProcessing = true;  // ← Activar loading
-    
+    this.isProcessing = true;
     try {
-      console.log('📧 [USER-MGMT] Resending invitation:', invitation.email);
+      const result = await this.invitationService.resendInvitation(invitation.id);
+      await this.loadInvitations();
 
-      await this.invitationService.resendInvitation(invitation.id);
-
-      this.notificationService.success(
-        'Invitación Reenviada',
-        `La invitación ha sido reenviada a ${invitation.email}.`
-      );
-
+      if (result.emailSent) {
+        this.notificationService.success(
+          'Invitación Reenviada',
+          `Correo enviado a ${invitation.email}. También puedes copiar la liga desde la tabla.`
+        );
+      } else {
+        this.notificationService.success(
+          'Liga Renovada',
+          `No se pudo enviar el correo, pero la liga fue renovada. Cópiala desde la tabla.`
+        );
+      }
     } catch (error) {
       console.error('❌ [USER-MGMT] Error resending invitation:', error);
-      this.notificationService.error(
-        'Error',
-        'No se pudo reenviar la invitación.'
-      );
+      this.notificationService.error('Error', 'No se pudo reenviar la invitación.');
     } finally {
-      this.isProcessing = false;  // ← Desactivar loading
+      this.isProcessing = false;
     }
   }
 
-  /**
-   * Cambiar tab activo
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  UI HELPERS
+  // ─────────────────────────────────────────────────────────────
+
   setActiveTab(tab: 'users' | 'invitations'): void {
     this.activeTab = tab;
   }
 
-  /**
-   * Verificar si se puede cambiar estado del usuario
-   */
-  canToggleUserStatus(user: User): boolean {
-    if (!this.canManageUsers()) return false;
-    if (user.uid === this.currentUser?.uid) return false;
-    if (user.isInternal) return false;
-    return true;
-  }
-
-  /**
-   * Verificar si se puede eliminar el usuario
-   */
-  canDeleteUser(user: User): boolean {
-    if (!this.canManageUsers()) return false;
-    if (user.uid === this.currentUser?.uid) return false;
-    if (user.isInternal) return false;
-    return true;
-  }
-
-  /**
-   * Formatear rol de usuario
-   */
   formatRole(role: UserRole): string {
     const roles: { [key: string]: string } = {
       [UserRole.ADMIN]: 'Administrador',
-      [UserRole.VIEWER]: 'Visualizador'
+      [UserRole.VIEWER]: 'Visualizador',
+      [UserRole.INTERNAL]: 'Administrador'
     };
     return roles[role] || role;
   }
 
-  /**
-   * Obtener iniciales del nombre
-   */
   getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+    return name.split(' ').map(p => p[0]).join('').toUpperCase().substring(0, 2);
   }
 
-  /**
-   * Formatear fecha
-   */
   formatDate(date: Date | undefined): string {
     if (!date) return 'Nunca';
-    
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = new Date().getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -608,54 +430,31 @@ export class UserManagement implements OnInit {
     if (diffHours < 24) return `Hace ${diffHours}h`;
     if (diffDays < 7) return `Hace ${diffDays}d`;
 
-    return new Intl.DateTimeFormat('es-MX', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).format(date);
+    return new Intl.DateTimeFormat('es-MX', { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
   }
 
-  /**
-   * Verificar si invitación está por expirar
-   */
   isInvitationExpiringSoon(invitation: Invitation): boolean {
-    const now = new Date();
-    const expiresAt = new Date(invitation.expiresAt);
-    const hoursUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60);
-    return hoursUntilExpiry < 24 && hoursUntilExpiry > 0;
+    const hours = (new Date(invitation.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60);
+    return hours < 24 && hours > 0;
   }
 
-  /**
-   * Verificar si invitación está expirada
-   */
   isInvitationExpired(invitation: Invitation): boolean {
     return new Date(invitation.expiresAt) < new Date();
   }
 
-  /**
-   * Obtener porcentaje de licencias usadas
-   */
   getLicensesPercentage(): number {
-    if (!this.usageStats) return 0;
-    return this.usageStats.licensesPercentage;
+    return this.usageStats?.licensesPercentage ?? 0;
   }
 
-  /**
-   * Verificar si hay licencias disponibles
-   */
   hasAvailableLicenses(): boolean {
     if (!this.currentTenant) return false;
     return this.currentTenant.usedLicenses < this.currentTenant.maxLicenses;
   }
 
-  /**
-   * Obtener color de barra de progreso
-   */
   getProgressColor(): string {
-    const percentage = this.getLicensesPercentage();
-    
-    if (percentage >= 90) return 'danger';
-    if (percentage >= 70) return 'warning';
+    const pct = this.getLicensesPercentage();
+    if (pct >= 90) return 'error';
+    if (pct >= 70) return 'warning';
     return 'success';
   }
 }
