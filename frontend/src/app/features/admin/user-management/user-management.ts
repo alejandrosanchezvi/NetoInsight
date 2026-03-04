@@ -433,6 +433,32 @@ export class UserManagement implements OnInit {
     return new Intl.DateTimeFormat('es-MX', { year: 'numeric', month: 'short', day: 'numeric' }).format(date);
   }
 
+  // Muestra cuántos días QUEDAN (fecha futura)
+  formatExpiresAt(date: Date | undefined): string {
+    if (!date) return '—';
+    const now = new Date();
+    const expires = new Date(date);
+    const diffMs = expires.getTime() - now.getTime();
+
+    if (diffMs <= 0) {
+      // Ya expiró — mostrar cuánto hace
+      const daysAgo = Math.floor(-diffMs / 86400000);
+      return daysAgo === 0 ? 'Expiró hoy' : `Expiró hace ${daysAgo}d`;
+    }
+
+    const daysLeft = Math.floor(diffMs / 86400000);
+    const hoursLeft = Math.floor(diffMs / 3600000);
+
+    if (hoursLeft < 24) return `Expira en ${hoursLeft}h`;
+    if (daysLeft === 1) return 'Expira mañana';
+    if (daysLeft < 7) return `Expira en ${daysLeft} días`;
+
+    // Más de una semana — mostrar fecha exacta
+    return new Intl.DateTimeFormat('es-MX', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    }).format(expires);
+  }
+
   isInvitationExpiringSoon(invitation: Invitation): boolean {
     const hours = (new Date(invitation.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60);
     return hours < 24 && hours > 0;

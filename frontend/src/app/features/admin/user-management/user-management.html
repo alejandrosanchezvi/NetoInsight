@@ -252,7 +252,7 @@
             <td>
               <span class="text-muted" [class.text-warning]="isInvitationExpiringSoon(invitation)"
                 [class.text-danger]="isInvitationExpired(invitation)">
-                {{ formatDate(invitation.expiresAt) }}
+                {{ formatExpiresAt(invitation.expiresAt) }}
               </span>
             </td>
             <td>

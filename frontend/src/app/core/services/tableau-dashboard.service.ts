@@ -41,6 +41,7 @@ const LOAD_TIMEOUT_MS = 20_000;
 const NETO_INTERNAL_ID = 'NETO-INTERNAL';
 const FILTER_FIELD_ID = 'Proveedor Id';   // campo ID numérico
 const FILTER_FIELD_NAME = 'Proveedor';      // campo nombre — también persiste en la vista publicada
+const FILTER_FIELD_NAME_DEFAULT = 'BIMBO, S.A. DE C.V.';      // campo nombre — también persiste en la vista publicada
 
 // ─────────────────────────────────────────────────────────────
 // Helpers de diagnóstico
@@ -381,7 +382,9 @@ export class TableauDashboardService {
                         await Promise.race([
                             Promise.all([
                                 ws.clearFilterAsync(fieldId),
-                                ws.clearFilterAsync(fieldName).catch(() => { }),
+                                // ws.clearFilterAsync(fieldName).catch(() => { }),
+                                ws.applyFilterAsync(fieldName, [FILTER_FIELD_NAME_DEFAULT], 'replace'),
+                                // ws.clearFilterAsync(fieldName).catch(() => { }),
                             ]),
                             new Promise((_, reject) =>
                                 setTimeout(() => reject(new Error('filter-timeout-15s')), 15_000)
