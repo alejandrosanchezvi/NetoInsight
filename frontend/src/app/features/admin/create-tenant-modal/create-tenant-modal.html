@@ -1,12 +1,13 @@
-<!-- 🏢 NetoInsight - Create Tenant Modal Template (SIMPLIFICADO) -->
+<!-- 🏢 NetoInsight - Create Tenant Modal v2.3 — Paso 3 sin dashboards -->
 
 <div class="modal-overlay" (click)="onClose()">
   <div class="modal-container" (click)="onModalClick($event)">
-    
-    <!-- Modal Header -->
+
+    <!-- Header -->
     <div class="modal-header">
       <div class="header-content">
-        <svg class="header-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="header-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
@@ -15,10 +16,7 @@
           <p class="modal-subtitle">Paso {{ currentStep }} de {{ totalSteps }}</p>
         </div>
       </div>
-      <button 
-        class="btn-close"
-        (click)="onClose()"
-        [disabled]="isSubmitting">
+      <button class="btn-close" (click)="onClose()" [disabled]="isSubmitting">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -26,263 +24,328 @@
       </button>
     </div>
 
-    <!-- Progress Steps -->
+    <!-- Steps -->
     <div class="progress-steps">
-      <div 
-        class="progress-step"
-        [class.active]="currentStep >= 1"
-        [class.completed]="currentStep > 1"
+      <div class="progress-step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1"
         (click)="goToStep(1)">
-        <div class="step-number">1</div>
-        <span class="step-label">Información</span>
+        <div class="step-number">
+          <svg *ngIf="currentStep > 1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="3">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span *ngIf="currentStep <= 1">1</span>
+        </div>
+        <span class="step-label">Info</span>
       </div>
       <div class="step-divider" [class.active]="currentStep > 1"></div>
-      <div 
-        class="progress-step"
-        [class.active]="currentStep >= 2"
-        [class.completed]="currentStep > 2"
+      <div class="progress-step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2"
         (click)="goToStep(2)">
-        <div class="step-number">2</div>
-        <span class="step-label">Configuración</span>
+        <div class="step-number">
+          <svg *ngIf="currentStep > 2" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="3">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span *ngIf="currentStep <= 2">2</span>
+        </div>
+        <span class="step-label">Plan</span>
       </div>
       <div class="step-divider" [class.active]="currentStep > 2"></div>
-      <div 
-        class="progress-step"
-        [class.active]="currentStep >= 3"
+      <div class="progress-step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3"
         (click)="goToStep(3)">
-        <div class="step-number">3</div>
+        <div class="step-number">
+          <svg *ngIf="currentStep > 3" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="3">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span *ngIf="currentStep <= 3">3</span>
+        </div>
         <span class="step-label">Contacto</span>
+      </div>
+      <div class="step-divider" [class.active]="currentStep > 3"></div>
+      <div class="progress-step" [class.active]="currentStep >= 4" (click)="goToStep(4)">
+        <div class="step-number">4</div>
+        <span class="step-label">Acceso</span>
       </div>
     </div>
 
-    <!-- Error Message -->
+    <!-- Error -->
     <div *ngIf="errorMessage" class="alert-error">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
       </svg>
-      <span>{{ errorMessage }}</span>
+      {{ errorMessage }}
     </div>
 
-    <!-- Form -->
-    <form [formGroup]="createForm" (ngSubmit)="onSubmit()" class="modal-form">
-      
-      <!-- PASO 1: Información Básica -->
+    <form [formGroup]="createForm" class="modal-form">
+
+      <!-- ══ PASO 1: Info ══ -->
       <div class="form-section" *ngIf="currentStep === 1">
-        <h3 class="section-title">Información Básica</h3>
+        <h3 class="section-title">Información del Proveedor</h3>
 
         <div class="form-group">
-          <label for="name" class="form-label">
-            Nombre del Proveedor
-            <span class="required">*</span>
-          </label>
-          <input
-            id="name"
-            type="text"
-            formControlName="name"
-            class="form-input"
-            [class.error]="hasError('name')"
+          <label class="form-label">Nombre del Proveedor <span class="required">*</span></label>
+          <input type="text" formControlName="name" class="form-input" [class.error]="hasError('name')"
             placeholder="Ej: Comercial ABC">
-          <span *ngIf="hasError('name')" class="error-message">
-            {{ getErrorMessage('name') }}
-          </span>
+          <span *ngIf="hasError('name')" class="error-message">{{ getErrorMessage('name') }}</span>
         </div>
 
         <div class="form-group">
-          <label for="legalName" class="form-label">Razón Social</label>
-          <input
-            id="legalName"
-            type="text"
-            formControlName="legalName"
-            class="form-input"
-            placeholder="Opcional - Se usa el nombre si se deja vacío">
-          <span class="field-hint">Opcional - Si no se especifica, se usará el nombre</span>
+          <label class="form-label">Razón Social</label>
+          <input type="text" formControlName="legalName" class="form-input"
+            placeholder="Opcional — se usa el nombre si se deja vacío">
         </div>
 
         <div class="form-group">
-          <label for="rfc" class="form-label">RFC</label>
-          <input
-            id="rfc"
-            type="text"
-            formControlName="rfc"
-            class="form-input"
-            [class.error]="hasError('rfc')"
-            placeholder="ABC123456XYZ"
-            maxlength="13"
-            style="text-transform: uppercase;">
-          <span *ngIf="hasError('rfc')" class="error-message">
-            {{ getErrorMessage('rfc') }}
-          </span>
-          <span class="field-hint">Opcional - Formato: ABC123456XYZ</span>
+          <label class="form-label">RFC</label>
+          <input type="text" formControlName="rfc" class="form-input" [class.error]="hasError('rfc')"
+            placeholder="ABC123456XYZ" maxlength="13" style="text-transform:uppercase">
+          <span *ngIf="hasError('rfc')" class="error-message">{{ getErrorMessage('rfc') }}</span>
+          <span class="field-hint">Opcional</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ID del Proveedor <span class="required">*</span></label>
+          <input type="text" formControlName="proveedorIdInterno" class="form-input"
+            [class.error]="hasError('proveedorIdInterno')" placeholder="Ej: PROV-001" style="text-transform:uppercase">
+          <span *ngIf="hasError('proveedorIdInterno')" class="error-message">{{ getErrorMessage('proveedorIdInterno')
+            }}</span>
+          <span class="field-hint">Identificador interno que asignas tú manualmente</span>
         </div>
       </div>
 
-      <!-- PASO 2: Configuración -->
+      <!-- ══ PASO 2: Plan y Suscripción ══ -->
       <div class="form-section" *ngIf="currentStep === 2">
-        <h3 class="section-title">Configuración</h3>
+        <h3 class="section-title">Plan y Suscripción</h3>
 
-        <!-- Plan -->
         <div class="form-group">
-          <label class="form-label">
-            Plan de Suscripción
-            <span class="required">*</span>
-          </label>
-          <div class="radio-group">
-            <label 
-              *ngFor="let plan of planOptions" 
-              class="radio-option"
-              [class.plan-trial]="plan.value === 'trial'"
-              [class.plan-recommended]="plan.value === 'starter'">
-              <input
-                type="radio"
-                formControlName="plan"
-                [value]="plan.value">
-              <div class="radio-content">
-                <div class="radio-header">
-                  <span class="radio-label">{{ plan.label }}</span>
-                  <span *ngIf="plan.value === 'trial'" class="badge-trial">Gratis</span>
-                  <span *ngIf="plan.value === 'starter'" class="badge-recommended">Recomendado</span>
+          <label class="form-label">Plan <span class="required">*</span></label>
+          <div class="plan-grid">
+            <label *ngFor="let plan of planOptions" class="plan-card"
+              [class.selected]="createForm.get('plan')?.value === plan.value"
+              [class.plan-trial]="plan.value === 'trial'">
+              <input type="radio" formControlName="plan" [value]="plan.value">
+              <div class="plan-body">
+                <div class="plan-top">
+                  <span class="plan-name">{{ plan.label }}</span>
+                  <span *ngIf="plan.badge" class="plan-badge" [ngClass]="plan.badgeClass">{{ plan.badge }}</span>
                 </div>
-                <span class="radio-description">{{ plan.description }}</span>
-                <div class="radio-details">
-                  <span class="radio-licenses">👥 {{ plan.maxLicenses }} {{ plan.maxLicenses === 1 ? 'usuario' : 'usuarios' }}</span>
-                  <span *ngIf="plan.trialDays" class="radio-duration">⏰ {{ plan.trialDays }} días</span>
-                  <span *ngIf="!plan.trialDays" class="radio-duration">✓ {{ plan.price }}</span>
+                <span class="plan-desc">{{ plan.description }}</span>
+                <div class="plan-lic">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                  </svg>
+                  {{ plan.maxLicenses }} {{ plan.maxLicenses === 1 ? 'usuario' : 'usuarios' }}
                 </div>
+              </div>
+              <div class="plan-checkmark" *ngIf="createForm.get('plan')?.value === plan.value">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
               </div>
             </label>
           </div>
         </div>
 
-        <!-- Licencias Máximas (readonly) -->
         <div class="form-group">
-          <label for="maxLicenses" class="form-label">
-            Licencias Máximas
-            <span class="required">*</span>
-          </label>
-          <input
-            id="maxLicenses"
-            type="number"
-            formControlName="maxLicenses"
-            class="form-input"
-            readonly>
-          <span class="field-hint">Se ajusta automáticamente según el plan seleccionado</span>
+          <label class="form-label">Duración de la Suscripción <span class="required">*</span></label>
+          <div class="duration-list">
+            <label *ngFor="let opt of visibleDurations" class="duration-item"
+              [class.selected]="selectedDuration === opt.value" (click)="setDuration(opt.value)">
+              <input type="radio" [checked]="selectedDuration === opt.value">
+              <div class="duration-item-body">
+                <span class="duration-item-name">{{ opt.label }}</span>
+                <span class="duration-item-desc">{{ opt.desc }}</span>
+              </div>
+              <div class="duration-checkmark" *ngIf="selectedDuration === opt.value">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+            </label>
+          </div>
+
+          <div class="duration-preview" *ngIf="selectedDuration !== 'none'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            La suscripción vence el <strong>{{ getDurationPreview() }}</strong>
+          </div>
+          <div class="duration-preview preview-none" *ngIf="selectedDuration === 'none'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            El proveedor tendrá acceso permanente. Usa <strong>Renovar</strong> para asignar una fecha cuando lo actives
+            formalmente.
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PASO 3: Contacto (sin dashboards) ══ -->
+      <div class="form-section" *ngIf="currentStep === 3">
+        <h3 class="section-title">Contacto</h3>
+
+        <div class="form-group">
+          <label class="form-label">Email del Administrador <span class="required">*</span></label>
+          <input type="email" formControlName="adminEmail" class="form-input" [class.error]="hasError('adminEmail')"
+            placeholder="admin@proveedor.com">
+          <span *ngIf="hasError('adminEmail')" class="error-message">{{ getErrorMessage('adminEmail') }}</span>
+          <span class="field-hint">Contacto principal del proveedor</span>
         </div>
 
-        <!-- Proveedor ID -->
         <div class="form-group">
-          <label for="proveedorIdInterno" class="form-label">
-            Proveedor ID
-            <span class="required">*</span>
-          </label>
-          <div class="input-with-button">
-            <input
-              id="proveedorIdInterno"
-              type="text"
-              formControlName="proveedorIdInterno"
-              class="form-input"
-              [class.error]="hasError('proveedorIdInterno')"
-              placeholder="PROV-001"
-              style="text-transform: uppercase;">
-            <button 
-              type="button" 
-              class="btn-generate"
-              (click)="generateProveedorId()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          <label class="form-label">Email de Facturación</label>
+          <input type="email" formControlName="billingEmail" class="form-input" placeholder="facturacion@proveedor.com">
+          <span class="field-hint">Opcional</span>
+        </div>
+      </div>
+
+      <!-- ══ PASO 4: Acceso ══ -->
+      <div class="form-section" *ngIf="currentStep === 4">
+        <h3 class="section-title">Acceso del Administrador</h3>
+
+        <div class="access-options" *ngIf="!magicLink">
+          <p class="access-intro">¿Cómo quieres darle acceso al administrador del proveedor?</p>
+
+          <button type="button" class="access-card" [class.selected]="accessMode === 'none'"
+            (click)="setAccessMode('none')">
+            <div class="ac-icon icon-gray">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
               </svg>
-              Generar
+            </div>
+            <div class="ac-text">
+              <span class="ac-title">Sin invitación por ahora</span>
+              <span class="ac-desc">Solo crea el proveedor. Desde la tarjeta del proveedor en <strong>Gestión de
+                  Proveedores</strong> encontrarás el botón <strong>"Invitar"</strong> para enviarle acceso cuando
+                quieras.</span>
+            </div>
+            <div class="ac-check" *ngIf="accessMode === 'none'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </button>
+
+          <button type="button" class="access-card" [class.selected]="accessMode === 'magic_link'"
+            (click)="setAccessMode('magic_link')">
+            <div class="ac-icon icon-blue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+            </div>
+            <div class="ac-text">
+              <span class="ac-title">Generar Liga Mágica ahora</span>
+              <span class="ac-desc">Genera un link para compartir por WhatsApp. También puedes obtener uno nuevo desde
+                el botón <strong>"Invitar"</strong> en la tarjeta del proveedor.</span>
+            </div>
+            <div class="ac-check" *ngIf="accessMode === 'magic_link'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </button>
+
+          <button type="button" class="access-card" [class.selected]="accessMode === 'email'"
+            (click)="setAccessMode('email')">
+            <div class="ac-icon icon-orange">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+            <div class="ac-text">
+              <span class="ac-title">Enviar correo de invitación</span>
+              <span class="ac-desc">Envía correo a <strong>{{ createForm.get('adminEmail')?.value || 'el admin'
+                  }}</strong>. Si falla, se mostrará la liga mágica como respaldo.</span>
+            </div>
+            <div class="ac-check" *ngIf="accessMode === 'email'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </button>
+        </div>
+
+        <!-- Resultado liga mágica -->
+        <div *ngIf="magicLink" class="magic-result">
+          <div class="magic-result-top">
+            <div class="magic-result-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div>
+              <p class="magic-result-title">¡Proveedor creado!</p>
+              <p class="magic-result-sub">Comparte este link con el administrador del proveedor</p>
+            </div>
+          </div>
+          <div class="magic-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            Al abrir este link el administrador configura su contraseña y accede. <strong>Válido 7 días.</strong>
+            Puedes generar uno nuevo desde <strong>Gestión de Proveedores → Invitar</strong>.
+          </div>
+          <div class="link-box">
+            <span class="link-text">{{ magicLink }}</span>
+            <button type="button" class="btn-copy" (click)="copyMagicLink()" [class.copied]="linkCopied">
+              <svg *ngIf="!linkCopied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <svg *ngIf="linkCopied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              {{ linkCopied ? 'Copiado' : 'Copiar' }}
             </button>
           </div>
-          <span *ngIf="hasError('proveedorIdInterno')" class="error-message">
-            {{ getErrorMessage('proveedorIdInterno') }}
-          </span>
         </div>
       </div>
 
-      <!-- PASO 3: Contacto -->
-      <div class="form-section" *ngIf="currentStep === 3">
-        <h3 class="section-title">Información de Contacto</h3>
-
-        <div class="form-group">
-          <label for="adminEmail" class="form-label">
-            Email del Administrador
-            <span class="required">*</span>
-          </label>
-          <input
-            id="adminEmail"
-            type="email"
-            formControlName="adminEmail"
-            class="form-input"
-            [class.error]="hasError('adminEmail')"
-            placeholder="admin@proveedor.com">
-          <span *ngIf="hasError('adminEmail')" class="error-message">
-            {{ getErrorMessage('adminEmail') }}
-          </span>
-          <span class="field-hint">Se enviará una invitación a este email</span>
-        </div>
-
-        <div class="form-group">
-          <label for="billingEmail" class="form-label">Email de Facturación</label>
-          <input
-            id="billingEmail"
-            type="email"
-            formControlName="billingEmail"
-            class="form-input"
-            [class.error]="hasError('billingEmail')"
-            placeholder="facturacion@proveedor.com">
-          <span *ngIf="hasError('billingEmail')" class="error-message">
-            {{ getErrorMessage('billingEmail') }}
-          </span>
-          <span class="field-hint">Opcional - Para temas de facturación</span>
-        </div>
-      </div>
     </form>
 
-    <!-- Modal Footer -->
+    <!-- Footer -->
     <div class="modal-footer">
-      <div class="step-indicator">
-        Paso {{ currentStep }} de {{ totalSteps }}
-      </div>
+      <span class="step-indicator">Paso {{ currentStep }} de {{ totalSteps }}</span>
       <div class="footer-actions">
-        <button 
-          *ngIf="currentStep > 1"
-          type="button"
-          class="btn-secondary"
-          (click)="prevStep()"
+        <button *ngIf="currentStep > 1 && !magicLink" type="button" class="btn-secondary" (click)="prevStep()"
           [disabled]="isSubmitting">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
           Anterior
         </button>
-
-        <button 
-          *ngIf="currentStep < totalSteps"
-          type="button"
-          class="btn-primary"
-          (click)="nextStep()">
+        <button *ngIf="currentStep < totalSteps" type="button" class="btn-primary" (click)="nextStep()">
           Siguiente
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
-
-        <button 
-          *ngIf="currentStep === totalSteps"
-          type="button"
-          class="btn-primary"
-          (click)="onSubmit()"
+        <button *ngIf="currentStep === totalSteps && !magicLink" type="button" class="btn-primary" (click)="onSubmit()"
           [disabled]="isSubmitting">
-          <div *ngIf="isSubmitting" class="spinner"></div>
-          <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <span class="spinner" *ngIf="isSubmitting"></span>
+          <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           {{ isSubmitting ? 'Creando...' : 'Crear Proveedor' }}
         </button>
+        <button *ngIf="magicLink" type="button" class="btn-primary" (click)="onCloseFinal()">Cerrar</button>
       </div>
     </div>
+
   </div>
 </div>

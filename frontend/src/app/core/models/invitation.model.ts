@@ -5,29 +5,29 @@ import { UserRole } from './user.model';
 export interface Invitation {
   // Identificación
   id: string;
-  
+
   // Datos del invitado
   email: string;
   role: UserRole;
-  
+
   // Relación con tenant
   tenantId: string;
   tenantName: string;
-  
+
   // Token y estado
   token: string;
   status: InvitationStatus;
-  
+
   // Timestamps
   createdAt: Date;
   expiresAt: Date;
   acceptedAt?: Date;
-  
+
   // Quién invitó
   invitedBy: string;      // UID del usuario que invitó
   invitedByEmail: string; // Email del usuario que invitó
   invitedByName: string; // Nombre del usuario que invitó
-  
+
   // Metadata
   metadata?: {
     userAgent?: string;
@@ -51,6 +51,7 @@ export interface CreateInvitationDTO {
   email: string;
   role: UserRole;
   tenantId: string;
+  sendEmail?: boolean
 }
 
 /**

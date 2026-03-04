@@ -1,127 +1,85 @@
-// 🏢 NetoInsight - Tenant Service (CORREGIDO)
+// 🏢 NetoInsight - Tenant Service v2.0 — Con renovación de suscripción
 
 import { Injectable, inject } from '@angular/core';
 import {
   Firestore,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  increment,
-  Timestamp,
+  collection, doc,
+  getDoc, getDocs,
+  setDoc, updateDoc,
+  query, where, orderBy,
+  serverTimestamp, increment, Timestamp,
 } from '@angular/fire/firestore';
-import { Observable, BehaviorSubject, from, map } from 'rxjs';
-import { Tenant, CreateTenantDTO, UpdateTenantDTO, TenantUsageStats } from '../models/tenant.model';
+import { BehaviorSubject } from 'rxjs';
+import {
+  Tenant, CreateTenantDTO, UpdateTenantDTO, TenantUsageStats,
+  SubscriptionDuration, calculateSubscriptionEnd
+} from '../models/tenant.model';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class TenantService {
+
   private firestore = inject(Firestore);
   private currentTenantSubject = new BehaviorSubject<Tenant | null>(null);
   public currentTenant$ = this.currentTenantSubject.asObservable();
 
   constructor() {
-    console.log('🏢 [TENANT] TenantService initialized');
+    console.log('🏢 [TENANT] TenantService v2.0 initialized');
   }
 
-  /**
-   * Obtener tenant por ID
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  LECTURA
+  // ─────────────────────────────────────────────────────────────
+
   async getTenantById(tenantId: string): Promise<Tenant | null> {
-    console.log('🏢 [TENANT] Fetching tenant:', tenantId);
-
     try {
-      const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
-      const tenantDoc = await getDoc(tenantDocRef);
-
-      if (!tenantDoc.exists()) {
-        console.warn('⚠️ [TENANT] Tenant not found:', tenantId);
-        return null;
-      }
-
-      const data = tenantDoc.data();
-      const tenant = this.mapDocToTenant(tenantId, data);
-
-      console.log('✅ [TENANT] Tenant fetched:', tenant.name);
-      return tenant;
-    } catch (error) {
-      console.error('❌ [TENANT] Error fetching tenant:', error);
-      throw error;
+      const snap = await getDoc(doc(this.firestore, 'tenants', tenantId));
+      if (!snap.exists()) return null;
+      return this.mapDocToTenant(snap.id, snap.data());
+    } catch (e) {
+      console.error('❌ [TENANT] getTenantById:', e);
+      throw e;
     }
   }
 
-  /**
-   * Obtener todos los tenants (solo para admins internos)
-   */
   async getAllTenants(): Promise<Tenant[]> {
-    console.log('🏢 [TENANT] Fetching all tenants');
-
     try {
-      const tenantsRef = collection(this.firestore, 'tenants');
-      const q = query(tenantsRef, orderBy('name', 'asc'));
-      const querySnapshot = await getDocs(q);
-
-      const tenants: Tenant[] = querySnapshot.docs.map((doc) =>
-        this.mapDocToTenant(doc.id, doc.data()),
-      );
-
-      console.log('✅ [TENANT] Fetched tenants:', tenants.length);
-      return tenants;
-    } catch (error) {
-      console.error('❌ [TENANT] Error fetching tenants:', error);
-      throw error;
+      const q = query(collection(this.firestore, 'tenants'), orderBy('name', 'asc'));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => this.mapDocToTenant(d.id, d.data()));
+    } catch (e) {
+      console.error('❌ [TENANT] getAllTenants:', e);
+      throw e;
     }
   }
 
-  /**
-   * Obtener tenants activos
-   */
   async getActiveTenants(): Promise<Tenant[]> {
-    console.log('🏢 [TENANT] Fetching active tenants');
-
     try {
-      const tenantsRef = collection(this.firestore, 'tenants');
-      const q = query(tenantsRef, where('isActive', '==', true), orderBy('name', 'asc'));
-      const querySnapshot = await getDocs(q);
-
-      const tenants: Tenant[] = querySnapshot.docs.map((doc) =>
-        this.mapDocToTenant(doc.id, doc.data()),
+      const q = query(
+        collection(this.firestore, 'tenants'),
+        where('isActive', '==', true),
+        orderBy('name', 'asc')
       );
-
-      console.log('✅ [TENANT] Active tenants:', tenants.length);
-      return tenants;
-    } catch (error) {
-      console.error('❌ [TENANT] Error fetching active tenants:', error);
-      throw error;
+      const snap = await getDocs(q);
+      return snap.docs.map(d => this.mapDocToTenant(d.id, d.data()));
+    } catch (e) {
+      console.error('❌ [TENANT] getActiveTenants:', e);
+      throw e;
     }
   }
 
-  /**
-   * Crear nuevo tenant
-   */
-  async createTenant(data: CreateTenantDTO, createdBy?: string): Promise<Tenant> {
-    console.log('🏢 [TENANT] Creating tenant:', data.name);
+  // ─────────────────────────────────────────────────────────────
+  //  CREAR
+  // ─────────────────────────────────────────────────────────────
 
+  async createTenant(data: CreateTenantDTO, createdBy?: string): Promise<Tenant> {
+    console.log('🏢 [TENANT] Creating:', data.name);
     try {
       const tenantId = `tenant-${data.name.toLowerCase().replace(/\s+/g, '-')}`;
-      const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
+      const ref = doc(this.firestore, 'tenants', tenantId);
 
-      // Verificar que no exista
-      const existingDoc = await getDoc(tenantDocRef);
-      if (existingDoc.exists()) {
-        throw new Error('Ya existe un tenant con ese nombre');
-      }
+      const existing = await getDoc(ref);
+      if (existing.exists()) throw new Error('Ya existe un proveedor con ese nombre');
 
-      // Construir objeto base (solo campos requeridos)
       const tenantData: any = {
         tenantId,
         proveedorIdInterno: data.proveedorIdInterno,
@@ -137,7 +95,7 @@ export class TenantService {
         adminEmail: data.adminEmail,
       };
 
-      // Agregar campos opcionales solo si tienen valor
+      // Campos opcionales
       if (data.legalName) tenantData.legalName = data.legalName;
       if (data.rfc) tenantData.rfc = data.rfc;
       if (data.bigQueryDataset) tenantData.bigQueryDataset = data.bigQueryDataset;
@@ -145,169 +103,173 @@ export class TenantService {
       if (data.billingEmail) tenantData.billingEmail = data.billingEmail;
       if (data.contractStart) tenantData.contractStart = data.contractStart;
       if (data.contractEnd) tenantData.contractEnd = data.contractEnd;
+
+      // Suscripción
+      if (data.subscriptionEnd) {
+        tenantData.subscriptionEnd = Timestamp.fromDate(data.subscriptionEnd);
+      }
+      if (data.subscriptionDuration) {
+        tenantData.subscriptionDuration = data.subscriptionDuration;
+      }
+      // Legacy trialEndsAt
       if (data.trialEndsAt) {
         tenantData.trialEndsAt = Timestamp.fromDate(data.trialEndsAt);
       }
-      await setDoc(tenantDocRef, tenantData);
 
-      console.log('✅ [TENANT] Tenant created:', tenantId);
-
-      // Retornar tenant creado
+      await setDoc(ref, tenantData);
+      console.log('✅ [TENANT] Created:', tenantId);
       return (await this.getTenantById(tenantId))!;
-    } catch (error) {
-      console.error('❌ [TENANT] Error creating tenant:', error);
-      throw error;
+
+    } catch (e) {
+      console.error('❌ [TENANT] createTenant:', e);
+      throw e;
     }
   }
 
-  /**
-   * Actualizar tenant
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  ACTUALIZAR
+  // ─────────────────────────────────────────────────────────────
+
   async updateTenant(tenantId: string, data: UpdateTenantDTO, updatedBy: string): Promise<void> {
-    console.log('🏢 [TENANT] Updating tenant:', tenantId);
-
     try {
-      const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
-
       const updateData: any = {
         ...data,
         updatedAt: serverTimestamp(),
         updatedBy,
       };
 
-      await updateDoc(tenantDocRef, updateData);
+      // Convertir Date → Timestamp para Firestore
+      if (data.subscriptionEnd instanceof Date) {
+        updateData.subscriptionEnd = Timestamp.fromDate(data.subscriptionEnd);
+      } else if (data.subscriptionEnd === null) {
+        updateData.subscriptionEnd = null;
+      }
 
-      console.log('✅ [TENANT] Tenant updated:', tenantId);
-    } catch (error) {
-      console.error('❌ [TENANT] Error updating tenant:', error);
-      throw error;
+      if (data.trialEndsAt instanceof Date) {
+        updateData.trialEndsAt = Timestamp.fromDate(data.trialEndsAt);
+      }
+
+      await updateDoc(doc(this.firestore, 'tenants', tenantId), updateData);
+      console.log('✅ [TENANT] Updated:', tenantId);
+    } catch (e) {
+      console.error('❌ [TENANT] updateTenant:', e);
+      throw e;
     }
   }
 
-  /**
-   * Incrementar/Decrementar licencias usadas
-   */
-  async updateUsedLicenses(tenantId: string, amount: number): Promise<void> {
-    console.log('📊 [TENANT] Updating licenses for tenant:', tenantId, 'amount:', amount);
-
-    try {
-      const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
-
-      await updateDoc(tenantDocRef, {
-        usedLicenses: increment(amount),
-      });
-
-      console.log('✅ [TENANT] Licenses updated');
-    } catch (error) {
-      console.error('❌ [TENANT] Error updating licenses:', error);
-      throw error;
-    }
-  }
+  // ─────────────────────────────────────────────────────────────
+  //  RENOVAR SUSCRIPCIÓN ← NUEVO
+  // ─────────────────────────────────────────────────────────────
 
   /**
-   * Verificar si hay licencias disponibles
+   * Renueva la suscripción de un tenant calculando la nueva fecha
+   * desde HOY (no desde la fecha de vencimiento anterior).
+   * También reactiva el tenant si estaba desactivado.
    */
-  async hasAvailableLicenses(tenantId: string): Promise<boolean> {
-    const tenant = await this.getTenantById(tenantId);
+  async renewSubscription(
+    tenantId: string,
+    duration: SubscriptionDuration,
+    updatedBy: string
+  ): Promise<Date> {
+    const newEnd = calculateSubscriptionEnd(duration);
 
-    if (!tenant) {
-      return false;
-    }
-
-    return tenant.usedLicenses < tenant.maxLicenses;
-  }
-
-  /**
-   * Obtener estadísticas de uso de un tenant
-   *
-   * 🔧 CORREGIDO:
-   * - totalUsers: Cuenta TODOS los usuarios en Firestore (activos e inactivos)
-   * - activeUsers: Cuenta solo usuarios con isActive === true
-   * - licensesUsed: Se sincroniza con el total real de usuarios
-   */
-  async getTenantUsageStats(tenantId: string): Promise<TenantUsageStats | null> {
-    const tenant = await this.getTenantById(tenantId);
-
-    if (!tenant) {
-      return null;
-    }
-
-    const usersRef = collection(this.firestore, 'users');
-
-    // ✅ Contar TODOS los usuarios (incluyendo inactivos)
-    const allUsersQuery = query(usersRef, where('tenantId', '==', tenantId));
-    const allUsersSnapshot = await getDocs(allUsersQuery);
-    const totalUsersCount = allUsersSnapshot.size;
-
-    // ✅ Contar solo usuarios activos
-    const activeUsersQuery = query(
-      usersRef,
-      where('tenantId', '==', tenantId),
-      where('isActive', '==', true),
-    );
-    const activeUsersSnapshot = await getDocs(activeUsersQuery);
-    const activeUsersCount = activeUsersSnapshot.size;
-
-    console.log('📊 [TENANT] Stats calculated:', {
+    await this.updateTenant(
       tenantId,
-      totalUsers: totalUsersCount,
-      activeUsers: activeUsersCount,
-      tenantUsedLicenses: tenant.usedLicenses,
-    });
+      {
+        subscriptionEnd: newEnd,
+        subscriptionDuration: duration,
+        isActive: true,
+      },
+      updatedBy
+    );
 
-    const stats: TenantUsageStats = {
-      tenantId: tenant.tenantId,
-      tenantName: tenant.name,
-      totalUsers: totalUsersCount, // ✅ Total real de Firestore
-      activeUsers: activeUsersCount, // ✅ Solo activos
-      licensesUsed: totalUsersCount, // ✅ Sincronizado con total
-      licensesAvailable: tenant.maxLicenses - totalUsersCount,
-      licensesPercentage: (totalUsersCount / tenant.maxLicenses) * 100,
-    };
-
-    return stats;
+    console.log(`✅ [TENANT] Suscripción renovada: ${tenantId} → ${newEnd.toISOString()}`);
+    return newEnd;
   }
 
-  /**
-   * Activar/Desactivar tenant
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  ACTIVAR / DESACTIVAR
+  // ─────────────────────────────────────────────────────────────
+
   async setTenantActive(tenantId: string, isActive: boolean, updatedBy: string): Promise<void> {
-    console.log(`🏢 [TENANT] Setting tenant ${isActive ? 'active' : 'inactive'}:`, tenantId);
-
     try {
-      const tenantDocRef = doc(this.firestore, 'tenants', tenantId);
-
-      await updateDoc(tenantDocRef, {
+      await updateDoc(doc(this.firestore, 'tenants', tenantId), {
         isActive,
         updatedAt: serverTimestamp(),
         updatedBy,
       });
-
-      console.log(`✅ [TENANT] Tenant ${isActive ? 'activated' : 'deactivated'}`);
-    } catch (error) {
-      console.error('❌ [TENANT] Error updating tenant status:', error);
-      throw error;
+      console.log(`✅ [TENANT] ${isActive ? 'Activated' : 'Deactivated'}:`, tenantId);
+    } catch (e) {
+      console.error('❌ [TENANT] setTenantActive:', e);
+      throw e;
     }
   }
 
-  /**
-   * Establecer tenant actual (para el contexto de la sesión)
-   */
-  setCurrentTenant(tenant: Tenant | null): void {
-    this.currentTenantSubject.next(tenant);
-    console.log('🏢 [TENANT] Current tenant set:', tenant?.name);
+  // ─────────────────────────────────────────────────────────────
+  //  LICENCIAS
+  // ─────────────────────────────────────────────────────────────
+
+  async updateUsedLicenses(tenantId: string, amount: number): Promise<void> {
+    try {
+      await updateDoc(doc(this.firestore, 'tenants', tenantId), {
+        usedLicenses: increment(amount),
+      });
+    } catch (e) {
+      console.error('❌ [TENANT] updateUsedLicenses:', e);
+      throw e;
+    }
   }
 
-  /**
-   * Obtener tenant actual
-   */
+  async hasAvailableLicenses(tenantId: string): Promise<boolean> {
+    const tenant = await this.getTenantById(tenantId);
+    return tenant ? tenant.usedLicenses < tenant.maxLicenses : false;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  ESTADÍSTICAS
+  // ─────────────────────────────────────────────────────────────
+
+  async getTenantUsageStats(tenantId: string): Promise<TenantUsageStats | null> {
+    const tenant = await this.getTenantById(tenantId);
+    if (!tenant) return null;
+
+    const usersRef = collection(this.firestore, 'users');
+
+    const allSnap = await getDocs(query(usersRef, where('tenantId', '==', tenantId)));
+    const totalCount = allSnap.size;
+
+    const activeSnap = await getDocs(
+      query(usersRef, where('tenantId', '==', tenantId), where('isActive', '==', true))
+    );
+    const activeCount = activeSnap.size;
+
+    return {
+      tenantId: tenant.tenantId,
+      tenantName: tenant.name,
+      totalUsers: totalCount,
+      activeUsers: activeCount,
+      licensesUsed: totalCount,
+      licensesAvailable: tenant.maxLicenses - totalCount,
+      licensesPercentage: (totalCount / tenant.maxLicenses) * 100,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  TENANT ACTUAL (sesión)
+  // ─────────────────────────────────────────────────────────────
+
+  setCurrentTenant(tenant: Tenant | null): void {
+    this.currentTenantSubject.next(tenant);
+  }
+
   getCurrentTenant(): Tenant | null {
     return this.currentTenantSubject.value;
   }
 
-  /**
-   * Mapear documento de Firestore a modelo Tenant
-   */
+  // ─────────────────────────────────────────────────────────────
+  //  MAPPER PRIVADO
+  // ─────────────────────────────────────────────────────────────
+
   private mapDocToTenant(id: string, data: any): Tenant {
     return {
       tenantId: id,
@@ -318,6 +280,9 @@ export class TenantService {
       plan: data['plan'],
       maxLicenses: data['maxLicenses'],
       usedLicenses: data['usedLicenses'],
+      // Suscripción — nuevo campo y legacy
+      subscriptionEnd: data['subscriptionEnd']?.toDate(),
+      subscriptionDuration: data['subscriptionDuration'],
       trialEndsAt: data['trialEndsAt']?.toDate(),
       features: data['features'],
       tableauGroup: data['tableauGroup'],

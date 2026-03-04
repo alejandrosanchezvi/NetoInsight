@@ -1,4 +1,12 @@
-// 🏢 NetoInsight - Create Tenant Modal (CON TRIAL Y NOTIFICACIONES)
+// 🏢 NetoInsight - Create Tenant Modal v2.2
+// Cambios vs anterior:
+// - Sin campo Licencias Máximas (visible en el plan)
+// - 4 planes visibles: Trial(1), Starter(3), Pro(5), Enterprise(10) — Interno oculto
+// - Duración: Anual, Semestral, Trimestral, Mensual + "Sin fecha"
+// - Proveedor ID: manual, sin botón generar
+// - Tableau / BigQuery: ocultos (se asignan automáticamente)
+// - Acceso "Sin invitación": explica que se invita desde Gestión de Proveedores
+// - Acceso "Liga mágica": también indica que se puede obtener desde Gestión de Proveedores
 
 import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -6,9 +14,78 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { TenantService } from '../../../core/services/tenant.service';
 import { InvitationService } from '../../../core/services/invitation.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { TenantPlan, CreateTenantDTO, PLAN_CONFIGS } from '../../../core/models/tenant.model';
+import {
+  TenantPlan, CreateTenantDTO,
+  SubscriptionDuration, calculateSubscriptionEnd
+} from '../../../core/models/tenant.model';
 import { UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+
+type AccessMode = 'none' | 'magic_link' | 'email';
+type DurationValue = SubscriptionDuration | 'none';
+
+const VISIBLE_PLANS = [
+  {
+    value: TenantPlan.TRIAL,
+    label: 'Prueba Gratis',
+    maxLicenses: 1,
+    description: '30 días de prueba con 1 usuario',
+    badge: 'Gratis',
+    badgeClass: 'badge-green'
+  },
+  {
+    value: TenantPlan.STARTER,
+    label: 'Starter',
+    maxLicenses: 3,
+    description: 'Ideal para equipos pequeños',
+    badge: null,
+    badgeClass: ''
+  },
+  {
+    value: TenantPlan.PRO,
+    label: 'Pro',
+    maxLicenses: 5,
+    description: 'Para equipos en crecimiento',
+    badge: null,
+    badgeClass: ''
+  },
+  {
+    value: TenantPlan.ENTERPRISE,
+    label: 'Enterprise',
+    maxLicenses: 10,
+    description: 'Para organizaciones grandes',
+    badge: null,
+    badgeClass: ''
+  },
+];
+
+const ALL_DURATIONS: { value: DurationValue; label: string; desc: string }[] = [
+  {
+    value: 'none',
+    label: 'Sin fecha por ahora',
+    desc: 'Acceso permanente hasta que definas una fecha con "Renovar"'
+  },
+  {
+    value: '1y',
+    label: 'Anual',
+    desc: '12 meses desde hoy'
+  },
+  {
+    value: '6m',
+    label: 'Semestral',
+    desc: '6 meses desde hoy'
+  },
+  {
+    value: '3m',
+    label: 'Trimestral',
+    desc: '3 meses desde hoy'
+  },
+  {
+    value: '30d',
+    label: 'Mensual',
+    desc: '30 días desde hoy'
+  },
+];
 
 @Component({
   selector: 'app-create-tenant-modal',
@@ -26,15 +103,20 @@ export class CreateTenantModal implements OnInit {
   isSubmitting = false;
   errorMessage = '';
   currentStep = 1;
-  totalSteps = 3;
+  readonly totalSteps = 4;
 
-  // Opciones de planes (ACTUALIZADAS)
-  planOptions = PLAN_CONFIGS;
+  readonly planOptions = VISIBLE_PLANS;
 
-  // Dashboards disponibles
+  // Paso 2 — duración
+  selectedDuration: DurationValue = '1y';
+
+  // Paso 4 — acceso
+  accessMode: AccessMode = 'none';
+  magicLink = '';
+  linkCopied = false;
+
   dashboardOptions = [
     { id: 'categorization', label: 'Categorización', checked: true },
-    { id: 'stores', label: 'Tiendas', checked: true },
     { id: 'skus', label: 'SKUs', checked: true },
     { id: 'stocks', label: 'Stocks', checked: true },
     { id: 'purchase-orders', label: 'Órdenes de Compra', checked: true }
@@ -48,369 +130,240 @@ export class CreateTenantModal implements OnInit {
     private notificationService: NotificationService
   ) {
     this.createForm = this.fb.group({
-      // Paso 1: Información Básica
+      // Paso 1
       name: ['', [Validators.required, Validators.minLength(2)]],
       legalName: [''],
       rfc: ['', [Validators.pattern(/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/)]],
-
-      // Paso 2: Configuración
-      plan: ['starter', Validators.required],  // Starter por defecto
-      maxLicenses: [5, [Validators.required, Validators.min(1)]],
-      proveedorIdInterno: ['', [Validators.required, Validators.pattern(/^PROV-\d{3}$/)]],
-
-      // Integraciones
-      tableauGroup: [''],
-      bigQueryDataset: [''],
-      bigQueryFilter: [''],
-
-      // Paso 3: Contacto
+      proveedorIdInterno: ['', [Validators.required]],
+      // Paso 2
+      plan: ['starter', Validators.required],
+      // Paso 3
       adminEmail: ['', [Validators.required, Validators.email]],
       billingEmail: ['', Validators.email],
-
-      // Fechas de contrato (opcional)
-      contractStart: [''],
-      contractEnd: ['']
     });
   }
 
   ngOnInit(): void {
-    console.log('🏢 [CREATE-TENANT] Modal initialized');
-
-    // Actualizar maxLicenses cuando cambia el plan
     this.createForm.get('plan')?.valueChanges.subscribe(plan => {
-      const selectedPlan = this.planOptions.find(p => p.value === plan);
-      if (selectedPlan) {
-        this.createForm.patchValue({ maxLicenses: selectedPlan.maxLicenses });
+      if (plan === TenantPlan.TRIAL) {
+        this.selectedDuration = '30d';
+      } else if (this.selectedDuration === '30d') {
+        this.selectedDuration = '1y';
       }
     });
-
-    // Auto-generar campos relacionados
-    this.createForm.get('name')?.valueChanges.subscribe(name => {
-      this.autoGenerateFields(name);
-    });
   }
 
-  /**
-   * Auto-generar campos basados en el nombre
-   */
-  private autoGenerateFields(name: string): void {
-    if (!name) return;
+  // ── Navegación ──────────────────────────────────────────────
 
-    const cleanName = name.trim();
-
-    // Tableau Group
-    if (!this.createForm.get('tableauGroup')?.value) {
-      const tableauGroup = `${cleanName.replace(/\s+/g, '_')}_Viewers`;
-      this.createForm.patchValue({ tableauGroup });
-    }
-
-    // BigQuery Dataset
-    if (!this.createForm.get('bigQueryDataset')?.value) {
-      const dataset = `proveedores_${cleanName.toLowerCase().replace(/\s+/g, '_')}`;
-      this.createForm.patchValue({ bigQueryDataset: dataset });
-    }
-  }
-
-  /**
-   * Generar siguiente Proveedor ID
-   */
-  async generateProveedorId(): Promise<void> {
-    try {
-      // Obtener todos los tenants
-      const tenants = await this.tenantService.getAllTenants();
-
-      // Extraer números de IDs existentes
-      const existingIds = tenants
-        .map(t => t.proveedorIdInterno)
-        .filter(id => id.startsWith('PROV-'))
-        .map(id => parseInt(id.replace('PROV-', '')))
-        .filter(num => !isNaN(num));
-
-      // Calcular siguiente ID
-      const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
-      const proveedorId = `PROV-${nextId.toString().padStart(3, '0')}`;
-
-      this.createForm.patchValue({ proveedorIdInterno: proveedorId });
-
-      // Auto-generar filtro BigQuery
-      this.createForm.patchValue({
-        bigQueryFilter: `proveedor_id = '${proveedorId}'`
-      });
-
-      console.log('✅ [CREATE-TENANT] Generated Proveedor ID:', proveedorId);
-
-    } catch (error) {
-      console.error('❌ [CREATE-TENANT] Error generating ID:', error);
-    }
-  }
-
-  /**
-   * Navegar entre pasos
-   */
   nextStep(): void {
-    if (this.currentStep < this.totalSteps) {
-      // Validar paso actual
-      if (!this.validateCurrentStep()) {
-        return;
-      }
+    if (this.currentStep < this.totalSteps && this.validateCurrentStep()) {
       this.currentStep++;
     }
   }
 
   prevStep(): void {
-    if (this.currentStep > 1) {
-      this.currentStep--;
-    }
+    if (this.currentStep > 1) this.currentStep--;
   }
 
   goToStep(step: number): void {
-    if (step <= this.currentStep) {
-      this.currentStep = step;
-    }
+    if (step < this.currentStep) this.currentStep = step;
   }
 
-  /**
-   * Validar paso actual
-   */
   private validateCurrentStep(): boolean {
-    const step1Fields = ['name'];
-    const step2Fields = ['plan', 'maxLicenses', 'proveedorIdInterno'];
-    const step3Fields = ['adminEmail'];
-
-    let fieldsToValidate: string[] = [];
-
-    switch (this.currentStep) {
-      case 1:
-        fieldsToValidate = step1Fields;
-        break;
-      case 2:
-        fieldsToValidate = step2Fields;
-        break;
-      case 3:
-        fieldsToValidate = step3Fields;
-        break;
-    }
-
-    // Marcar campos como touched
-    fieldsToValidate.forEach(field => {
-      this.createForm.get(field)?.markAsTouched();
-    });
-
-    // Validar
-    const isValid = fieldsToValidate.every(field => {
-      const control = this.createForm.get(field);
-      return control && control.valid;
-    });
-
-    if (!isValid) {
+    const stepFields: Record<number, string[]> = {
+      1: ['name', 'proveedorIdInterno'],
+      2: ['plan'],
+      3: ['adminEmail'],
+      4: []
+    };
+    const fields = stepFields[this.currentStep] ?? [];
+    fields.forEach(f => this.createForm.get(f)?.markAsTouched());
+    const valid = fields.every(f => this.createForm.get(f)?.valid);
+    if (!valid) {
       this.errorMessage = 'Por favor completa todos los campos requeridos';
-      setTimeout(() => this.errorMessage = '', 3000);
+      setTimeout(() => (this.errorMessage = ''), 3000);
     }
-
-    return isValid;
+    return valid;
   }
 
-  /**
-   * Calcular fecha de expiración del trial (30 días)
-   */
-  private calculateTrialEndDate(): any {
-    const now = new Date();
-    const trialEnd = new Date(now);
-    trialEnd.setDate(trialEnd.getDate() + 30);
-    return trialEnd;  // Firestore lo convertirá automáticamente a Timestamp
+  // ── Plan helpers ─────────────────────────────────────────────
+
+  get selectedPlan() {
+    return this.planOptions.find(p => p.value === this.createForm.get('plan')?.value);
   }
 
-  /**
-   * Enviar formulario
-   */
+  get isTrialPlan(): boolean {
+    return this.createForm.get('plan')?.value === TenantPlan.TRIAL;
+  }
+
+  get visibleDurations() {
+    if (this.isTrialPlan) {
+      return ALL_DURATIONS.filter(d => d.value === '30d');
+    }
+    return ALL_DURATIONS.filter(d => d.value !== '30d');
+  }
+
+  setDuration(val: DurationValue): void {
+    this.selectedDuration = val;
+  }
+
+  getDurationPreview(): string {
+    if (this.selectedDuration === 'none') return '';
+    const end = calculateSubscriptionEnd(this.selectedDuration as SubscriptionDuration);
+    return new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(end);
+  }
+
+  // ── Acceso ───────────────────────────────────────────────────
+
+  setAccessMode(mode: AccessMode): void {
+    this.accessMode = mode;
+    this.magicLink = '';
+    this.linkCopied = false;
+  }
+
+  // ── Submit ───────────────────────────────────────────────────
+
   async onSubmit(): Promise<void> {
-    if (this.createForm.invalid) {
-      this.markFormGroupTouched(this.createForm);
-      this.errorMessage = 'Por favor completa todos los campos requeridos';
-      return;
-    }
-
+    if (this.isSubmitting) return;
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    console.log('🏢 [CREATE-TENANT] Creating tenant...');
-
     try {
-      const formValue = this.createForm.value;
-      const selectedPlan = formValue.plan as TenantPlan;
+      const fv = this.createForm.value;
+      const plan = fv.plan as TenantPlan;
+      const planConfig = this.planOptions.find(p => p.value === plan)!;
 
-      // Preparar DTO
+      const subscriptionEnd: Date | undefined =
+        this.selectedDuration === 'none'
+          ? undefined
+          : calculateSubscriptionEnd(this.selectedDuration as SubscriptionDuration);
+
+      const name = fv.name.trim();
+      const provId = fv.proveedorIdInterno.trim().toUpperCase();
+
       const createDTO: CreateTenantDTO = {
-        proveedorIdInterno: formValue.proveedorIdInterno,
-        name: formValue.name.trim(),
-        legalName: formValue.legalName?.trim() || formValue.name.trim(),
-        rfc: formValue.rfc?.trim() || undefined,
-        plan: selectedPlan,
-        maxLicenses: formValue.maxLicenses,
+        proveedorIdInterno: provId,
+        name,
+        legalName: fv.legalName?.trim() || name,
+        rfc: fv.rfc?.trim() || undefined,
+        plan,
+        maxLicenses: planConfig.maxLicenses,
         features: {
           dashboards: this.getSelectedDashboards(),
           exports: true,
-          api: selectedPlan === TenantPlan.ENTERPRISE || selectedPlan === TenantPlan.INTERNAL,
-          customReports: selectedPlan === TenantPlan.ENTERPRISE || selectedPlan === TenantPlan.INTERNAL
+          api: plan === TenantPlan.ENTERPRISE,
+          customReports: plan === TenantPlan.ENTERPRISE
         },
-        tableauGroup: formValue.tableauGroup.trim(),
-        bigQueryDataset: formValue.bigQueryDataset?.trim(),
-        bigQueryFilter: formValue.bigQueryFilter?.trim(),
-        adminEmail: formValue.adminEmail.trim(),
-        billingEmail: formValue.billingEmail?.trim(),
-        contractStart: formValue.contractStart || undefined,
-        contractEnd: formValue.contractEnd || undefined,
-        trialEndsAt: selectedPlan === TenantPlan.TRIAL ? this.calculateTrialEndDate() : undefined
+        // Campos automáticos — ocultos en UI
+        tableauGroup: `${name.replace(/\s+/g, '_')}_Viewers`,
+        bigQueryDataset: `proveedores_${name.toLowerCase().replace(/\s+/g, '_')}`,
+        bigQueryFilter: `proveedor_id = '${provId}'`,
+        adminEmail: fv.adminEmail.trim(),
+        billingEmail: fv.billingEmail?.trim() || undefined,
+        subscriptionEnd,
+        subscriptionDuration: this.selectedDuration === 'none'
+          ? undefined
+          : this.selectedDuration as SubscriptionDuration,
+        trialEndsAt: plan === TenantPlan.TRIAL ? subscriptionEnd : undefined,
       };
 
-      // Obtener usuario actual para createdBy
       const currentUser = this.authService.getCurrentUser();
-
-      // 1. Crear tenant
-      console.log('🏢 [CREATE-TENANT] Creating tenant in Firestore...');
       const tenant = await this.tenantService.createTenant(createDTO, currentUser?.uid || 'system');
-      console.log('✅ [CREATE-TENANT] Tenant created:', tenant.tenantId);
 
-      // 2. Crear invitación para el admin (esto ya envía el email automáticamente)
-      console.log('📧 [CREATE-TENANT] Creating invitation for admin...');
-      const invitation = await this.invitationService.createInvitation({
-        email: formValue.adminEmail.trim(),
-        role: UserRole.ADMIN,
-        tenantId: tenant.tenantId
-      });
-      // console.log('✅ [CREATE-TENANT] Invitation created and email sent:', invitation.id);
+      if (this.accessMode === 'none') {
+        this.notificationService.success(
+          'Proveedor Creado',
+          `${tenant.name} creado correctamente.\n\nPuedes enviarle la invitación desde su tarjeta en Gestión de Proveedores.`
+        );
+        this.tenantCreated.emit();
 
-      // 3. Emitir evento de éxito
-      this.tenantCreated.emit();
+      } else {
+        const result = await this.invitationService.createInvitation({
+          email: fv.adminEmail.trim(),
+          role: UserRole.ADMIN,
+          tenantId: tenant.tenantId
+        });
 
-      // 4. Mostrar modal de éxito
-      const trialMessage = selectedPlan === TenantPlan.TRIAL
-        ? '\n\n⏰ Trial válido por 30 días desde hoy'
-        : '';
+        this.magicLink = result.magicLink;
 
-      this.notificationService.success(
-        'Proveedor Creado',
-        `${tenant.name} ha sido creado exitosamente.\n\n` +
-        `📧 Invitación enviada a: ${formValue.adminEmail}\n` +
-        `📦 Plan: ${this.getPlanLabel(selectedPlan)}\n` +
-        `👥 Licencias: ${formValue.maxLicenses}${trialMessage}`
-      );
+        if (this.accessMode === 'email') {
+          const msg = result.emailSent
+            ? `📧 Correo enviado a ${fv.adminEmail}`
+            : `⚠️ No se pudo enviar el correo. Copia la liga mágica abajo.`;
+          this.notificationService.success('Proveedor Creado', `${tenant.name} creado.\n${msg}`);
+          this.tenantCreated.emit();
+        }
+        // accessMode === 'magic_link': modal se queda abierto mostrando el link
+      }
 
     } catch (error: any) {
-      console.error('❌ [CREATE-TENANT] Error:', error);
+      console.error('❌ [CREATE-TENANT]', error);
       this.errorMessage = error.message || 'Error al crear proveedor';
-
-      this.notificationService.error(
-        'Error al Crear Proveedor',
-        this.errorMessage
-      );
-
+      this.notificationService.error('Error', this.errorMessage);
       this.isSubmitting = false;
     }
   }
 
-  /**
-   * Obtener label del plan
-   */
-  private getPlanLabel(plan: TenantPlan): string {
-    const planConfig = this.planOptions.find(p => p.value === plan);
-    return planConfig?.label || plan;
-  }
-
-  /**
-   * Obtener dashboards seleccionados
-   */
-  private getSelectedDashboards(): string[] {
-    return this.dashboardOptions
-      .filter(d => d.checked)
-      .map(d => d.id);
-  }
-
-  /**
-   * Toggle dashboard
-   */
-  toggleDashboard(dashboardId: string): void {
-    const dashboard = this.dashboardOptions.find(d => d.id === dashboardId);
-    if (dashboard) {
-      dashboard.checked = !dashboard.checked;
+  async copyMagicLink(): Promise<void> {
+    if (!this.magicLink) return;
+    try {
+      await navigator.clipboard.writeText(this.magicLink);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = this.magicLink;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
     }
+    this.linkCopied = true;
+    setTimeout(() => (this.linkCopied = false), 2500);
   }
 
-  /**
-   * Cerrar modal
-   */
+  onCloseFinal(): void {
+    this.tenantCreated.emit();
+    this.close.emit();
+  }
+
+  // ── Utils ────────────────────────────────────────────────────
+
+  private getSelectedDashboards(): string[] {
+    return this.dashboardOptions.filter(d => d.checked).map(d => d.id);
+  }
+
+  toggleDashboard(id: string): void {
+    const d = this.dashboardOptions.find(x => x.id === id);
+    if (d) d.checked = !d.checked;
+  }
+
+  hasError(field: string): boolean {
+    const c = this.createForm.get(field);
+    return !!(c?.invalid && c.touched);
+  }
+
+  getErrorMessage(field: string): string {
+    const c = this.createForm.get(field);
+    if (c?.hasError('required')) return 'Este campo es requerido';
+    if (c?.hasError('email')) return 'Email inválido';
+    if (c?.hasError('minlength')) return `Mínimo ${c.errors?.['minlength'].requiredLength} caracteres`;
+    if (c?.hasError('pattern') && field === 'rfc') return 'Formato de RFC inválido';
+    return 'Campo inválido';
+  }
+
   onClose(): void {
     if (this.isSubmitting) return;
-
     if (this.createForm.dirty) {
       this.notificationService.confirm(
         'Cancelar Creación',
-        '¿Estás seguro de cancelar? Los cambios se perderán.',
-        () => {
-          this.close.emit();
-        },
-        'Sí, cancelar',
-        'Continuar editando',
-        'warning'
+        '¿Estás seguro? Los cambios se perderán.',
+        () => this.close.emit(),
+        'Sí, cancelar', 'Continuar', 'warning'
       );
     } else {
       this.close.emit();
     }
   }
 
-  /**
-   * Prevenir cierre al hacer click dentro del modal
-   */
-  onModalClick(event: MouseEvent): void {
-    event.stopPropagation();
-  }
-
-  /**
-   * Marcar todos los campos como touched
-   */
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  /**
-   * Verificar si un campo tiene error
-   */
-  hasError(fieldName: string): boolean {
-    const control = this.createForm.get(fieldName);
-    return !!(control && control.invalid && control.touched);
-  }
-
-  /**
-   * Obtener mensaje de error
-   */
-  getErrorMessage(fieldName: string): string {
-    const control = this.createForm.get(fieldName);
-
-    if (control?.hasError('required')) {
-      return 'Este campo es requerido';
-    }
-
-    if (control?.hasError('email')) {
-      return 'Email inválido';
-    }
-
-    if (control?.hasError('minlength')) {
-      const minLength = control.errors?.['minlength'].requiredLength;
-      return `Mínimo ${minLength} caracteres`;
-    }
-
-    if (control?.hasError('pattern')) {
-      if (fieldName === 'rfc') {
-        return 'Formato de RFC inválido';
-      }
-      if (fieldName === 'proveedorIdInterno') {
-        return 'Formato debe ser PROV-XXX';
-      }
-    }
-
-    return 'Campo inválido';
-  }
+  onModalClick(e: MouseEvent): void { e.stopPropagation(); }
 }

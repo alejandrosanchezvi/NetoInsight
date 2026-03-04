@@ -2,3 +2,42 @@
 /* Reutiliza estilos del create-tenant-modal */
 
 @import '../create-tenant-modal/create-tenant-modal.css';
+
+/* ── Sección solo lectura: Plan ── */
+.readonly-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+    margin-bottom: .875rem;
+}
+
+.readonly-item {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    padding: .75rem 1rem;
+    background: var(--light-gray);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.readonly-label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+
+.readonly-value {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.readonly-hint {
+    font-size: .8125rem;
+    color: var(--text-gray);
+    margin: 0;
+    line-height: 1.5;
+}

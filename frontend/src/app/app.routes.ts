@@ -14,6 +14,7 @@ import { AcceptInvite } from './features/auth/accept-invite/accept-invite';
 import { TenantManagement } from './features/admin/tenant-management/tenant-management';
 import { internalAdminGuard } from './core/guards/internal-admin.guard';
 import { ResetPassword } from './features/auth/reset-password/reset-password';
+import { SubscriptionSuspended } from './features/auth/subscription-suspended/subscription-suspended';
 
 export const routes: Routes = [
   // 🔓 Rutas públicas
@@ -28,6 +29,10 @@ export const routes: Routes = [
   {
     path: 'reset-password',
     component: ResetPassword,
+  },
+  {
+    path: 'subscription-suspended',
+    component: SubscriptionSuspended,
   },
   // 🏠 Rutas protegidas
   {

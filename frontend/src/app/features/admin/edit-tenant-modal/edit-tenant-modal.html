@@ -1,8 +1,8 @@
-<!-- 🏢 NetoInsight - Edit Tenant Modal Template (ACTUALIZADO) -->
+<!-- 🏢 NetoInsight - Edit Tenant Modal v2.1 -->
 
 <div class="modal-overlay" (click)="onClose()">
   <div class="modal-container" (click)="onModalClick($event)">
-    
+
     <!-- Header -->
     <div class="modal-header">
       <div class="header-content">
@@ -25,7 +25,7 @@
 
     <!-- Error -->
     <div *ngIf="errorMessage" class="alert-error">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -35,8 +35,8 @@
 
     <!-- Form -->
     <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="modal-form">
-      
-      <!-- Info Básica -->
+
+      <!-- Información Básica -->
       <div class="form-section">
         <h3 class="section-title">Información Básica</h3>
 
@@ -47,85 +47,22 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label">ID del Proveedor</label>
+          <input type="text" class="form-input" [value]="tenant.proveedorIdInterno" disabled>
+          <span class="field-hint">El ID no se puede modificar</span>
+        </div>
+
+        <div class="form-group">
           <label for="legalName" class="form-label">Razón Social</label>
-          <input id="legalName" type="text" formControlName="legalName" class="form-input">
+          <input id="legalName" type="text" formControlName="legalName" class="form-input"
+            placeholder="Nombre legal del proveedor">
         </div>
 
         <div class="form-group">
           <label for="rfc" class="form-label">RFC</label>
-          <input id="rfc" type="text" formControlName="rfc" class="form-input" [class.error]="hasError('rfc')" maxlength="13" style="text-transform: uppercase;">
+          <input id="rfc" type="text" formControlName="rfc" class="form-input" [class.error]="hasError('rfc')"
+            maxlength="13" placeholder="ABC123456XYZ" style="text-transform: uppercase;">
           <span *ngIf="hasError('rfc')" class="error-message">{{ getErrorMessage('rfc') }}</span>
-        </div>
-      </div>
-
-      <!-- Configuración -->
-      <div class="form-section">
-        <h3 class="section-title">Configuración</h3>
-
-        <!-- Plan -->
-        <div class="form-group">
-          <label class="form-label">
-            Plan de Suscripción
-            <span class="required">*</span>
-          </label>
-          <div class="radio-group">
-            <label 
-              *ngFor="let plan of planOptions" 
-              class="radio-option"
-              [class.plan-trial]="plan.value === 'trial'"
-              [class.plan-recommended]="plan.value === 'starter'">
-              <input type="radio" formControlName="plan" [value]="plan.value">
-              <div class="radio-content">
-                <div class="radio-header">
-                  <span class="radio-label">{{ plan.label }}</span>
-                  <span *ngIf="plan.value === 'trial'" class="badge-trial">Gratis</span>
-                  <span *ngIf="plan.value === 'starter'" class="badge-recommended">Recomendado</span>
-                </div>
-                <span class="radio-description">{{ plan.description }}</span>
-                <div class="radio-details">
-                  <span class="radio-licenses">👥 {{ plan.maxLicenses }} {{ plan.maxLicenses === 1 ? 'usuario' : 'usuarios' }}</span>
-                  <span *ngIf="plan.trialDays" class="radio-duration">⏰ {{ plan.trialDays }} días</span>
-                  <span *ngIf="!plan.trialDays" class="radio-duration">✓ {{ plan.price }}</span>
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- Licencias Máximas (readonly) -->
-        <div class="form-group">
-          <label for="maxLicenses" class="form-label">
-            Licencias Máximas
-            <span class="required">*</span>
-          </label>
-          <input 
-            id="maxLicenses" 
-            type="number" 
-            formControlName="maxLicenses" 
-            class="form-input" 
-            readonly>
-          <span class="field-hint">
-            Se ajusta automáticamente según el plan. 
-            Actualmente en uso: {{ tenant.usedLicenses }} de {{ tenant.maxLicenses }}
-          </span>
-        </div>
-
-        <!-- Tableau Group -->
-        <div class="form-group">
-          <label for="tableauGroup" class="form-label">Tableau Group</label>
-          <input id="tableauGroup" type="text" formControlName="tableauGroup" class="form-input">
-        </div>
-
-        <!-- BigQuery Dataset -->
-        <div class="form-group">
-          <label for="bigQueryDataset" class="form-label">BigQuery Dataset</label>
-          <input id="bigQueryDataset" type="text" formControlName="bigQueryDataset" class="form-input">
-        </div>
-
-        <!-- BigQuery Filter -->
-        <div class="form-group">
-          <label for="bigQueryFilter" class="form-label">Filtro BigQuery</label>
-          <input id="bigQueryFilter" type="text" formControlName="bigQueryFilter" class="form-input">
         </div>
       </div>
 
@@ -135,77 +72,55 @@
 
         <div class="form-group">
           <label for="adminEmail" class="form-label">
-            Email del Administrador
-            <span class="required">*</span>
+            Email del Administrador <span class="required">*</span>
           </label>
-          <input 
-            id="adminEmail" 
-            type="email" 
-            formControlName="adminEmail" 
-            class="form-input" 
-            [class.error]="hasError('adminEmail')">
+          <input id="adminEmail" type="email" formControlName="adminEmail" class="form-input"
+            [class.error]="hasError('adminEmail')" placeholder="admin@proveedor.com">
           <span *ngIf="hasError('adminEmail')" class="error-message">{{ getErrorMessage('adminEmail') }}</span>
         </div>
 
         <div class="form-group">
           <label for="billingEmail" class="form-label">Email de Facturación</label>
-          <input 
-            id="billingEmail" 
-            type="email" 
-            formControlName="billingEmail" 
-            class="form-input" 
-            [class.error]="hasError('billingEmail')">
+          <input id="billingEmail" type="email" formControlName="billingEmail" class="form-input"
+            [class.error]="hasError('billingEmail')" placeholder="facturacion@proveedor.com">
           <span *ngIf="hasError('billingEmail')" class="error-message">{{ getErrorMessage('billingEmail') }}</span>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="contractStart" class="form-label">Inicio de Contrato</label>
-            <input id="contractStart" type="date" formControlName="contractStart" class="form-input">
-          </div>
-
-          <div class="form-group">
-            <label for="contractEnd" class="form-label">Fin de Contrato</label>
-            <input id="contractEnd" type="date" formControlName="contractEnd" class="form-input">
-          </div>
+          <span class="field-hint">Opcional</span>
         </div>
       </div>
 
-      <!-- Dashboards -->
+      <!-- Info de solo lectura: Plan y suscripción -->
       <div class="form-section">
-        <h3 class="section-title">Dashboards Permitidos</h3>
-        <div class="checkbox-group">
-          <label *ngFor="let dashboard of dashboardOptions" class="checkbox-option">
-            <input
-              type="checkbox"
-              [checked]="dashboard.checked"
-              (change)="toggleDashboard(dashboard.id)">
-            <span>{{ dashboard.label }}</span>
-          </label>
+        <h3 class="section-title">Plan y Suscripción</h3>
+        <div class="readonly-info-grid">
+          <div class="readonly-item">
+            <span class="readonly-label">Plan</span>
+            <span class="readonly-value">{{ tenant.plan | titlecase }}</span>
+          </div>
+          <div class="readonly-item">
+            <span class="readonly-label">Licencias</span>
+            <span class="readonly-value">{{ tenant.usedLicenses }} / {{ tenant.maxLicenses }}</span>
+          </div>
         </div>
+        <p class="readonly-hint">Para cambiar el plan o renovar la suscripción usa los botones en la tarjeta del
+          proveedor.</p>
       </div>
+
     </form>
 
     <!-- Footer -->
     <div class="modal-footer">
-      <button 
-        type="button" 
-        class="btn-secondary" 
-        (click)="onClose()"
-        [disabled]="isSubmitting">
+      <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="isSubmitting">
         Cancelar
       </button>
-      <button 
-        type="button" 
-        class="btn-primary" 
-        (click)="onSubmit()"
-        [disabled]="isSubmitting">
+      <button type="button" class="btn-primary" (click)="onSubmit()" [disabled]="isSubmitting">
         <div *ngIf="isSubmitting" class="spinner"></div>
-        <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
         {{ isSubmitting ? 'Guardando...' : 'Guardar Cambios' }}
       </button>
     </div>
+
   </div>
 </div>
