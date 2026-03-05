@@ -365,110 +365,96 @@ export class TableauDashboardService {
             if (isNetoAdmin) {
                 // ─────────────────────────────────────────────────────────────────
                 // CASO NETO ADMIN
-                // Limpiar ambos campos en la PRIMERA worksheet que los acepte.
-                // Tableau propaga al resto del dashboard automáticamente.
+                // Limpiar campo numérico y fijar proveedor base de forma SECUENCIAL
                 // ─────────────────────────────────────────────────────────────────
                 let cleared = false;
 
                 for (const ws of sheets) {
-                    // Log de filtros ANTES para ver qué trae cada hoja
-                    const antes = await snapshotFilters(ws);
-                    console.log(`${tag} 📄 "${ws.name}" ANTES →`, antes.length ? antes : '(ningún filtro)');
-
                     try {
                         const tOp = performance.now();
-                        console.log(`${tag} 📄 "${ws.name}" — intentando clear...`);
 
+                        // 1) Aplicamos el campo principal primero. Si falla, el campo no existe.
                         await Promise.race([
-                            Promise.all([
-                                ws.clearFilterAsync(fieldId),
-                                // ws.clearFilterAsync(fieldName).catch(() => { }),
-                                ws.applyFilterAsync(fieldName, [FILTER_FIELD_NAME_DEFAULT], 'replace'),
-                                // ws.clearFilterAsync(fieldName).catch(() => { }),
-                            ]),
-                            new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error('filter-timeout-15s')), 15_000)
-                            ),
+                            ws.applyFilterAsync(fieldName, [FILTER_FIELD_NAME_DEFAULT], 'replace'),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('filter-timeout-15s')), 15_000))
                         ]);
 
-                        console.log(`${tag} 🧹 clear "${fieldId}" + "${fieldName}" en "${ws.name}" en ${ms(tOp)}`);
-                        console.log(`${tag} → Tableau propaga al resto del dashboard`);
-                        cleared = true;
-                        break;
+                        // 2) Si funcionó el campo principal, limpiamos el campo de ID
+                        await ws.clearFilterAsync(fieldId).catch(() => { });
+
+                        // Verificamos si Tableau *realmente* guardó el filtro en el backend (a veces falla silenciosamente en la primer hoja)
+                        const checkFilters = await snapshotFilters(ws) as any[];
+                        const didApply = checkFilters.some((f: any) => f.campo === fieldName && Array.isArray(f.valores) && f.valores.includes(FILTER_FIELD_NAME_DEFAULT));
+
+                        if (didApply) {
+                            console.log(`${tag} ✅ Filtro fijado exitósamente ("${fieldName}"="BIMBO...") en la hoja "${ws.name}" en ${ms(tOp)}`);
+                            cleared = true;
+                            break; // Ahora sí, salimos seguros de que Tableau lo procesó al resto del dashboard
+                        } else {
+                            console.log(`${tag} ⚠️ "${ws.name}" procesó el comando pero no reflejó los valores. Probando en la siguiente hoja...`);
+                        }
 
                     } catch (err: any) {
                         if (err?.message === 'filter-timeout-15s') {
-                            console.warn(`${tag} ⏱ TIMEOUT en clear sobre "${ws.name}" (>15s)`);
-                            cleared = true;
+                            console.warn(`${tag} ⏱ TIMEOUT en "${ws.name}" (>15s)`);
+                            break;
                         } else {
-                            console.log(`${tag} ⏭ "${ws.name}" no tiene "${fieldId}" — siguiente`);
+                            // Ignoramos silentemente si no existe el filtro en esta hoja para avanzar rápido
                         }
-                        break;
                     }
                 }
 
+                console.log(`${tag} → Tableau propaga al resto del dashboard (admin neto)`);
+
                 if (!cleared) {
-                    console.warn(`${tag} ⚠️ NINGUNA worksheet aceptó "${fieldId}"`);
+                    console.warn(`${tag} ⚠️ NINGUNA worksheet aplicó correctamente. dashboard sin filtrar.`);
                 }
 
             } else {
                 // ─────────────────────────────────────────────────────────────────
                 // CASO PROVEEDOR EXTERNO
-                // Apply en la primera worksheet que acepte el campo.
+                // Aplicar de forma SECUENCIAL para evitar colisiones en VizQL
                 // Timeout de 15s para no bloquear la UI si Tableau tarda.
                 // ─────────────────────────────────────────────────────────────────
                 let applied = false;
 
                 for (const ws of sheets) {
-                    // Log de filtros ANTES para ver qué trae cada hoja
-                    const antes = await snapshotFilters(ws);
-                    console.log(`${tag} 📄 "${ws.name}" ANTES →`, antes.length ? antes : '(ningún filtro)');
-
                     try {
                         const tOp = performance.now();
-                        console.log(`${tag} 📄 "${ws.name}" — intentando apply...`);
 
+                        // 1) Aplicamos nuestro id
                         await Promise.race([
-                            Promise.all([
-                                ws.applyFilterAsync(fieldId, [providerId], 'replace'),
-                                ws.clearFilterAsync(fieldName).catch(() => { }),
-                            ]),
-                            new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error('filter-timeout-15s')), 15_000)
-                            ),
+                            ws.applyFilterAsync(fieldId, [providerId], 'replace'),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error('filter-timeout-15s')), 15_000))
                         ]);
 
-                        console.log(`${tag}   applyFilterAsync("${fieldId}", ["${providerId}"]) + clearFilterAsync("${fieldName}") en ${ms(tOp)}`);
+                        // 2) Si funcionó (el id existía en la hoja y no falló), limpiamos el nombre
+                        await ws.clearFilterAsync(fieldName).catch(() => { });
 
-                        // Snapshot DESPUÉS para confirmar
-                        const snap = await snapshotFilters(ws);
-                        const confirmado = snap.find((f: any) => f.campo === fieldId);
-                        const quedoName = snap.find((f: any) => f.campo === fieldName);
-                        const vals = (quedoName as any)?.valores;
-                        const nameOk = !quedoName || !vals || vals === '(vacío — sin valores activos)'
-                            || (Array.isArray(vals) && vals.length === 0);
+                        // Verificación de que el filtro existe post-comando
+                        const checkFilters = await snapshotFilters(ws) as any[];
+                        const didApply = checkFilters.some((f: any) => f.campo === fieldId && Array.isArray(f.valores) && f.valores.includes(providerId));
 
-                        console.log(`${tag}   DESPUÉS →`, snap.length ? snap : '(ningún filtro activo)');
-                        console.log(`${tag}   ${confirmado ? '✅' : '⚠️'} "${fieldId}": ${confirmado ? `valores=${JSON.stringify((confirmado as any).valores)}` : `NO aparece — "${providerId}" puede no existir en datos`}`);
-                        console.log(`${tag}   ${nameOk ? '✅' : '⚠️'} "${fieldName}": ${nameOk ? 'limpiado (sin restricción)' : 'sigue con valores: ' + JSON.stringify(vals)}`);
-                        console.log(`${tag}   → Tableau propaga al resto del dashboard`);
-
-                        applied = true;
-                        break;
+                        if (didApply) {
+                            console.log(`${tag} ✅ Filtro ID aplicado exitósamente en la hoja "${ws.name}" en ${ms(tOp)}`);
+                            applied = true;
+                            break; // Salimos de iterar sabiendo que funcionó
+                        } else {
+                            console.log(`${tag} ⚠️ "${ws.name}" procesó el comando de proveedor pero no retuvo el valor. Probando en siguiente hoja...`);
+                        }
 
                     } catch (err: any) {
                         if (err?.message === 'filter-timeout-15s') {
-                            // Timeout en esta hoja — continuar con la siguiente
-                            // No romper el loop: otra worksheet puede responder más rápido
                             console.warn(`${tag}   ⏱ TIMEOUT en "${ws.name}" (>15s) — probando siguiente worksheet...`);
                             continue;
                         } else {
-                            // Campo no existe en esta hoja — siguiente
-                            console.log(`${tag}   ⏭ "${fieldId}" no existe en "${ws.name}" — siguiente`);
+                            // Siguiente hoja
                             continue;
                         }
                     }
                 }
+
+                console.log(`${tag} → Tableau propaga al resto del dashboard (proveedor)`);
 
                 if (!applied) {
                     console.warn(`${tag} ⚠️ NINGUNA worksheet respondió a "${fieldId}" — dashboard se muestra sin filtro`);

@@ -38,16 +38,16 @@ FRONTEND_URL = get_env_var('FRONTEND_URL', 'http://localhost:4200')
 
 # ===== VALIDATION & LOGGING =====
 print("\n" + "="*80)
-print("⚙️  CONFIGURACIÓN CARGADA")
+print("  CONFIGURACIN CARGADA")
 print("="*80)
-print(f"📊 Tableau Server: {TABLEAU_SERVER}")
-print(f"🌐 Tableau Site: {TABLEAU_SITE}")
-print(f"🔑 Client ID: {TABLEAU_CONNECTED_APP_CLIENT_ID[:20]}...")
-print(f"🔐 Secret ID: {TABLEAU_CONNECTED_APP_SECRET_ID[:20]}...")
-print(f"🔒 Secret Value: {TABLEAU_CONNECTED_APP_SECRET_VALUE[:20]}...")
-print(f"🔥 Firebase Path: {FIREBASE_CREDENTIALS_PATH}")
-print(f"🌍 Backend URL: {BACKEND_URL}")
-print(f"💻 Frontend URL: {FRONTEND_URL}")
+print(f" Tableau Server: {TABLEAU_SERVER}")
+print(f" Tableau Site: {TABLEAU_SITE}")
+print(f" Client ID: {TABLEAU_CONNECTED_APP_CLIENT_ID[:20]}...")
+print(f" Secret ID: {TABLEAU_CONNECTED_APP_SECRET_ID[:20]}...")
+print(f" Secret Value: {TABLEAU_CONNECTED_APP_SECRET_VALUE[:20]}...")
+print(f" Firebase Path: {FIREBASE_CREDENTIALS_PATH}")
+print(f" Backend URL: {BACKEND_URL}")
+print(f" Frontend URL: {FRONTEND_URL}")
 print("="*80 + "\n")
 
 # Validar tipos
@@ -55,4 +55,4 @@ assert isinstance(TABLEAU_CONNECTED_APP_CLIENT_ID, str), "Client ID debe ser str
 assert isinstance(TABLEAU_CONNECTED_APP_SECRET_ID, str), "Secret ID debe ser string"
 assert isinstance(TABLEAU_CONNECTED_APP_SECRET_VALUE, str), "Secret Value debe ser string"
 
-print("✅ Todas las variables son strings válidos\n")
+print(" Todas las variables son strings vlidos\n")
