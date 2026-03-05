@@ -94,9 +94,9 @@ class BulkImportResponse(BaseModel):
 
 PLAN_LICENSES = {
     "trial": 1,
-    "starter": 3,
-    "pro": 5,
-    "enterprise": 10,
+    "starter": 1,
+    "pro": 3,
+    "enterprise": 5,
 }
 
 DURATION_DAYS = {

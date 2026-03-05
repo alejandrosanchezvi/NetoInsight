@@ -36,7 +36,7 @@ const VISIBLE_PLANS = [
   {
     value: TenantPlan.STARTER,
     label: 'Starter',
-    maxLicenses: 3,
+    maxLicenses: 1,
     description: 'Ideal para equipos pequeños',
     badge: null,
     badgeClass: ''
@@ -44,7 +44,7 @@ const VISIBLE_PLANS = [
   {
     value: TenantPlan.PRO,
     label: 'Pro',
-    maxLicenses: 5,
+    maxLicenses: 3,
     description: 'Para equipos en crecimiento',
     badge: null,
     badgeClass: ''
@@ -52,7 +52,7 @@ const VISIBLE_PLANS = [
   {
     value: TenantPlan.ENTERPRISE,
     label: 'Enterprise',
-    maxLicenses: 10,
+    maxLicenses: 5,
     description: 'Para organizaciones grandes',
     badge: null,
     badgeClass: ''

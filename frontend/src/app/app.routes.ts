@@ -12,6 +12,7 @@ import { adminGuard } from './core/guards/admin.guard';
 import { UserManagement } from './features/admin/user-management/user-management';
 import { AcceptInvite } from './features/auth/accept-invite/accept-invite';
 import { TenantManagement } from './features/admin/tenant-management/tenant-management';
+import { HelpComponent } from './features/help/help';
 import { internalAdminGuard } from './core/guards/internal-admin.guard';
 import { ResetPassword } from './features/auth/reset-password/reset-password';
 import { SubscriptionSuspended } from './features/auth/subscription-suspended/subscription-suspended';
@@ -69,6 +70,10 @@ export const routes: Routes = [
       {
         path: 'purchase-orders',
         component: OrdenesDeCompra,
+      },
+      {
+        path: 'help',
+        component: HelpComponent,
       },
       {
         path: 'admin/tenants',

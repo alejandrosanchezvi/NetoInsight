@@ -40,28 +40,10 @@ export class UserMenu {
   private initializeMenuItems(): void {
     this.menuItems = [
       {
-        id: 'profile',
-        label: 'Editar Perfil',
-        icon: 'user',
-        action: () => this.navigateTo('/profile')
-      },
-      {
-        id: 'settings',
-        label: 'Configuración y Privacidad',
-        icon: 'settings',
-        action: () => this.navigateTo('/settings')
-      },
-      {
         id: 'help',
         label: 'Ayuda y Soporte',
         icon: 'help-circle',
         action: () => this.navigateTo('/help')
-      },
-      {
-        id: 'accessibility',
-        label: 'Display y Accesibilidad',
-        icon: 'eye',
-        action: () => this.navigateTo('/accessibility')
       },
       {
         id: 'logout',

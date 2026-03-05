@@ -1,0 +1,108 @@
+<!-- 🛠️ NetoInsight - Help & Support -->
+<div class="help-container">
+
+    <!-- Header -->
+    <div class="help-page-header">
+        <div class="help-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </div>
+        <div class="help-header-text">
+            <h2>Soporte Técnico NetoInsight</h2>
+            <p>Envíanos un mensaje directo al equipo de sistemas.</p>
+        </div>
+    </div>
+
+    <!-- Mensaje del bot -->
+    <div class="bot-message-card">
+        <div class="bot-avatar">
+            <img src="/assets/images/logoNeto.png" alt="Neto Bot">
+        </div>
+        <div class="bot-message-body">
+            <div class="bot-author">
+                <strong>Soporte Bot</strong>
+                <span class="bot-author-badge">Automático</span>
+            </div>
+            <p class="bot-text">
+                ¡Hola {{ currentUser?.name?.split(' ')?.[0] || 'usuario' }}! 👋&nbsp;&nbsp;
+                Si tienes algún problema, duda con un tablero o sugerencia, envíanos un mensaje detallado aquí.
+                Nuestro equipo en <strong>cuenta.conexion@tiendasnetows.com</strong> lo recibirá inmediatamente
+                y se pondrá en contacto contigo.
+            </p>
+        </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="help-form-card">
+        <div class="form-card-header">
+            <span>Nuevo mensaje</span>
+        </div>
+
+        <form [formGroup]="helpForm" (ngSubmit)="onSubmit()" class="help-form">
+
+            <!-- Tema -->
+            <div class="field-group">
+                <label class="field-label" for="topic-select">
+                    Tema <span class="required-mark">*</span>
+                </label>
+                <div class="select-wrapper">
+                    <select id="topic-select" formControlName="topic" class="help-select"
+                        [class.is-invalid]="submitted && helpForm.get('topic')?.invalid">
+                        <option value="" disabled selected>Elige el tema de tu mensaje...</option>
+                        <option *ngFor="let option of topicOptions" [value]="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                    <svg class="select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+                <span class="topic-error" *ngIf="submitted && helpForm.get('topic')?.invalid">
+                    Por favor selecciona un tema.
+                </span>
+            </div>
+
+            <!-- Mensaje -->
+            <div class="field-group">
+                <label class="field-label" for="details">
+                    Mensaje <span class="required-mark">*</span>
+                </label>
+                <div class="message-editor-wrap" [class.is-invalid]="submitted && helpForm.get('details')?.invalid">
+                    <textarea id="details" formControlName="details" rows="4" class="help-textarea"
+                        placeholder="Describe tu problema o sugerencia con detalle... (mínimo 20 caracteres)"
+                        (input)="resizeTextarea($event)"></textarea>
+
+                    <div class="editor-footer">
+                        <span class="field-error" *ngIf="submitted && helpForm.get('details')?.hasError('required')">
+                            El mensaje es obligatorio.
+                        </span>
+                        <span class="char-counter"
+                            [class.below-min]="(helpForm.get('details')?.value?.length || 0) < 20 && (helpForm.get('details')?.value?.length || 0) > 0"
+                            *ngIf="(helpForm.get('details')?.value?.length || 0) > 0">
+                            {{ helpForm.get('details')?.value?.length }} / 20 mín.
+                        </span>
+                        <span *ngIf="(helpForm.get('details')?.value?.length || 0) === 0"></span>
+
+                        <!-- Botón Enviar -->
+                        <button type="submit" class="send-btn" [class.is-ready]="helpForm.valid"
+                            [disabled]="isSubmitting"
+                            [title]="helpForm.invalid ? 'Completa el formulario para enviar' : 'Enviar mensaje'">
+                            <div *ngIf="isSubmitting" class="spinner-sm"></div>
+                            <svg *ngIf="!isSubmitting" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            {{ isSubmitting ? 'Enviando...' : 'Enviar' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+</div>

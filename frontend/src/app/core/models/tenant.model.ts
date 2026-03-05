@@ -168,21 +168,21 @@ export const PLAN_CONFIGS: PlanConfig[] = [
   {
     value: TenantPlan.STARTER,
     label: 'Starter',
-    maxLicenses: 5,
+    maxLicenses: 1,
     description: 'Ideal para equipos pequeños',
     price: 'Permanente'
   },
   {
     value: TenantPlan.PRO,
     label: 'Pro',
-    maxLicenses: 10,
+    maxLicenses: 3,
     description: 'Para equipos en crecimiento',
     price: 'Permanente'
   },
   {
     value: TenantPlan.ENTERPRISE,
     label: 'Enterprise',
-    maxLicenses: 25,
+    maxLicenses: 5,
     description: 'Para organizaciones grandes',
     price: 'Permanente'
   },

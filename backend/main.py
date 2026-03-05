@@ -110,6 +110,17 @@ class SendInvitationResponse(BaseModel):
     sent_at: Optional[str] = None
 
 
+class SupportTicketRequest(BaseModel):
+    topic: str
+    details: str
+
+
+class SupportTicketResponse(BaseModel):
+    success: bool
+    message: str
+    message_id: Optional[str] = None
+
+
 class PasswordResetRequest(BaseModel):
     email: EmailStr
     frontend_url: str
@@ -296,6 +307,51 @@ async def verify_mailslurp_connection(user_data: dict = Depends(verify_token)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===== SUPPORT TICKETS =====
+
+
+@app.post("/api/support/ticket", response_model=SupportTicketResponse)
+async def submit_support_ticket(
+    request: SupportTicketRequest, user_data: dict = Depends(verify_token)
+):
+    try:
+        real_email = user_data.get("email")
+        if not real_email:
+            raise HTTPException(status_code=400, detail="Email not found in token")
+
+        tenant_name = (
+            user_data.get("tenant_name") or user_data.get("tenantName") or "Unknown"
+        )
+        user_name = user_data.get("name") or real_email
+
+        mailslurp = get_mailslurp_service()
+        result = mailslurp.send_support_email(
+            user_name=user_name,
+            user_email=real_email,
+            tenant_name=tenant_name,
+            topic=request.topic,
+            details=request.details,
+        )
+
+        if result["success"]:
+            return SupportTicketResponse(
+                success=True,
+                message="Ticket enviado exitosamente",
+                message_id=result.get("message_id"),
+            )
+        else:
+            logger.error(f"❌ [SUPPORT] Failed to send ticket: {result.get('error')}")
+            raise HTTPException(
+                status_code=500, detail="Error enviando el ticket de soporte"
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ [SUPPORT] Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
 # ===== TABLEAU =====
