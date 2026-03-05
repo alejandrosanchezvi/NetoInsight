@@ -11,5 +11,5 @@ export const environment = {
     appId: '1:609085902384:web:783ae46a895c16854fe7f5',
     measurementId: 'G-0CHK310VMX',
   },
-   apiUrl: "https://netoinsight-api-staging-609085902384.us-central1.run.app"
+  apiUrl: "https://netoinsight-api-staging-609085902384.us-central1.run.app"
 };

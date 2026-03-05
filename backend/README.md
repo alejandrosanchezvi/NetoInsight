@@ -67,14 +67,27 @@ El backend de NetoInsight está preparado para empaquetarse en un contenedor Doc
    gcloud config set project [TU_PROJECT_ID]
    ```
 
-2. Despliega la aplicación directamente compilando desde el código fuente:
+2. **Despliegue a Staging** (Ambiente de pruebas):
+   Esto creará un servicio llamado `netoinsight-api-staging` y te dará una URL específica para este ambiente.
 
    ```bash
-   gcloud run deploy netoinsight-backend \
+   gcloud run deploy netoinsight-api-staging \
      --source . \
-     --platform managed \
      --region us-central1 \
      --allow-unauthenticated \
-     --port 8000 \
-     --set-env-vars="ENVIRONMENT=production,TABLEAU_SERVER=...,TABLEAU_SITE=...,TABLEAU_CLIENT_ID=...,TABLEAU_SECRET_ID=...,TABLEAU_SECRET_VALUE=...,MAILSLURP_API_KEY=...,FIREBASE_PROJECT_ID=..."
+     --project netoinsight-fed03
    ```
+
+3. **Despliegue a Producción** (Ambiente real):
+   Al cambiar el nombre del servicio a `netoinsight-api-prod`, Cloud Run crea un servicio completamente separado con su propia URL. De esta manera, no afectas las pruebas cuando actualizas producción.
+
+   ```bash
+   gcloud run deploy netoinsight-api-prod \
+     --source . \
+     --region us-central1 \
+     --allow-unauthenticated \
+     --project netoinsight-fed03 \
+     --set-env-vars="ENVIRONMENT=production"
+   ```
+
+*Nota: Una vez que se complete el despliegue, la terminal te imprimirá una "Service URL" para cada ambiente (ej. `https://netoinsight-api-staging-xxxxxxxx-uc.a.run.app`). Deberás poner la URL de staging dentro del `environment.development.ts` de Angular, y la URL de producción dentro del `environment.ts`.*
