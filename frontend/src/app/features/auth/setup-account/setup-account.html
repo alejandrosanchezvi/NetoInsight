@@ -13,19 +13,19 @@
 
     <!-- Progress Steps -->
     <div class="progress-steps">
-      <div class="step active">
+      <div class="step" [class.active]="step === 'ACCOUNT'">
         <div class="step-number">1</div>
         <span class="step-label">Configurar Cuenta</span>
       </div>
       <div class="step-divider"></div>
-      <div class="step">
+      <div class="step" [class.active]="step === 'MFA_SETUP'">
         <div class="step-number">2</div>
-        <span class="step-label">Dashboard</span>
+        <span class="step-label">Autenticador</span>
       </div>
     </div>
 
-    <!-- Form -->
-    <form [formGroup]="setupForm" (ngSubmit)="onSubmit()" class="setup-form">
+    <!-- Form Paso 1: Cuenta -->
+    <form *ngIf="step === 'ACCOUNT'" [formGroup]="setupForm" (ngSubmit)="onSubmit()" class="setup-form">
       
       <!-- Error Message -->
       <div *ngIf="errorMessage" class="alert-error">
@@ -176,8 +176,70 @@
       </button>
     </form>
 
+    <!-- Form Paso 2: MFA Setup -->
+    <div *ngIf="step === 'MFA_SETUP'" class="mfa-setup-section">
+      <h3 class="mfa-setup-title">Protege tu cuenta</h3>
+      <p class="mfa-setup-desc">
+        Configura la verificación en 2 pasos con una aplicación de autenticación (como Google Authenticator o Authy)
+        para añadir una capa extra de seguridad.
+      </p>
+
+      <!-- QR Code Area -->
+      <div class="qr-container" *ngIf="qrCodeUrl">
+        <img [src]="qrCodeUrl" alt="Código QR para Authenticator" class="qr-image" />
+        <p class="qr-instruction">
+          1. Escanea este código QR con tu aplicación.
+        </p>
+      </div>
+
+      <!-- Code Input Area -->
+      <form (ngSubmit)="onMfaSubmit()" class="mfa-verify-form">
+        <label for="mfaCode" class="form-label text-center">
+          2. Ingresa el código de 6 dígitos que genera la aplicación:
+        </label>
+        
+        <div class="input-container code-container" style="max-width: 250px; margin: 0 auto; margin-bottom: 1rem;">
+          <input
+            id="mfaCode"
+            type="text"
+            [(ngModel)]="mfaCode"
+            name="mfaCode"
+            class="form-input text-center tracking-widest text-xl font-mono"
+            placeholder="000000"
+            maxlength="6"
+            pattern="\d{6}"
+            [disabled]="isSubmitting"
+            autocomplete="off"
+            required>
+        </div>
+
+        <div *ngIf="qrCodeError" class="alert-error" style="margin-bottom: 1rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ qrCodeError }}</span>
+        </div>
+
+        <div class="mfa-setup-actions">
+          <button type="button" class="btn-skip-mfa" (click)="skipMfa()" [disabled]="isSubmitting">
+            Omitir por ahora
+          </button>
+          
+          <button type="submit" class="btn-submit" style="margin-top: 0; min-width: 200px;" [disabled]="isSubmitting || mfaCode.length !== 6">
+            <span *ngIf="!isSubmitting">Activar y Continuar</span>
+            <span *ngIf="isSubmitting" class="loading-text">
+              <span class="spinner"></span>
+              Verificando...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
     <!-- Footer -->
-    <div class="setup-footer">
+    <div *ngIf="step === 'ACCOUNT'" class="setup-footer">
       <p class="footer-text">
         Al crear tu cuenta, aceptas nuestros 
         <a href="#" class="footer-link">Términos de Servicio</a> y 

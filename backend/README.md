@@ -1,93 +1,102 @@
 # 🏗️ NetoInsight - API Backend (FastAPI)
 
-Este es el backend de la plataforma NetoInsight, desarrollado con **FastAPI** y **Python 3.11**. Provee la lógica de negocio, integración con Firebase Authentication, autenticación para tableros de Tableau a través de Connected Apps, y notificaciones de correo mediante MailSlurp.
+Bienvenido a la carpeta backend del proyecto NetoInsight. Este repositorio contiene el código fuente de la **API REST** desarrollada en un stack íntegramente de Python Moderno sobre **FastAPI**. Provee toda la lógica de validación de negocio, proxy transaccional para incrustar de forma segura Dashboards Tableau (mediante Connected Apps) y una capa robusta de manejo de identidades y accesos.
 
-## 🚀 Características Principales
+---
 
-- **Tableau Embedding V3**: Generación segura de tokens JWT para mostrar tableros de Tableau mediante Connected Apps.
-- **Firebase Auth Integration**: Verificación de tokens de sesión y gestión de usuarios a través de Firebase Admin SDK.
-- **MailSlurp Integration**: Envío de correos transaccionales para registro, restablecimiento de contraseñas y envío de tickets de soporte.
-- **API REST Rápida y Moderna**: Aprovecha las ventajas de tipado estático, validación automática con Pydantic, y la velocidad de FastAPI.
+## 🚀 Características Principales y Arquitectura
 
-## 🛠️ Tecnologías
+- **Integración Single-Sign-On en Tableau (V3)**: El principal caso de uso. El portal consulta nuestro endpoint de dashboard, el cual genera y emite JWTs (Tokens Web JSON) temporalmente encriptados, verificando la correspondencia exacta de Tenant y Dashboard sin revelar credenciales del Servidor Base al mundo `(*Connected Apps*)`.
+- **Firebase Auth (Identity Platform Native)**: Interceptación completa vía Admin SDK del Header `Authorization` HTTPS y gestión asincrónica de CRUD con Firebase Platform (MFA, deshabilitación forzada, consultas de claims).
+- **Importaciones Masivas (Bulk CSV)**: Endpoints capaces de parsear registros asíncronos en paralelo para la ingesta global de provedores a bases nosql en Firestore.
+- **MailSlurp Integration API**: Manejo de plantillas personalizadas y sistema tipo *"Slack"* para _Help Center_ usando correos transaccionales para registro, o tickets de soporte enviados directamente al personal interno.
+- **Validación Automática Pydantic**: Manejo tipado de esquemas para requests (basados en OpenAPI estricta e internamente autogenerando documentación Redoc/Swagger).
 
-- [FastAPI](https://fastapi.tiangolo.com/) - Framework web para construir APIs
-- [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup) - Gestión de autenticación
-- [PyJWT](https://pyjwt.readthedocs.io/) - Para generar tokens JWT para Tableau
-- [MailSlurp](https://www.mailslurp.com/) - Para envíos de correos
-- [Uvicorn](https://www.uvicorn.org/) - Servidor ASGI
+---
 
-## ⚙️ Requisitos Previos
+## 🛠️ Stack y Tecnologías Clave
 
-- Python 3.9 o superior (Recomendado: 3.11+)
-- Credenciales de Firebase (archivo JSON o configuradas a través de Application Default Credentials)
-- API Key de MailSlurp
+- [FastAPI](https://fastapi.tiangolo.com/) - El núcleo veloz y asíncrono para rutas.
+- [Firebase Admin SDK 7+](https://firebase.google.com/docs/admin/setup) - Puente de administración directo a la nube sin requerimientos de red cliente.
+- [PyJWT](https://pyjwt.readthedocs.io/) - Encriptación RS256 de Connected Apps.
+- [Python 3.11+](https://www.python.org/) - Soporte base con type hints estructurados.
+- [Uvicorn](https://www.uvicorn.org/) - Servidor local multihebra (ASGI).
 
-## 📦 Instalación y Configuración
+---
 
-1. **Crear y activar un entorno virtual**:
+## ⚙️ Requisitos y Variables de Entorno Previas
 
-   ```bash
-   python -m venv venv
-   source venv/Scripts/activate  # En Windows
-   # source venv/bin/activate    # En Linux/Mac
-   ```
+Dile adiós a los `.env` caóticos. Solo tienes que configurar dos cosas en tu máquina (Windows/Linux/Mac):
 
-2. **Instalar dependencias**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configurar variables de entorno**:
-   Copia el archivo `env.example` a `.env` y ajusta los valores necesarios:
+1. Un **Archivo de Credenciales de Firebase Admin SDK** (típicamente llamado `firebase-credentials.json` o bajado de Google Cloud). Lo puedes situar en la raíz y la variable `FIREBASE_CREDENTIALS_PATH` se conectará a la ruta. Alternativamente, la aplicación acepta fallar la primera para agarrar nativamente el Application Default Credentials si ya estás logueado con `gcloud`.
+2. Las **Keys de configuración**. Tienes a mano un `env.example`. Cópialo completo y crea un secreto `.env`:
 
    ```bash
    cp env.example .env
    ```
+   Rellena dentro del archivo los parámetros faltantes del proveedor de Tableau (ClientID, SecretValue, SecretId) y la llave encriptada general de MailSlurp.
 
-## 🚀 Ejecutar el Servidor en Desarrollo
+---
 
-Para levantar el servidor de desarrollo en el puerto 8000 con recarga automática:
+## 📦 Inicialización y Puesta en Marcha (Local Development)
 
+El proyecto depende de la encapsulación en Python para arrancar. Recomendamos 100% que generes siempre un nuevo entorno virtual.
+
+### 1. Activar el Entorno Local
+Posicionado en la consola sobre esta carpeta (`/backend`), crea un enviroment aislado:
+```bash
+python -m venv venv
+```
+Activa este ambiente de desarrollo seguro en **Windows**:
+```bash
+venv\Scripts\activate
+```
+_(Si estás en Mac o Linux usa `source venv/bin/activate`)_
+
+### 2. Sincronizar Librerías Externas
+Instala los motores, el SDK y FastAPI en tu computadora directamente desde el archivo plano en tan sólo unos clics:
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Levantar Servidor a Modo Test:
+Para inicializar de forma asíncrona la escucha en tu puerto `8000` con `Hot-Reloading` activo si salvas código:
 ```bash
 uvicorn main:app --reload --port 8000
 ```
+La documentación interactiva de la API (Swagger UI automatizada mediante metadatos) estará disponible mágicamente en ➔ `http://localhost:8000/docs`.
 
-La documentación interactiva de la API estará disponible en `http://localhost:8000/docs`.
+---
 
-## 🚢 Despliegue en Producción (Cloud Run)
+## 🚢 Despliegue en Producción (Google Cloud Run)
 
-El backend de NetoInsight está preparado para empaquetarse en un contenedor Docker y desplegarse en **Google Cloud Run**.
+El backend de NetoInsight está preparado localmente para empaquetarse en un contenedor en la nube **(Docker y GCR)** bajo el servicio de Google Cloud Run. La aplicación escalará sola desde cero nodos según la necesidad.
 
-1. Asegúrate de tener iniciada sesión en el CLI de Google Cloud:
+### Pre-Requisito Despliegue (Auth):
+Tu terminal debe tener el cli validado y apuntando al proyecto correcto. Tómate 20s en correr esto la primera vez antes del push:
+```bash
+gcloud auth login
+gcloud config set project [TU_PROJECT_ID]   # (Ej. netoinsight-fed03)
+```
 
-   ```bash
-   gcloud auth login
-   gcloud config set project [TU_PROJECT_ID]
-   ```
+### ➔ Despliegue a Modo Staging (Ambiente de Pruebas aisladas):
+Esto forzará a la consola a precompilar y subir de golpe tu código bajo el nombre temporal `netoinsight-api-staging`. Al terminar te arrojará una URL segura única que puedes pasarle de API Url base a tu Frontend de pruebas.
+```bash
+gcloud run deploy netoinsight-api-staging \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --project netoinsight-fed03
+```
 
-2. **Despliegue a Staging** (Ambiente de pruebas):
-   Esto creará un servicio llamado `netoinsight-api-staging` y te dará una URL específica para este ambiente.
-
-   ```bash
-   gcloud run deploy netoinsight-api-staging \
-     --source . \
-     --region us-central1 \
-     --allow-unauthenticated \
-     --project netoinsight-fed03
-   ```
-
-3. **Despliegue a Producción** (Ambiente real):
-   Al cambiar el nombre del servicio a `netoinsight-api-prod`, Cloud Run crea un servicio completamente separado con su propia URL. De esta manera, no afectas las pruebas cuando actualizas producción.
-
-   ```bash
-   gcloud run deploy netoinsight-api-prod \
-     --source . \
-     --region us-central1 \
-     --allow-unauthenticated \
-     --project netoinsight-fed03 \
-     --set-env-vars="ENVIRONMENT=production"
-   ```
-
-*Nota: Una vez que se complete el despliegue, la terminal te imprimirá una "Service URL" para cada ambiente (ej. `https://netoinsight-api-staging-xxxxxxxx-uc.a.run.app`). Deberás poner la URL de staging dentro del `environment.development.ts` de Angular, y la URL de producción dentro del `environment.ts`.*
+### ➔ Despliegue a Producción (Ambiente Master):
+Idéntico esfuerzo, pero generará una instancia distinta en otro dominio HTTPS `(netoinsight-api-prod)` que le dirá al sistema por Variables Internas que active los sistemas productivos de correo y logs.
+```bash
+gcloud run deploy netoinsight-api-prod \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --project netoinsight-fed03 \
+  --set-env-vars="ENVIRONMENT=production"
+```
+_(Nota: El Frontend debe apuntar en su respectivo archivo `environment.ts` de Angular hacia la URL resultante que devuelva este último comando después de compilar exitosamente)_.

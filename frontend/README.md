@@ -1,83 +1,75 @@
-# 🎨 NetoInsight - Frontend (Angular)
+# 🎨 NetoInsight - Frontend (SPA Angular)
 
-El frontend de NetoInsight proporciona la interfaz de usuario moderna, rápida y dinámica para interactuar con los datos de las tiendas, proveedores y tableros incrustados de Tableau.
+El frontend de NetoInsight provee una asombrosa interfaz de usuario interactiva y fluida para manipular la navegación completa de los tableros **Tableau en Web**. Además, ofrece una experiencia administrable limpia de "Dashboards de Múltiples Inquilinos (Proveedores)", Formularios Tipo Chat (Mesa de Ayuda), y Gestión nativa en App.
 
-## ✨ Arquitectura y Tecnologías
+---
 
-El proyecto se basa en las últimas tecnologías frontend, con soporte de Firebase desde Google Cloud.
+## ✨ Características de Arquitectura Frontend
 
-- **[Angular 17/18+](https://angular.dev/)**: Framework principal para el desarrollo de la Single Page Application (SPA).
-- **Standalone Components**: Arquitectura basada en componentes independientes sin necesidad de NgModule.
-- **[Firebase & AngularFire](https://github.com/angular/angularfire)**: Utilizado como Identity Provider para la autenticación, con integracion con Firestore para almacenar perfiles de usuarios y roles (Admin Neto vs Proveedor).
-- **[Tableau Embedding API v3](https://help.tableau.com/current/api/embedding_api/en-us/index.html)**: Biblioteca para incrustar los tableros de manera segura y enviar JWTs firmados por el Backend y pasar filtros iniciales de seguridad a través del Frontend.
-- **Aesthetic UI**: Diseño tipo Glassmorphism alineado con los esquemas de color corporativos de Tiendas Neto (`#0E3B83` - midnight blue, y `#F58220` - naranja brillante).
+El proyecto se despliega localmente rápido usando las ventajas compilar código en base a perfiles de Angular (`production` vs `development`).
 
-## 🚀 Inicio Rápido (Desarrollo Local)
+- **[Angular 17/18+](https://angular.dev/)**: Utiliza Components en formato `Standalone` con renderizados progresivos y _Signals_ en vez de antiguos observables reactivos RxJS masificados, simplificando mantenibilidad.
+- **Tableau Embedding API v3 Native**: Bibliotecas JavaScript insertas de nivel web-component para leer filtros dimensionales desde un Frontend sin pasar variables complejas vía iframes; validando la seguridad con _Single-Use Proxies_.
+- **[Firebase Auth & AngularFire](https://github.com/angular/angularfire)**: Comunicación transaccional con GCP. Atrapa el objeto de usuario y valida el acceso de credenciales 2FA/MFA mediante flujos asíncronos antes de cargar el primer módulo.
+- **Glassmorphism Aesthetic**: CSS plano modular optimizado que elimina librerías pesadas como Bootstrap en favor del esquema moderno corporativo de **Tiendas Neto**. Integra `loaders` enmascarados de degradado durante tiempos muertos del iFrame BI.
+- **Protección JWT Total**: La integración de Headers se encripta automáticamente _bajo el capo_ mediante interceptores que mandan el idToken nativo de Google hasta las factorías del Backend Python.
 
-Asegúrate de tener instalado [Node.js](https://nodejs.org/) (recomendado 18+) y Angular CLI de forma global (`npm install -g @angular/cli`).
+---
 
-1. **Instalar Dependencias**:
-   Ve a la carpeta de `frontend` y ejecuta:
+## 🚀 Inicio Rápido en Modo Desarrollador (Local)
 
-   ```bash
-   npm install
-   ```
+Requisito para los ingenieros frontend: _Tener al menos NodeJS v18+_ instalado de manera global en tu OS y la herramienta principal de Angular CLI funcionando. Tu puerto preferido será el `4200` y requerirás un Backend corriendo de lado.
 
-2. **Configuración de Variables de Entorno**:
-   Asegúrate de tener correctamente configurados los archivos en `src/environments/`:
-   - `environment.ts` (para producción - backend en la nube)
-   - `environment.development.ts` (para correr contra un backend local, por ejemplo: `apiUrl: 'http://localhost:8000'`)
+### 1. Descomprimir e Instalar Dependencias del Repositorio Raíz
+Ubícate con en la carpeta de `/frontend` y mapea los paquetes de `package.json` hacia NodeJS y compila sus vínculos al DOM Local:
+```bash
+npm install
+```
 
-3. **Arrancar el Servidor Local**:
-   Inicia el servidor en el puerto 4200.
+### 2. Configuración de Entornos y Apuntador de Nube (Environments)
+Es vital revisar en qué ambiente estás. Ve a `src/environments/` y ubica que el archivo local por defecto esté pegándole a un `localhost` para hacer llamados API locales hacia Python (no en la nube, hasta en Producción):
+- `environment.development.ts`: Usualmente apuntará ciegamente a `apiUrl: 'http://localhost:8000/api'`.
 
-   ```bash
-   ng serve
-   ```
+### 3. Engancho al Servidor Local
+Para activar de fondo compilaciones interactivas por cada pequeño cambio CSS / TS que hagas sin necesidad de refrescar el App manually *(Vite-Style Reload)* ejecutamos desde tu consola:
+```bash
+ng serve
+```
+Y si todo sale en color verde con un "Compiled Successfully", entra ahora mismo a tu buscador web nativo:
+👉 **[http://localhost:4200/](http://localhost:4200/)**
 
-   Abre el navegador en `http://localhost:4200/`. La aplicación se recargará automáticamente si haces cambios en cualquier archivo dentro de `src/`.
+---
 
-## 🏗️ Construcción (Build)
+## 🚢 Compilación a Construcción Final (Production Build)
 
-Para empaquetar la aplicación de manera óptima para producción:
+Para el momento de entregar _(Release)_, compactamos el _tree-shaking_, borramos consolas inútiles, encogemos archivos de estílos, y encapsulamos todas las piezas en un módulo optimizado inyectándole reglas de variables en las nubes. 
 
+Corre esto siempre desde tu CLI sobre este framework Angular:
 ```bash
 ng build --configuration production
 ```
+Esto creará silenciosamente una carpeta intocable llamada `dist/neto-insight/browser` donde estarán exclusivamente los `index.html` compilados como minificados que la Web requiere.
 
-Los artefactos compilados se almacenarán en el directorio `dist/neto-insight/`.
+---
 
-## 🚢 Despliegue en Firebase Hosting
+## ☁️ Autodespliegue Rápido a Nubes Serverless (Firebase Hosting)
 
-La aplicación puede alojarse de manera sencilla a través de Firebase Hosting. Asegúrate de tener las credenciales correctas configuradas localmente con Google Cloud SDK o a través de `firebase login`.
+La SPA FrontEnd NetoInsight jamás tocará un Servidor físico local. Gracias al CLI nativo, subiremos el material completo directo de nuestra caja local hacia los CDNs planetarios de _Google Firebase (Identity Platform)_.
 
-1. **Autenticación en Firebase**:
+**Recomendación de Terminal**: Comprueba antes con un comando `firebase --version` si estás dado de alta en CLI global de Firebase Tools (si no haz un `npm install -g firebase-tools`).
 
-   ```bash
-   firebase login
-   ```
+1. Loguéate a GCP si es la primera vez y enlaza tu token en tu navegador:
+```bash
+firebase login
+```
+2. Si te pide inicializar tu repositorio como Nube (No recomendado a menos de sobrescribir reglas host de App) hazlo con `firebase init hosting`. Si no, es inútil puesto a que cuentas nativamente con el archivo prefabricado en este repo `firebase.json` que contiene reglas SPA obligatorias (Rewrites Index Html) y Headers.
+3. Para publicar desde tu rama master tras un Build hacia Producción total e interactuar con Firebase:
 
-2. **Inicializar Firebase si no se ha hecho** (Cuidado de no sobrescribir la config actual):
+```bash
+firebase deploy --only hosting
+```
+Si te imprime _Deploy Complete_, todo el mundo moderno podrá visualizarte inmediatamente ingresando a:
+👉 **https://netoinsight.soyneto.com**
 
-   ```bash
-   firebase init hosting
-   ```
-
-3. **Desplegar a Producción**:
-
-   ```bash
-   firebase deploy --only hosting
-   ```
-
-   Esto compilará y subirá los archivos del directorio `dist` a los servidores de Firebase Hosting (ej: `https://netoinsight-staging.web.app` o el dominio personalizado `https://netoinsight.soyneto.com`).
-
-## 📞 Estructura del Aplicativo
-
-- `src/app/core/`: Patrones Singleton, Guards y Servicios (Comunicación al Backend v2.5.0, Login/Logout de Firebase, Session Storage Cache).
-- `src/app/features/`: Componentes principales divididos por funcionalidad de Negocio (Dashboard de Inicio, Categorización, Tiendas, Ordenes, Formulario de Ayuda, Modales de Administración).
-- `src/app/shared/`: Componentes, Servicios, e utilidades reciclables. (Sidebar, Navbar, Loader States, etc).
-
-## 🆘 Troubleshooting y Consejos de Desarrollo
-
-- Si ocurren errores `401 Unauthorized` de permisos con tu backend local en peticiones HTTPS hacia un dominio `::1`, usa un hostname distinto o revisa que `CORS` permita conectividad local explícita en `localhost`.
-- La consola del navegador (Inspect) está configurada para mostrar logs útiles estilo `[AUTH]`, `[TABLEAU]`, así que puedes seguir el flujo del JWT y la petición del iframe desde las DevTools.
+---
+_Innovación Digital Corporativa | Aplicación Construida por y para Tiendas Neto y Socios Estratégicos._

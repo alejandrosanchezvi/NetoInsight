@@ -11,6 +11,7 @@ export interface User {
   isInternal: boolean;
   isActive: boolean;       // ← Nuevo campo
   mfaEnabled: boolean;
+  mfaRequired?: boolean;
   createdAt: Date;
   lastLogin?: Date;
   invitationId?: string;

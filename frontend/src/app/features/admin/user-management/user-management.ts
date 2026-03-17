@@ -1,10 +1,10 @@
 // 👥 NetoInsight - User Management v3.0 — Magic Link integrado
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { InvitationService } from '../../../core/services/invitation.service';
@@ -25,6 +25,7 @@ import {
   updateDoc,
   deleteDoc
 } from '@angular/fire/firestore';
+import { Auth } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-user-management',
@@ -33,7 +34,8 @@ import {
   templateUrl: './user-management.html',
   styleUrls: ['./user-management.css']
 })
-export class UserManagement implements OnInit {
+export class UserManagement implements OnInit, OnDestroy {
+  private mfaSubscription: Subscription | null = null;
 
   isLoading = true;
   isProcessing = false;
@@ -58,7 +60,8 @@ export class UserManagement implements OnInit {
     private notificationService: NotificationService,
     private http: HttpClient,
     private firestore: Firestore,
-    private router: Router
+    private router: Router,
+    private auth: Auth
   ) { }
 
   async ngOnInit(): Promise<void> {
@@ -74,6 +77,18 @@ export class UserManagement implements OnInit {
     }
 
     await this.loadData();
+
+    // Suscribirse a cambios de MFA para recargar la tabla
+    this.mfaSubscription = this.authService.mfaStatusChanged$.subscribe(async () => {
+      console.log('🔄 [USER-MGMT] MFA status change detected, reloading data...');
+      await this.loadData();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.mfaSubscription) {
+      this.mfaSubscription.unsubscribe();
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -144,6 +159,7 @@ export class UserManagement implements OnInit {
           isInternal: data['isInternal'] || false,
           isActive: data['isActive'] !== false,
           mfaEnabled: data['mfaEnabled'] || false,
+          mfaRequired: data['mfaRequired'] || false,
           createdAt: data['createdAt']?.toDate() || new Date(),
           lastLogin: data['lastLogin']?.toDate(),
           proveedorIdInterno: data['proveedorIdInterno']
@@ -299,14 +315,27 @@ export class UserManagement implements OnInit {
       async () => {
         this.isProcessing = true;
         try {
+          const idToken = await this.authService.getIdToken();
+          const apiUrl = environment.apiUrl;
+
+          await firstValueFrom(
+            this.http.post<any>(
+              `${apiUrl}/api/users/toggle-status`,
+              { uid: user.uid, disabled: user.isActive, admin_uid: this.currentUser?.uid },
+              { headers: new HttpHeaders({ 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' }) }
+            )
+          );
+
           const userDocRef = doc(this.firestore, 'users', user.uid);
           await updateDoc(userDocRef, { isActive: !user.isActive, updatedAt: new Date(), updatedBy: this.currentUser?.uid });
           await this.loadData();
+          
           this.notificationService.success(
             `Usuario ${action === 'desactivar' ? 'Desactivado' : 'Activado'}`,
             `${user.name} ha sido ${action}do correctamente.`
           );
         } catch (error) {
+          console.error('❌ [USER-MGMT] Error toggling status:', error);
           this.notificationService.error('Error', `No se pudo ${action} el usuario.`);
         } finally {
           this.isProcessing = false;
@@ -315,6 +344,142 @@ export class UserManagement implements OnInit {
       action === 'desactivar' ? 'Desactivar' : 'Activar',
       'Cancelar',
       'warning'
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  MFA ACCIONES DE ADMINISTRADOR
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Toggle MFA desde el switch de la tabla de administración
+   */
+  async toggleMfa(user: User): Promise<void> {
+    if (!this.canManageUsers()) return;
+
+    if (user.mfaEnabled) {
+      // Desactivar MFA → llama al endpoint que elimina los factores
+      await this.disableMfa(user);
+    } else {
+      // No se puede activar MFA desde admin (requiere QR en el celular del usuario)
+      // Pero podemos notificar al usuario que debe configurarlo
+      this.notificationService.confirm(
+        'Solicitar MFA',
+        `No es posible activar MFA directamente desde aquí porque ${user.name} necesita escanear un código QR con su celular.\n\n¿Deseas notificar al usuario que debe configurar MFA en su próximo inicio de sesión?`,
+        async () => {
+          this.isProcessing = true;
+          try {
+            const userDocRef = doc(this.firestore, 'users', user.uid);
+            await updateDoc(userDocRef, {
+              mfaRequired: true,
+              updatedAt: new Date(),
+              updatedBy: this.currentUser?.uid
+            });
+            await this.loadData();
+            this.notificationService.success(
+              'MFA Requerido',
+              `${user.name} deberá configurar MFA en su próximo inicio de sesión.`
+            );
+          } catch (error) {
+            console.error('❌ [USER-MGMT] Error requiring MFA:', error);
+            this.notificationService.error('Error', 'No se pudo actualizar la configuración de MFA.');
+          } finally {
+            this.isProcessing = false;
+          }
+        },
+        'Sí, solicitar MFA',
+        'Cancelar',
+        'info'
+      );
+    }
+  }
+
+  async disableMfa(user: User): Promise<void> {
+    if (!this.canManageUsers()) {
+      this.notificationService.error('Sin Permisos', 'No tienes permisos para modificar el MFA del usuario.');
+      return;
+    }
+
+    this.notificationService.confirm(
+      'Deshabilitar MFA',
+      `¿Estás seguro de deshabilitar la autenticación de dos pasos para ${user.name}?\n\nAl hacerlo, el usuario podrá ingresar solo con su contraseña corriente y se eliminará el registro de su dispositivo Authenticator asociado.\nEsto es útil si el usuario perdió acceso a su celular.`,
+      async () => {
+        this.isProcessing = true;
+        try {
+          const idToken = await this.authService.getIdToken();
+          const apiUrl = environment.apiUrl;
+
+          await firstValueFrom(
+            this.http.post<any>(
+              `${apiUrl}/api/users/disable-mfa`,
+              { uid: user.uid, email: user.email, forced_by_uid: this.currentUser?.uid },
+              { headers: new HttpHeaders({ 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' }) }
+            )
+          );
+
+          // Forzar recarga del estado de Firebase Auth para que el SDK actualice su cache
+          const fbUser = this.auth.currentUser;
+          if (fbUser) {
+            await fbUser.reload();
+            // Si el usuario deshabilitado es el usuario actual (admin), también actualitar el cache local
+            if (user.uid === this.currentUser?.uid) {
+              const cachedUser = this.authService.getCurrentUser();
+              if (cachedUser) {
+                this.authService.setCurrentUser({ ...cachedUser, mfaEnabled: false, mfaRequired: false });
+              }
+            }
+          }
+
+          // Notificar globalmente y recargar localmente
+          this.authService.notifyMfaStatusChanged();
+          await this.loadData();
+          this.notificationService.success('MFA Deshabilitado', `Se desactivó correctamente el MFA para ${user.name}.`);
+        } catch (error) {
+          console.error('❌ [USER-MGMT] Error disabling MFA:', error);
+          this.notificationService.error('Error', 'No se pudo deshabilitar el MFA del usuario.');
+        } finally {
+          this.isProcessing = false;
+        }
+      },
+      'Deshabilitar MFA',
+      'Cancelar',
+      'warning'
+    );
+  }
+
+  async requireMfa(user: User): Promise<void> {
+    if (!this.canManageUsers()) {
+      this.notificationService.error('Sin Permisos', 'No tienes permisos para modificar el MFA del usuario.');
+      return;
+    }
+
+    const confirmMsg = user.mfaRequired
+      ? `¿Quieres dejar de forzar el MFA para ${user.name}?`
+      : `Al forzar el MFA, a ${user.name} se le presentará el bloqueo de configuración de Authenticator obligatoriamente la próxima vez que inicie sesión.\n\n¿Estás seguro de querer forzar esta regla de seguridad?`;
+
+    this.notificationService.confirm(
+      user.mfaRequired ? 'Quitar Exigencia MFA' : 'Forzar MFA',
+      confirmMsg,
+      async () => {
+        this.isProcessing = true;
+        try {
+          const userDocRef = doc(this.firestore, 'users', user.uid);
+          await updateDoc(userDocRef, { mfaRequired: !user.mfaRequired, updatedAt: new Date(), updatedBy: this.currentUser?.uid });
+          await this.loadData();
+          this.notificationService.success(
+            'MFA Actualizado',
+            user.mfaRequired ? `Se dejó de forzar el MFA para ${user.name}.` : `Se ha forzado el uso de MFA para ${user.name}.`
+          );
+        } catch (error) {
+          console.error('❌ [USER-MGMT] Error requiring MFA:', error);
+          this.notificationService.error('Error', 'No se pudo modificar la exigencia de MFA del usuario.');
+        } finally {
+          this.isProcessing = false;
+        }
+      },
+      user.mfaRequired ? 'Quitar Regla' : 'Forzar MFA',
+      'Cancelar',
+      'info'
     );
   }
 

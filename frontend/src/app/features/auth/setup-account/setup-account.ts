@@ -2,7 +2,7 @@
 
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth, createUserWithEmailAndPassword, UserCredential } from '@angular/fire/auth';
 import { Firestore, doc, setDoc, serverTimestamp } from '@angular/fire/firestore';
@@ -11,11 +11,12 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Invitation } from '../../../core/models/invitation.model';
 import { UserRole } from '../../../core/models/user.model';
+import { TotpSecret } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-setup-account',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './setup-account.html',
   styleUrls: ['./setup-account.css'],
 })
@@ -27,6 +28,13 @@ export class SetupAccount implements OnInit {
   errorMessage = '';
   showPassword = false;
   showConfirmPassword = false;
+
+  // MFA Setup State
+  step: 'ACCOUNT' | 'MFA_SETUP' = 'ACCOUNT';
+  qrCodeUrl: string | null = null;
+  totpSecret: TotpSecret | null = null;
+  mfaCode = '';
+  qrCodeError = '';
 
   // Password strength
   passwordStrength: 'weak' | 'medium' | 'strong' = 'weak';
@@ -210,9 +218,15 @@ export class SetupAccount implements OnInit {
       await this.authService.login(this.invitation.email, password);
       console.log('✅ [SETUP-ACCOUNT] User logged in');
 
-      // 6. Redirigir al dashboard
-      console.log('✅ [SETUP-ACCOUNT] Account setup complete! Redirecting...');
-      this.router.navigate(['/categorization']);
+      // 6. Generar QR Code para MFA y cambiar de paso
+      console.log('🔐 [SETUP-ACCOUNT] Setting up TOTP Secret...');
+      const { secret, qrCodeUrl } = await this.authService.generateTotpSecret(credential.user);
+      this.totpSecret = secret;
+      this.qrCodeUrl = qrCodeUrl;
+      
+      this.isSubmitting = false;
+      this.step = 'MFA_SETUP';
+
     } catch (error: any) {
       console.error('❌ [SETUP-ACCOUNT] Error creating account:', error);
 
@@ -227,6 +241,41 @@ export class SetupAccount implements OnInit {
 
       this.isSubmitting = false;
     }
+  }
+
+  /**
+   * Enviar código MFA para terminar configuración
+   */
+  async onMfaSubmit(): Promise<void> {
+    if (this.mfaCode.length !== 6 || !this.totpSecret) {
+      this.qrCodeError = 'Código inválido.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.qrCodeError = '';
+
+    try {
+      const user = this.auth.currentUser;
+      if (!user) throw new Error('Usuario no encontrado en sesión activa');
+
+      await this.authService.enrollTotp(user, this.totpSecret, this.mfaCode);
+      
+      console.log('✅ [SETUP-ACCOUNT] Account and MFA setup complete! Redirecting...');
+      this.router.navigate(['/categorization']);
+    } catch (error: any) {
+      console.error('❌ [SETUP-ACCOUNT] Error setting up MFA:', error);
+      this.isSubmitting = false;
+      this.qrCodeError = error.message || 'Código incorrecto. Intenta de nuevo.';
+    }
+  }
+
+  /**
+   * Omitir configuración MFA
+   */
+  skipMfa(): void {
+    console.log('⏩ [SETUP-ACCOUNT] Skipping MFA setup. Redirecting...');
+    this.router.navigate(['/categorization']);
   }
 
   /**

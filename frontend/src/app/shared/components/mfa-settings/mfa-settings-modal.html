@@ -1,0 +1,235 @@
+<!-- 🛡️ NetoInsight - MFA Settings Modal -->
+
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Botón Cerrar -->
+    <button class="btn-close" (click)="close()" [disabled]="isSubmitting">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="modal-header">
+      <div class="modal-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+      </div>
+      <h2 class="modal-title">Seguridad de la Cuenta</h2>
+      <p class="modal-subtitle">Configura la Autenticación en 2 Pasos (MFA)</p>
+    </div>
+
+    <div class="modal-body" *ngIf="!isLoading">
+      
+      <!-- ESTADO: INITIAL -->
+      <div *ngIf="step === 'INITIAL'" class="mfa-initial-state text-center">
+        <div *ngIf="mfaEnabled" class="mfa-status-badge success">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          MFA Activo
+        </div>
+        
+        <div *ngIf="!mfaEnabled" class="mfa-status-badge warning">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          MFA Desactivado
+        </div>
+
+        <p class="mfa-description mt-4 text-gray-600 text-sm">
+          La autenticación en dos pasos añade una capa adicional de seguridad a tu cuenta al requerir
+          más que solo una contraseña para iniciar sesión.
+        </p>
+
+        <div class="mfa-actions mt-6">
+          <button 
+            *ngIf="!mfaEnabled" 
+            class="btn-primary w-full justify-center" 
+            (click)="startEnrollment()" 
+            [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting">Configurar Autenticador</span>
+            <span *ngIf="isSubmitting" class="loading-spinner"></span>
+          </button>
+          
+          <div *ngIf="mfaEnabled" class="alert-info mt-4 text-sm text-left">
+            <strong>Nota:</strong> Para desactivar el MFA o restablecerlo en caso de pérdida del dispositivo, 
+            por favor contacta al administrador del sistema.
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADO: REAUTH_PASSWORD (Confirmar contraseña antes de configurar MFA) -->
+      <div *ngIf="step === 'REAUTH_PASSWORD'" class="mfa-reauth-state">
+        <div class="reauth-icon-container">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f58220" stroke-width="1.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <p class="text-sm text-gray-600 mb-4 text-center">
+          Por seguridad, ingresa tu contraseña actual para continuar con la configuración del autenticador.
+        </p>
+        
+        <form (ngSubmit)="reauthAndGenerateSecret()" class="reauth-form">
+          <div class="input-group mb-4">
+            <label for="reauthPassword" class="block text-sm font-medium text-gray-700 mb-1">
+              Contraseña actual
+            </label>
+            <div class="input-wrapper">
+              <input
+                id="reauthPassword"
+                [type]="showPassword ? 'text' : 'password'"
+                [(ngModel)]="reauthPassword"
+                name="reauthPassword"
+                class="form-input w-full"
+                placeholder="Ingresa tu contraseña"
+                [disabled]="isSubmitting"
+                autocomplete="current-password"
+                required>
+              <button
+                type="button"
+                class="password-toggle-btn"
+                (click)="togglePasswordVisibility()"
+                tabindex="-1">
+                <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="error-message text-sm text-center mb-4">
+            {{ errorMessage }}
+          </div>
+
+          <div class="flex gap-3 justify-center">
+            <button type="button" class="btn-secondary" (click)="cancelEnrollment()" [disabled]="isSubmitting">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="isSubmitting || !reauthPassword">
+              <span *ngIf="!isSubmitting">Continuar</span>
+              <span *ngIf="isSubmitting" class="loading-spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ESTADO: REAUTH_MFA (Verificar código TOTP existente durante re-autenticación) -->
+      <div *ngIf="step === 'REAUTH_MFA'" class="mfa-reauth-state">
+        <div class="reauth-icon-container">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <p class="text-sm text-gray-600 mb-2 text-center font-medium">
+          Tu cuenta ya tiene MFA configurado.
+        </p>
+        <p class="text-sm text-gray-600 mb-4 text-center">
+          Para verificar tu identidad, ingresa el código de tu aplicación de autenticación.
+        </p>
+        
+        <form (ngSubmit)="completeReauthWithMfa()" class="reauth-form">
+          <div class="input-group mb-4">
+            <input
+              id="reauthMfaCode"
+              type="text"
+              [(ngModel)]="reauthMfaCode"
+              name="reauthMfaCode"
+              class="form-input text-center text-xl tracking-widest font-mono mx-auto block w-48"
+              placeholder="000000"
+              maxlength="6"
+              pattern="\d{6}"
+              [disabled]="isSubmitting"
+              autocomplete="off"
+              required>
+          </div>
+
+          <div *ngIf="errorMessage" class="error-message text-sm text-center mb-4">
+            {{ errorMessage }}
+          </div>
+
+          <div class="flex gap-3 justify-center">
+            <button type="button" class="btn-secondary" (click)="cancelEnrollment()" [disabled]="isSubmitting">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="isSubmitting || reauthMfaCode.length !== 6">
+              <span *ngIf="!isSubmitting">Verificar</span>
+              <span *ngIf="isSubmitting" class="loading-spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ESTADO: ENROLLING -->
+      <div *ngIf="step === 'ENROLLING'" class="mfa-enroll-state">
+        <p class="text-sm text-gray-600 mb-4 text-center">
+          1. Escanea este código QR usando tu aplicación de autenticación (ej. Google Authenticator o Authy).
+        </p>
+        
+        <div class="qr-container">
+          <img *ngIf="qrCodeUrl" [src]="qrCodeUrl" alt="QR Code" />
+        </div>
+
+        <form (ngSubmit)="verifyAndEnroll()" class="mfa-verify-form">
+          <label for="mfaCode" class="block text-sm font-medium text-gray-700 text-center mb-2">
+            2. Ingresa el código de 6 dígitos:
+          </label>
+          
+          <input
+            id="mfaCode"
+            type="text"
+            [(ngModel)]="mfaCode"
+            name="mfaCode"
+            class="form-input"
+            placeholder="000000"
+            maxlength="6"
+            pattern="\d{6}"
+            [disabled]="isSubmitting"
+            autocomplete="off"
+            required>
+
+          <div *ngIf="errorMessage" class="error-message text-sm text-center mb-4">
+            {{ errorMessage }}
+          </div>
+
+          <div class="flex gap-3 justify-center">
+            <button type="button" class="btn-secondary" (click)="cancelEnrollment()" [disabled]="isSubmitting">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-primary" [disabled]="isSubmitting || mfaCode.length !== 6">
+              <span *ngIf="!isSubmitting">Verificar</span>
+              <span *ngIf="isSubmitting" class="loading-spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ESTADO: SUCCESS -->
+      <div *ngIf="step === 'SUCCESS'" class="mfa-success-state text-center py-6">
+        <div class="success-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">¡MFA Activo!</h3>
+        <p class="text-gray-600 text-sm mb-6">
+          Tu cuenta está protegida con verificación en dos pasos.
+        </p>
+        <button type="button" class="btn-primary w-full justify-center" (click)="close()">
+          Entendido
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

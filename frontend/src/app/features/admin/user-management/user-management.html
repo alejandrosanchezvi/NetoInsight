@@ -178,9 +178,19 @@
             </td>
             <td class="text-muted">{{ formatDate(user.lastLogin) }}</td>
             <td>
-              <span class="badge" [ngClass]="user.mfaEnabled ? 'badge-success' : 'badge-warning'">
-                {{ user.mfaEnabled ? 'Habilitado' : 'Deshabilitado' }}
-              </span>
+              <div class="mfa-toggle-cell">
+                <label class="toggle-switch" 
+                  [class.active]="user.mfaEnabled" 
+                  [class.clickable]="canManageUsers() && user.uid !== currentUser?.uid"
+                  (click)="canManageUsers() && user.uid !== currentUser?.uid ? toggleMfa(user) : null">
+                  <span class="toggle-track">
+                    <span class="toggle-thumb"></span>
+                  </span>
+                  <span class="toggle-label">
+                    {{ user.mfaEnabled ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </label>
+              </div>
             </td>
             <td>
               <div class="action-buttons">
@@ -210,12 +220,16 @@
                   <span class="btn-text">Eliminar</span>
                 </button>
 
-                <!-- Indicador si no puede hacer nada -->
-                <span *ngIf="!canToggleUserStatus(user) && !canDeleteUser(user)" class="text-muted small">
-                  {{ user.uid === currentUser?.uid ? '(Tú)' : '' }}
-                  {{ user.isInternal ? '(Usuario Interno)' : '' }}
-                  {{ !canManageUsers() ? '(Solo lectura)' : '' }}
-                </span>
+                <!-- ⭐ Botón Deshabilitar MFA - Solo si puede gestionar y está habilitado -->
+                <button *ngIf="canManageUsers() && user.mfaEnabled" class="btn-action btn-danger" 
+                  (click)="disableMfa(user)"
+                  title="Deshabilitar Autenticador (útil si perdió el celular)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <line x1="3" y1="3" x2="21" y2="21"></line>
+                  </svg>
+                  <span class="btn-text">Quitar MFA</span>
+                </button>
               </div>
             </td>
           </tr>

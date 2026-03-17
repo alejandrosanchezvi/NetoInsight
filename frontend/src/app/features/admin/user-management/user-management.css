@@ -940,3 +940,90 @@
 .btn-cancel:hover {
   background: #ffcdd2;
 }
+
+/* ===== MFA Toggle Switch ===== */
+.mfa-toggle-cell {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default;
+}
+
+.toggle-switch.clickable {
+  cursor: pointer;
+}
+
+.toggle-switch.clickable:hover .toggle-track {
+  filter: brightness(0.9);
+  box-shadow: 0 0 0 3px rgba(0,102,204,0.15);
+  user-select: none;
+}
+
+.toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: #d1d5db;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active (MFA enabled) */
+.toggle-switch.active .toggle-track {
+  background: linear-gradient(135deg, #34d399, #10b981);
+}
+
+.toggle-switch.active .toggle-thumb {
+  transform: translateX(16px);
+}
+
+.toggle-switch.active .toggle-label {
+  color: #059669;
+  font-weight: 600;
+}
+
+/* Required (pending enrollment) */
+.toggle-switch.required .toggle-track {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  animation: pulse-glow 2s infinite;
+}
+
+.toggle-switch.required .toggle-thumb {
+  transform: translateX(8px);
+}
+
+.toggle-switch.required .toggle-label {
+  color: #d97706;
+  font-weight: 600;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(245,158,11,0.15); }
+}
+
+/* Inactive (default) */
+.toggle-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #9ca3af;
+  white-space: nowrap;
+}

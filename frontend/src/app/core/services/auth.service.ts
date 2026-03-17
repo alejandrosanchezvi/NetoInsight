@@ -2,7 +2,7 @@
 
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, from } from 'rxjs';
+import { BehaviorSubject, Observable, from, Subject } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 
 // Firebase imports
@@ -13,6 +13,11 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   UserCredential,
+  multiFactor,
+  TotpMultiFactorGenerator,
+  TotpSecret,
+  MultiFactorResolver,
+  getMultiFactorResolver,
 } from '@angular/fire/auth';
 
 import {
@@ -24,6 +29,8 @@ import {
 } from '@angular/fire/firestore';
 
 import { User, UserRole } from '../models/user.model';
+import { environment } from '../../../environments/environment';
+import QRCode from 'qrcode';
 
 @Injectable({
   providedIn: 'root',
@@ -31,6 +38,9 @@ import { User, UserRole } from '../models/user.model';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  
+  private mfaStatusChangedSubject = new Subject<void>();
+  public mfaStatusChanged$ = this.mfaStatusChangedSubject.asObservable();
 
   constructor(
     private auth: Auth,
@@ -51,6 +61,10 @@ export class AuthService {
 
     // Iniciar listener de Firebase
     this.initAuthListener();
+  }
+
+  notifyMfaStatusChanged(): void {
+    this.mfaStatusChangedSubject.next();
   }
 
   /**
@@ -111,6 +125,13 @@ export class AuthService {
         // Mensajes de error amigables
         let errorMessage = 'Error al iniciar sesión';
 
+        if (error.code === 'auth/multi-factor-auth-required') {
+          console.warn('⚠️ [AUTH] MFA requerido para:', email);
+          const resolver = getMultiFactorResolver(this.auth, error);
+          // IMPORTANTE: Se lanza un objeto con isMfaRequired para que el componente lo maneje
+          throw { isMfaRequired: true, resolver };
+        }
+
         if (error.code === 'auth/user-not-found') {
           errorMessage = 'Usuario no encontrado';
         } else if (error.code === 'auth/wrong-password') {
@@ -125,6 +146,10 @@ export class AuthService {
           errorMessage = 'Credenciales inválidas';
         }
 
+        if (error.isMfaRequired) {
+          throw error;
+        }
+        
         throw new Error(errorMessage);
       })
     );
@@ -196,6 +221,7 @@ export class AuthService {
         isInternal: data['isInternal'] || false,
         isActive: data['isActive'] !== false,
         mfaEnabled: data['mfaEnabled'] || false,
+        mfaRequired: data['mfaRequired'] || false,
         createdAt: data['createdAt']?.toDate() || new Date(),
         lastLogin: data['lastLogin']?.toDate(),
         proveedorIdInterno: proveedorIdInterno
@@ -269,7 +295,7 @@ export class AuthService {
   /**
    * Establecer usuario actual y guardar en storage
    */
-  private setCurrentUser(user: User): void {
+  setCurrentUser(user: User): void {
     this.currentUserSubject.next(user);
     this.saveUserToStorage(user);
   }
@@ -365,4 +391,144 @@ async getFirebaseToken(): Promise<string | null> {
     return null;
   }
 }
+
+  // ─────────────────────────────────────────────────────────────
+  //  MFA - TOTP (Google Authenticator)
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Completar login con código TOTP cuando se requiera MFA
+   */
+  async verifyTotpForLogin(resolver: MultiFactorResolver, code: string): Promise<User> {
+    try {
+      console.log('🛡️ [AUTH] Verificando código TOTP para login...');
+      const assertion = TotpMultiFactorGenerator.assertionForSignIn(
+        resolver.hints[0].uid,
+        code
+      );
+      
+      const credential = await resolver.resolveSignIn(assertion);
+      console.log('✅ [AUTH] MFA successful');
+
+      const userData = await this.getUserData(credential.user.uid);
+      if (!userData) {
+        throw new Error('User data not found in Firestore after MFA');
+      }
+
+      await this.updateLastLogin(credential.user.uid);
+      this.setCurrentUser(userData);
+      
+      return userData;
+    } catch (error: any) {
+      console.error('❌ [AUTH] MFA Verification error:', error);
+      if (error.code === 'auth/invalid-multi-factor-session') {
+        throw new Error('Sesión de MFA expirada o inválida');
+      }
+      throw new Error('Código incorrecto');
+    }
+  }
+
+  /**
+   * Verifica automáticamente el email del usuario para evitar 
+   * el error auth/unverified-email al intentar enrolarse a MFA.
+   * Llama un endpoint del backend que usa el admin SDK de Firebase.
+   */
+  async verifyEmailForMfa(user: FirebaseUser): Promise<void> {
+    try {
+      console.log('🛡️ [AUTH] Verificando email para MFA en backend...');
+      // 1. Obtener Token para autenticación con el servidor
+      const token = await user.getIdToken();
+
+      // 2. Ejecutar la llamada manual directa sin usar HttpClient
+      const response = await fetch(`${environment.apiUrl}/api/users/set-email-verified`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ uid: user.uid }),
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo verificar el email desde el servidor (HTTP ' + response.status + ')');
+      }
+
+      console.log('✅ [AUTH] Email verificado exitosamente por el servidor.');
+      // 3. Forzar refresco local de los claims del usuario
+      await user.getIdToken(true);
+      await user.reload();
+      console.log('✅ [AUTH] Sesión local recargada reconociendo el email verificado.');
+    } catch (error) {
+      console.error('❌ [AUTH] Error en verifyEmailForMfa:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generar secreto TOTP para un usuario logueado (Enrollment Step 1)
+   */
+  async generateTotpSecret(user: FirebaseUser): Promise<{ secret: TotpSecret, qrCodeUrl: string }> {
+    try {
+      console.log('🛡️ [AUTH] Generando secreto TOTP...');
+      // Verificar proactivamente si falta verificar el email e invocar el autoverificador
+      if (!user.emailVerified) {
+        console.log('⚠️ [AUTH] El usuario no tiene el email verificado, se forzará la verificación...');
+        await this.verifyEmailForMfa(user);
+      }
+
+      const multiFactorSession = await multiFactor(user).getSession();
+      const secret = await TotpMultiFactorGenerator.generateSecret(multiFactorSession);
+      
+      // Obtener la URI otpauth:// del secreto
+      const otpauthUrl = secret.generateQrCodeUrl(
+        user.email || 'NetoInsight',
+        'NetoInsight'
+      );
+      
+      // Generar imagen QR como Data URL usando la librería qrcode
+      const qrCodeUrl = await QRCode.toDataURL(otpauthUrl, {
+        width: 250,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
+      console.log('🛡️ [AUTH] QR Code data URL generada correctamente');
+      
+      return { secret, qrCodeUrl };
+    } catch (error) {
+      console.error('❌ [AUTH] Error generando secreto TOTP:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Verificar código y completar enrolamiento TOTP (Enrollment Step 2)
+   */
+  async enrollTotp(user: FirebaseUser, secret: TotpSecret, code: string, displayName: string = 'Authenticator App'): Promise<void> {
+    try {
+      console.log('🛡️ [AUTH] Completando enrolamiento TOTP...');
+      const assertion = TotpMultiFactorGenerator.assertionForEnrollment(secret, code);
+      await multiFactor(user).enroll(assertion, displayName);
+      
+      // Actualizamos el documento del usuario en Firestore para indicar que tiene MFA
+      const uid = user.uid;
+      const userRef = doc(this.firestore, 'users', uid);
+      await updateDoc(userRef, {
+        mfaEnabled: true,
+      });
+
+      // Actualizamos el cache
+      const currentUser = this.getCurrentUser();
+      if (currentUser && currentUser.uid === uid) {
+        this.setCurrentUser({ ...currentUser, mfaEnabled: true });
+      }
+
+      console.log('✅ [AUTH] TOTP enrolado correctamente en Firebase y Firestore');
+    } catch (error: any) {
+      console.error('❌ [AUTH] Error enrolando TOTP:', error);
+      if (error.code === 'auth/invalid-verification-code') {
+        throw new Error('Código incorrecto');
+      }
+      throw error;
+    }
+  }
 }

@@ -31,8 +31,8 @@
       <span class="error-text">{{ errorMessage }}</span>
     </div>
 
-    <!-- Login Form -->
-    <form (ngSubmit)="onSubmit()" class="login-form">
+    <!-- Formulario de Login Principal -->
+    <form *ngIf="!showMfaStep" (ngSubmit)="onSubmit()" class="login-form">
       <!-- Email Input -->
       <div class="input-group">
         <label class="input-label">Email</label>
@@ -98,6 +98,50 @@
       </button>
     </form>
 
+    <!-- Formulario de Verificación MFA (TOTP) -->
+    <form *ngIf="showMfaStep" (ngSubmit)="onMfaSubmit()" class="login-form mfa-form">
+      <div class="mfa-instructions">
+        <div class="mfa-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+        </div>
+        <h3>Verificación en 2 pasos</h3>
+        <p>Abre tu aplicación de autenticación (ej. Google Authenticator) e ingresa el código de 6 dígitos.</p>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label text-center">Código de verificación</label>
+        <div class="input-container code-container">
+          <input
+            id="mfaCode"
+            type="text"
+            [(ngModel)]="mfaCode"
+            name="mfaCode"
+            class="input-field code-input text-center tracking-widest text-xl font-mono"
+            placeholder="000000"
+            maxlength="6"
+            pattern="\d{6}"
+            [disabled]="isLoading"
+            autocomplete="one-time-code"
+            required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="isLoading || mfaCode.length !== 6">
+        <span *ngIf="!isLoading" class="btn-text">Verificar Código</span>
+        <span *ngIf="isLoading" class="btn-loading">
+          <span class="loading-spinner"></span>
+          <span>Verificando...</span>
+        </span>
+      </button>
+
+      <button type="button" class="btn-cancel-mfa" (click)="cancelMfa()" [disabled]="isLoading">
+        Cancelar y volver atrás
+      </button>
+    </form>
+
     <!-- Footer -->
     <div class="card-footer">
       <p class="footer-text">© 2026 Neto. Todos los derechos reservados.</p>
@@ -142,8 +186,14 @@
   </div>
 </div>
 
-<!-- 🔑 Forgot Password Modal -->
-<app-forgot-password-modal
-  *ngIf="showForgotPassword"
-  (closeModal)="closeForgotPassword()">
-</app-forgot-password-modal>
+  <!-- 🔑 Forgot Password Modal -->
+  <app-forgot-password-modal
+    *ngIf="showForgotPassword"
+    (closeModal)="closeForgotPassword()">
+  </app-forgot-password-modal>
+
+  <!-- 🛡️ Force MFA Setup Modal -->
+  <app-mfa-settings-modal
+    *ngIf="showForceMfaModal"
+    (closeModal)="closeForceMfaModal()">
+  </app-mfa-settings-modal>

@@ -53,3 +53,9 @@
     <span class="menu-footer-text">NetoInsight v1.0</span>
   </div>
 </div>
+
+<!-- 🛡️ MFA Settings Modal -->
+<app-mfa-settings-modal
+  *ngIf="showMfaModal"
+  (closeModal)="closeMfaModal()">
+</app-mfa-settings-modal>
