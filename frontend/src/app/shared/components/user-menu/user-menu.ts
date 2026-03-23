@@ -47,13 +47,14 @@ export class UserMenu {
         icon: 'help-circle',
         action: () => this.navigateTo('/help')
       },
-      {
-        id: 'security',
-        label: 'Seguridad / MFA',
-        icon: 'security',
-        action: () => this.openMfaModal(),
-        divider: true
-      },
+      // Deshabilitado temporalmente: menú de Seguridad MFA
+      // {
+      //   id: 'security',
+      //   label: 'Seguridad / MFA',
+      //   icon: 'security',
+      //   action: () => this.openMfaModal(),
+      //   divider: true
+      // },
       {
         id: 'logout',
         label: 'Cerrar Sesión',

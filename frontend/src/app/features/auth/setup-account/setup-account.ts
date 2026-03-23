@@ -218,14 +218,10 @@ export class SetupAccount implements OnInit {
       await this.authService.login(this.invitation.email, password);
       console.log('✅ [SETUP-ACCOUNT] User logged in');
 
-      // 6. Generar QR Code para MFA y cambiar de paso
-      console.log('🔐 [SETUP-ACCOUNT] Setting up TOTP Secret...');
-      const { secret, qrCodeUrl } = await this.authService.generateTotpSecret(credential.user);
-      this.totpSecret = secret;
-      this.qrCodeUrl = qrCodeUrl;
-      
+      // 6. Redirigir directamente al inicio (MFA deshabilitado temporalmente)
+      console.log('✅ [SETUP-ACCOUNT] Account setup complete! Redirecting...');
       this.isSubmitting = false;
-      this.step = 'MFA_SETUP';
+      this.router.navigate(['/categorization']);
 
     } catch (error: any) {
       console.error('❌ [SETUP-ACCOUNT] Error creating account:', error);

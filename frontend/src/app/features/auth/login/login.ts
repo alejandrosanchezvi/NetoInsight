@@ -64,13 +64,13 @@ export class Login implements OnInit {
         console.log('✅ [LOGIN] Login exitoso:', user.email);
         this.isLoading = false;
 
-        if (user.mfaRequired && !user.mfaEnabled) {
-          console.log('⚠️ [LOGIN] Administrador requiere MFA. Forzando enrolamiento.');
-          // Iniciamos la sesión para que el modal de MFA funcione (requiere Firebase Auth activo)
-          this.sessionService.startSession();
-          this.showForceMfaModal = true;
-          return;
-        }
+        // Deshabilitado temporalmente: MFA Forzado
+        // if (user.mfaRequired && !user.mfaEnabled) {
+        //   console.log('⚠️ [LOGIN] Administrador requiere MFA. Forzando enrolamiento.');
+        //   this.sessionService.startSession();
+        //   this.showForceMfaModal = true;
+        //   return;
+        // }
 
         this.sessionService.startSession();
         this.router.navigate([this.returnUrl]);
@@ -78,12 +78,13 @@ export class Login implements OnInit {
       error: (error) => {
         this.isLoading = false;
 
-        if (error.isMfaRequired) {
-          console.log('🛡️ [LOGIN] MFA Requerido. Pasando a pantalla de código.');
-          this.showMfaStep = true;
-          this.resolver = error.resolver;
-          return;
-        }
+        // Deshabilitado temporalmente: MFA Requerido (Verificación)
+        // if (error.isMfaRequired) {
+        //   console.log('🛡️ [LOGIN] MFA Requerido. Pasando a pantalla de código.');
+        //   this.showMfaStep = true;
+        //   this.resolver = error.resolver;
+        //   return;
+        // }
 
         console.error('❌ [LOGIN] Error:', error);
         this.errorMessage = error.message || 'Error al iniciar sesión';

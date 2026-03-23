@@ -24,8 +24,7 @@ export class ForgotPasswordModal {
   errorMessage = '';
   step: ModalStep = 'form';
 
-  private readonly apiUrl = environment.apiUrl ||
-    'https://netoinsight-api-staging-609085902384.us-central1.run.app';
+  private readonly apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

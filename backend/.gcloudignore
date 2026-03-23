@@ -1,0 +1,40 @@
+.gcloudignore
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# Credentials
+# (Allowing .json and .env temporarily so Cloud Build can push secrets to the container)
+credentials/
+service-account*.json
+
+# Environment
+.env.local
+
+# Windows
+nul
+Thumbs.db
+
+# --- SECRETS OVERRIDE ---
+# Obligatorio para subir a Cloud Run sin enviroment variables externas
+!.env
+!firebase-credentials.json
