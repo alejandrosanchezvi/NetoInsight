@@ -64,9 +64,13 @@ if os.getenv("ENVIRONMENT") != "production":
 
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
-        logger.info(f"🌐 {request.method} {request.url.path}")
+        import time
+        start_time = time.time()
+        # logger.info(f"🌐 {request.method} {request.url.path}")
         response = await call_next(request)
-        logger.info(f"✅ Status: {response.status_code}")
+        process_time = time.time() - start_time
+        logger.info(f"⏱️ {request.method} {request.url.path} tomó {process_time:.4f}s")
+        # logger.info(f"✅ Status: {response.status_code}")
         return response
 
 
@@ -239,16 +243,14 @@ async def send_password_reset(request: PasswordResetRequest):
 
         try:
             user_record = firebase_auth.get_user_by_email(request.email)
-            logger.info(f"✅ [RESET] User found — UID: {user_record.uid}")
+            # logger.info(f"✅ [RESET] User found — UID: {user_record.uid}")
         except firebase_auth.UserNotFoundError:
             logger.info(
                 f"🔒 [RESET] User not found (generic response): {request.email}"
             )
             return GENERIC_RESPONSE
         except Exception as e:
-            logger.error(
-                f"❌ [RESET] get_user_by_email failed — {type(e).__name__}: {str(e)}"
-            )
+            logger.exception("❌ [RESET] get_user_by_email failed with full details:")
             raise HTTPException(status_code=500, detail="Error verificando usuario")
 
         action_code_settings = firebase_auth.ActionCodeSettings(
@@ -259,11 +261,9 @@ async def send_password_reset(request: PasswordResetRequest):
             reset_link = firebase_auth.generate_password_reset_link(
                 request.email, action_code_settings=action_code_settings
             )
-            logger.info(f"✅ [RESET] Reset link generated for: {request.email}")
+            # logger.info(f"✅ [RESET] Reset link generated for: {request.email}")
         except Exception as e:
-            logger.error(
-                f"❌ [RESET] generate_password_reset_link failed — {type(e).__name__}: {str(e)}"
-            )
+            logger.exception("❌ [RESET] generate_password_reset_link failed with full details:")
             raise HTTPException(
                 status_code=500, detail="Error generando enlace de reset"
             )
@@ -275,7 +275,7 @@ async def send_password_reset(request: PasswordResetRequest):
         )
 
         if result["success"]:
-            logger.info(f"✅ [RESET] Email sent to {request.email}")
+            # logger.info(f"✅ [RESET] Email sent to {request.email}")
             return GENERIC_RESPONSE
         else:
             logger.error(f"❌ [RESET] MailSlurp failed: {result.get('error')}")
@@ -284,7 +284,7 @@ async def send_password_reset(request: PasswordResetRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ [RESET] Unexpected error — {type(e).__name__}: {str(e)}")
+        logger.exception("❌ [RESET] Unexpected error critically failed:")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
@@ -389,10 +389,10 @@ async def get_embed_url_v3(dashboard: str, user_data: dict = Depends(verify_toke
         dashboard_path = get_dashboard_path(dashboard)
         embed_url = f"{TABLEAU_SERVER}/t/{TABLEAU_SITE}/views/{dashboard_path}"
 
-        logger.info(
-            f"✅ [TABLEAU] embed-url — real_user={real_email} "
-            f"proxy={TABLEAU_PROXY_USER} dashboard={dashboard}"
-        )
+        # logger.info(
+        #     f"✅ [TABLEAU] embed-url — real_user={real_email} "
+        #     f"proxy={TABLEAU_PROXY_USER} dashboard={dashboard}"
+        # )
 
         return {
             "embedUrl": embed_url,
