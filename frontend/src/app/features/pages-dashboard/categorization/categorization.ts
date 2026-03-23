@@ -186,7 +186,41 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
   toggleExportMenu(): void { this.showExportMenu = !this.showExportMenu; }
   async exportToPDF(): Promise<void> { this.showExportMenu = false; try { await this.vizElement?.displayDialogAsync('export-pdf'); } catch { } }
   async exportToImage(): Promise<void> { this.showExportMenu = false; try { await this.vizElement?.displayDialogAsync('export-image'); } catch { } }
-  async exportData(): Promise<void> { this.showExportMenu = false; try { await this.vizElement?.displayDialogAsync('export-data'); } catch { } }
+  async exportData(): Promise<void> {
+    this.showExportMenu = false;
+    if (!this.vizElement) return;
+    try {
+      const activeSheet = this.vizElement.workbook?.activeSheet;
+      // En un dashboard, activeSheet es tipo Dashboard. Tomamos la primera hoja con datos.
+      const sheet = activeSheet?.worksheets?.[0] ?? activeSheet;
+      if (!sheet) return;
+      // getUnderlyingDataAsync retorna datos a nivel de fila (no agregados)
+      const data = await sheet.getUnderlyingDataAsync({ includeAllColumns: true, ignoreSelection: true, maxRows: 0 });
+      const headers = data.columns.map((col: any) => `"${col.fieldName}"`).join(',');
+      const rows = data.data.map((row: any[]) =>
+        row.map((val: any) => `"${String(val.formattedValue ?? val.value ?? '').replace(/"/g, '""')}"`).join(',')
+      );
+      const csvContent = [headers, ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'categorization-data.csv';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    } catch (e) { console.error('Error exportando CSV:', e); }
+  }
+
+  // Interceptar Ctrl+P del navegador y redirigir al PDF completo de Tableau
+  @HostListener('window:beforeprint')
+  onBeforePrint(): void { this.exportToPDF(); }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent): void {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+      e.preventDefault();
+      this.exportToPDF();
+    }
+  }
 
   toggleFullscreen(): void {
     const c = document.querySelector(this.CONTAINER_SELECTOR) as HTMLElement;
