@@ -120,6 +120,12 @@ export interface ExcelSheet {
   sheetName: string;
   /** Datos de Tableau (getSummaryDataAsync) */
   tableauData: { columns: any[]; data: any[][] };
+  /**
+   * Si true, convierte valores numéricos de decimal a porcentaje.
+   * Ej: 0.79 → "79%", 1 → "100%", 0.225 → "22.5%"
+   * Los valores no numéricos (texto) se dejan intactos.
+   */
+  formatAsPercent?: boolean;
 }
 
 /**
@@ -129,8 +135,8 @@ export interface ExcelSheet {
 export function downloadExcel(sheets: ExcelSheet[], filename: string): void {
   const wb = XLSX.utils.book_new();
 
-  for (const { sheetName, tableauData } of sheets) {
-    const aoa = buildAoA(tableauData);
+  for (const { sheetName, tableauData, formatAsPercent } of sheets) {
+    const aoa = buildAoA(tableauData, formatAsPercent);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
   }
@@ -140,11 +146,22 @@ export function downloadExcel(sheets: ExcelSheet[], filename: string): void {
   triggerDownload(blob, filename);
 }
 
+/** Convierte un valor decimal a porcentaje legible. Solo actua sobre numeros. */
+function toPercent(val: string): string {
+  // Limpia comas de miles antes de parsear
+  const num = parseFloat(val.replace(/,/g, ''));
+  if (isNaN(num)) return val; // texto/dimensión: dejar intacto
+  const pct = Math.round(num * 10000) / 100; // e.g. 0.79 → 79, 0.225 → 22.5
+  // Quitar .00 del porcentaje también
+  const pctStr = pct.toString().replace(/\.00$/, '');
+  return `${pctStr}%`;
+}
+
 /**
  * Convierte datos de Tableau a Array-of-Arrays (formato SheetJS).
  * Aplica pivoteo automático si detecta Measure Names/Values.
  */
-function buildAoA(data: { columns: any[]; data: any[][] }): any[][] {
+function buildAoA(data: { columns: any[]; data: any[][] }, formatAsPercent = false): any[][] {
   const cols = data.columns;
 
   const measureNamesIdx = cols.findIndex((c: any) => MEASURE_NAMES_RE.test(c.fieldName));
@@ -154,7 +171,10 @@ function buildAoA(data: { columns: any[]; data: any[][] }): any[][] {
     // Formato normal
     const header = cols.map((c: any) => c.fieldName);
     const rows = data.data.map((row: any[]) =>
-      row.map((cell: any) => cellValue(cell))
+      row.map((cell: any) => {
+        const v = cellValue(cell);
+        return formatAsPercent ? toPercent(v) : v;
+      })
     );
     return [header, ...rows];
   }
@@ -202,10 +222,12 @@ function buildAoA(data: { columns: any[]; data: any[][] }): any[][] {
 
   const rows = keyOrder.map((key: string) => {
     const entry = grouped.get(key)!;
-    return [
-      ...dimIndices.map((i: number) => entry[`__dim_${i}`] ?? ''),
-      ...measureNamesSeen.map((m: string) => entry[m] ?? '')
-    ];
+    const dimVals = dimIndices.map((i: number) => entry[`__dim_${i}`] ?? '');
+    const metricVals = measureNamesSeen.map((m: string) => {
+      const v = entry[m] ?? '';
+      return formatAsPercent ? toPercent(v) : v;
+    });
+    return [...dimVals, ...metricVals];
   });
 
   return [header, ...rows];

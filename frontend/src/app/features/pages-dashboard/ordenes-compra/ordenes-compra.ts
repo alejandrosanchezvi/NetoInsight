@@ -177,11 +177,11 @@ export class OrdenesDeCompra implements OnInit, AfterViewInit, OnDestroy {
       const excelSheets: any[] = [];
       if (sheetTda) {
         const data = await sheetTda.getSummaryDataAsync({ ignoreSelection: false });
-        excelSheets.push({ sheetName: 'Fill Rate Tienda', tableauData: data });
+        excelSheets.push({ sheetName: 'Fill Rate Tienda', tableauData: data, formatAsPercent: true });
       }
       if (sheetArt) {
         const data = await sheetArt.getSummaryDataAsync({ ignoreSelection: false });
-        excelSheets.push({ sheetName: 'Fill Rate Artículo', tableauData: data });
+        excelSheets.push({ sheetName: 'Fill Rate Artículo', tableauData: data, formatAsPercent: true });
       }
 
       downloadExcel(excelSheets, 'ordenes-compra-data.xlsx');
