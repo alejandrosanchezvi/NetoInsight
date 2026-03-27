@@ -146,13 +146,12 @@ export function downloadExcel(sheets: ExcelSheet[], filename: string): void {
   triggerDownload(blob, filename);
 }
 
-/** Convierte un valor decimal a porcentaje legible. Solo actua sobre numeros. */
+/** Convierte un valor decimal a porcentaje SOLO si está en el rango [0, 1]. */
 function toPercent(val: string): string {
-  // Limpia comas de miles antes de parsear
   const num = parseFloat(val.replace(/,/g, ''));
-  if (isNaN(num)) return val; // texto/dimensión: dejar intacto
-  const pct = Math.round(num * 10000) / 100; // e.g. 0.79 → 79, 0.225 → 22.5
-  // Quitar .00 del porcentaje también
+  if (isNaN(num)) return val;       // texto/dimensión: intacto
+  if (num < 0 || num > 1) return val; // número regular (conteo, monto): intacto
+  const pct = Math.round(num * 10000) / 100; // 0.79 → 79, 0.225 → 22.5
   const pctStr = pct.toString().replace(/\.00$/, '');
   return `${pctStr}%`;
 }
