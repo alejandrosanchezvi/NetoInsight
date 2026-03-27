@@ -9,6 +9,7 @@ import { Subject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { TableauDashboardService } from '../../../core/services/tableau-dashboard.service';
+import { buildCsv, downloadCsv } from '../../../core/utils/csv-export.util';
 
 @Component({
   selector: 'app-categorization',
@@ -191,22 +192,17 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
     if (!this.vizElement) return;
     try {
       const activeSheet = this.vizElement.workbook?.activeSheet;
-      // En un dashboard, activeSheet es tipo Dashboard. Tomamos la primera hoja con datos.
-      const sheet = activeSheet?.worksheets?.[0] ?? activeSheet;
-      if (!sheet) return;
-      // getUnderlyingDataAsync retorna datos a nivel de fila (no agregados)
-      const data = await sheet.getUnderlyingDataAsync({ includeAllColumns: true, ignoreSelection: true, maxRows: 0 });
-      const headers = data.columns.map((col: any) => `"${col.fieldName}"`).join(',');
-      const rows = data.data.map((row: any[]) =>
-        row.map((val: any) => `"${String(val.formattedValue ?? val.value ?? '').replace(/"/g, '""')}"`).join(',')
-      );
-      const csvContent = [headers, ...rows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'categorization-data.csv';
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a); URL.revokeObjectURL(url);
+      // Buscamos específicamente la hoja 'tabla-arts'
+      const sheet = activeSheet?.worksheets?.find((ws: any) => ws.name === 'Tabla-arts');
+      if (!sheet) {
+        console.error('[Categorization] ❌ No se encontró la hoja "Tabla-arts". Hojas disponibles:', activeSheet?.worksheets?.map((ws: any) => ws.name));
+        return;
+      }
+      // getSummaryDataAsync retorna los datos tal como se ven en el viz (respeta filtros del dashboard)
+      const data = await sheet.getSummaryDataAsync({ ignoreSelection: false });
+      // buildCsv detecta y pivota automáticamente el formato Measure Names/Values
+      const csvContent = buildCsv(data);
+      downloadCsv(csvContent, 'categorization-data.csv');
     } catch (e) { console.error('Error exportando CSV:', e); }
   }
 

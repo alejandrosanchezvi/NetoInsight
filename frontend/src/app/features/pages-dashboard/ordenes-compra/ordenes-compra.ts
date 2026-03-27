@@ -9,6 +9,7 @@ import { Subject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { TableauDashboardService } from '../../../core/services/tableau-dashboard.service';
+import { downloadExcel } from '../../../core/utils/csv-export.util';
 
 @Component({
   selector: 'app-ordenes-compra',
@@ -161,20 +162,29 @@ export class OrdenesDeCompra implements OnInit, AfterViewInit, OnDestroy {
     if (!this.vizElement) return;
     try {
       const activeSheet = this.vizElement.workbook?.activeSheet;
-      const sheet = activeSheet?.worksheets?.[0] ?? activeSheet;
-      // getUnderlyingDataAsync retorna datos a nivel de fila (no agregados)
-      const data = await sheet.getUnderlyingDataAsync({ includeAllColumns: true, ignoreSelection: true, maxRows: 0 });
-      const headers = data.columns.map((col: any) => `"${col.fieldName}"`).join(',');
-      const rows = data.data.map((row: any[]) =>
-        row.map((val: any) => `"${String(val.formattedValue ?? val.value ?? '').replace(/"/g, '""')}"`).join(',')
-      );
-      const csvContent = [headers, ...rows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'ordenes-compra-data.csv';
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a); URL.revokeObjectURL(url);
+      const worksheets = activeSheet?.worksheets ?? [];
+
+      // Hoja 1: TablaFRTda (Fill Rate por Tienda)
+      const sheetTda = worksheets.find((ws: any) => ws.name === 'TablaFRTda');
+      // Hoja 2: TablaFRArt (Fill Rate por Artículo)
+      const sheetArt = worksheets.find((ws: any) => ws.name === 'TablaFRArt');
+
+      if (!sheetTda && !sheetArt) {
+        console.error('[OrdenesDeCompra] ❌ No se encontraron hojas. Disponibles:', worksheets.map((ws: any) => ws.name));
+        return;
+      }
+
+      const excelSheets: any[] = [];
+      if (sheetTda) {
+        const data = await sheetTda.getSummaryDataAsync({ ignoreSelection: false });
+        excelSheets.push({ sheetName: 'Fill Rate Tienda', tableauData: data });
+      }
+      if (sheetArt) {
+        const data = await sheetArt.getSummaryDataAsync({ ignoreSelection: false });
+        excelSheets.push({ sheetName: 'Fill Rate Artículo', tableauData: data });
+      }
+
+      downloadExcel(excelSheets, 'ordenes-compra-data.xlsx');
     } catch (e) { console.error('Error exportando CSV:', e); }
   }
 

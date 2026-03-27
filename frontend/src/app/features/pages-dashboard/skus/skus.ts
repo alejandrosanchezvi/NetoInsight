@@ -9,6 +9,7 @@ import { Subject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { TableauDashboardService } from '../../../core/services/tableau-dashboard.service';
+import { downloadExcel } from '../../../core/utils/csv-export.util';
 
 @Component({
   selector: 'app-skus',
@@ -161,20 +162,30 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
     if (!this.vizElement) return;
     try {
       const activeSheet = this.vizElement.workbook?.activeSheet;
-      const sheet = activeSheet?.worksheets?.[0] ?? activeSheet;
-      // getUnderlyingDataAsync retorna datos a nivel de fila (no agregados)
-      const data = await sheet.getUnderlyingDataAsync({ includeAllColumns: true, ignoreSelection: true, maxRows: 0 });
-      const headers = data.columns.map((col: any) => `"${col.fieldName}"`).join(',');
-      const rows = data.data.map((row: any[]) =>
-        row.map((val: any) => `"${String(val.formattedValue ?? val.value ?? '').replace(/"/g, '""')}"`).join(',')
-      );
-      const csvContent = [headers, ...rows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'skus-data.csv';
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a); URL.revokeObjectURL(url);
+      const worksheets = activeSheet?.worksheets ?? [];
+
+      // Hoja 1: TablaArts (datos de SKUs con pivoteo automático)
+      const sheetTablaArts = worksheets.find((ws: any) => ws.name === 'TablaArts');
+      if (!sheetTablaArts) {
+        console.error('[Skus] ❌ No se encontró "TablaArts". Hojas:', worksheets.map((ws: any) => ws.name));
+        return;
+      }
+
+      // Hoja 2: Catalogo (4ta hoja del dashboard)
+      const sheetCatalogo = worksheets.find((ws: any) => ws.name === 'Catalogo');
+      if (!sheetCatalogo) {
+        console.error('[Skus] ❌ No se encontró "Catalogo". Hojas:', worksheets.map((ws: any) => ws.name));
+      }
+
+      const dataTablaArts = await sheetTablaArts.getSummaryDataAsync({ ignoreSelection: false });
+      const excelSheets: any[] = [{ sheetName: 'SKUs', tableauData: dataTablaArts }];
+
+      if (sheetCatalogo) {
+        const dataCatalogo = await sheetCatalogo.getSummaryDataAsync({ ignoreSelection: false });
+        excelSheets.push({ sheetName: 'Catálogo', tableauData: dataCatalogo });
+      }
+
+      downloadExcel(excelSheets, 'skus-data.xlsx');
     } catch (e) { console.error('Error exportando CSV:', e); }
   }
 
