@@ -64,16 +64,20 @@
 }
 
 @keyframes float-orb {
-  0%, 100% { 
-    transform: translate(0, 0) scale(1); 
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
     opacity: 0.4;
   }
-  33% { 
-    transform: translate(-50px, -50px) scale(1.1); 
+
+  33% {
+    transform: translate(-50px, -50px) scale(1.1);
     opacity: 0.5;
   }
-  66% { 
-    transform: translate(50px, 50px) scale(0.9); 
+
+  66% {
+    transform: translate(50px, 50px) scale(0.9);
     opacity: 0.3;
   }
 }
@@ -108,8 +112,15 @@
     transform: translateY(0) translateX(0) scale(1) rotate(0deg);
     opacity: 0;
   }
-  5% { opacity: 0.7; }
-  95% { opacity: 0.4; }
+
+  5% {
+    opacity: 0.7;
+  }
+
+  95% {
+    opacity: 0.4;
+  }
+
   100% {
     transform: translateY(-110vh) translateX(-60px) scale(0.3) rotate(180deg);
     opacity: 0;
@@ -121,8 +132,15 @@
     transform: translateY(0) translateX(0) scale(1) rotate(0deg);
     opacity: 0;
   }
-  5% { opacity: 0.7; }
-  95% { opacity: 0.4; }
+
+  5% {
+    opacity: 0.7;
+  }
+
+  95% {
+    opacity: 0.4;
+  }
+
   100% {
     transform: translateY(-110vh) translateX(60px) scale(0.3) rotate(-180deg);
     opacity: 0;
@@ -134,8 +152,15 @@
     transform: translateY(0) scale(1);
     opacity: 0;
   }
-  5% { opacity: 0.6; }
-  95% { opacity: 0.5; }
+
+  5% {
+    opacity: 0.6;
+  }
+
+  95% {
+    opacity: 0.5;
+  }
+
   100% {
     transform: translateY(-110vh) scale(0.4);
     opacity: 0;
@@ -147,22 +172,27 @@
     transform: translateY(0) translateX(0) scale(1);
     opacity: 0;
   }
+
   15% {
     transform: translateY(-20vh) translateX(30px) scale(0.95);
     opacity: 0.7;
   }
+
   35% {
     transform: translateY(-40vh) translateX(-20px) scale(0.85);
     opacity: 0.6;
   }
+
   55% {
     transform: translateY(-60vh) translateX(25px) scale(0.7);
     opacity: 0.6;
   }
+
   75% {
     transform: translateY(-80vh) translateX(-15px) scale(0.5);
     opacity: 0.5;
   }
+
   100% {
     transform: translateY(-110vh) translateX(0) scale(0.3);
     opacity: 0;
@@ -174,22 +204,27 @@
     transform: translateY(0) translateX(0) scale(1);
     opacity: 0;
   }
+
   20% {
     transform: translateY(-25vh) translateX(-40px) scale(0.9);
     opacity: 0.7;
   }
+
   40% {
     transform: translateY(-50vh) translateX(40px) scale(0.75);
     opacity: 0.6;
   }
+
   60% {
     transform: translateY(-75vh) translateX(-30px) scale(0.6);
     opacity: 0.5;
   }
+
   80% {
     transform: translateY(-95vh) translateX(20px) scale(0.4);
     opacity: 0.4;
   }
+
   100% {
     transform: translateY(-110vh) translateX(0) scale(0.3);
     opacity: 0;
@@ -200,7 +235,10 @@
 
 /* Partículas 1-10: Zona superior e izquierda */
 .particle:nth-child(1) {
-  left: 8%; top: 85%; width: 4px; height: 4px;
+  left: 8%;
+  top: 85%;
+  width: 4px;
+  height: 4px;
   color: rgba(0, 102, 204, 0.6);
   background: currentColor;
   animation: float-up-right 22s linear infinite;
@@ -208,7 +246,10 @@
 }
 
 .particle:nth-child(2) {
-  left: 22%; top: 65%; width: 5px; height: 5px;
+  left: 22%;
+  top: 65%;
+  width: 5px;
+  height: 5px;
   color: rgba(245, 130, 32, 0.5);
   background: currentColor;
   animation: float-up-left 18s linear infinite;
@@ -216,7 +257,10 @@
 }
 
 .particle:nth-child(3) {
-  left: 35%; top: 92%; width: 3px; height: 3px;
+  left: 35%;
+  top: 92%;
+  width: 3px;
+  height: 3px;
   color: rgba(0, 102, 204, 0.7);
   background: currentColor;
   animation: float-up-wave 25s linear infinite;
@@ -224,7 +268,10 @@
 }
 
 .particle:nth-child(4) {
-  left: 48%; top: 75%; width: 6px; height: 6px;
+  left: 48%;
+  top: 75%;
+  width: 6px;
+  height: 6px;
   color: rgba(245, 130, 32, 0.6);
   background: currentColor;
   animation: float-up-straight 20s linear infinite;
@@ -232,7 +279,10 @@
 }
 
 .particle:nth-child(5) {
-  left: 62%; top: 88%; width: 4px; height: 4px;
+  left: 62%;
+  top: 88%;
+  width: 4px;
+  height: 4px;
   color: rgba(0, 102, 204, 0.5);
   background: currentColor;
   animation: float-up-zigzag 23s linear infinite;
@@ -240,7 +290,10 @@
 }
 
 .particle:nth-child(6) {
-  left: 75%; top: 68%; width: 5px; height: 5px;
+  left: 75%;
+  top: 68%;
+  width: 5px;
+  height: 5px;
   color: #f58220b3;
   background: currentColor;
   animation: float-up-right 19s linear infinite;
@@ -248,7 +301,10 @@
 }
 
 .particle:nth-child(7) {
-  left: 88%; top: 80%; width: 3px; height: 3px;
+  left: 88%;
+  top: 80%;
+  width: 3px;
+  height: 3px;
   color: rgba(0, 102, 204, 0.6);
   background: currentColor;
   animation: float-up-left 21s linear infinite;
@@ -256,7 +312,10 @@
 }
 
 .particle:nth-child(8) {
-  left: 15%; top: 95%; width: 4px; height: 4px;
+  left: 15%;
+  top: 95%;
+  width: 4px;
+  height: 4px;
   color: rgba(245, 130, 32, 0.5);
   background: currentColor;
   animation: float-up-wave 24s linear infinite;
@@ -264,7 +323,10 @@
 }
 
 .particle:nth-child(9) {
-  left: 42%; top: 70%; width: 5px; height: 5px;
+  left: 42%;
+  top: 70%;
+  width: 5px;
+  height: 5px;
   color: rgba(0, 102, 204, 0.7);
   background: currentColor;
   animation: float-up-straight 17s linear infinite;
@@ -272,7 +334,10 @@
 }
 
 .particle:nth-child(10) {
-  left: 68%; top: 78%; width: 6px; height: 6px;
+  left: 68%;
+  top: 78%;
+  width: 6px;
+  height: 6px;
   color: rgba(245, 130, 32, 0.6);
   background: currentColor;
   animation: float-up-zigzag 22s linear infinite;
@@ -282,7 +347,10 @@
 
 /* Partículas 11-20: Zona media */
 .particle:nth-child(11) {
-  left: 5%; top: 45%; width: 3px; height: 3px;
+  left: 5%;
+  top: 45%;
+  width: 3px;
+  height: 3px;
   color: rgba(0, 102, 204, 0.6);
   background: currentColor;
   animation: float-up-right 20s linear infinite;
@@ -290,7 +358,10 @@
 }
 
 .particle:nth-child(12) {
-  left: 18%; top: 58%; width: 4px; height: 4px;
+  left: 18%;
+  top: 58%;
+  width: 4px;
+  height: 4px;
   color: rgba(245, 130, 32, 0.7);
   background: currentColor;
   animation: float-up-left 23s linear infinite;
@@ -298,7 +369,10 @@
 }
 
 .particle:nth-child(13) {
-  left: 32%; top: 42%; width: 5px; height: 5px;
+  left: 32%;
+  top: 42%;
+  width: 5px;
+  height: 5px;
   color: rgba(0, 102, 204, 0.5);
   background: currentColor;
   animation: float-up-wave 19s linear infinite;
@@ -306,7 +380,10 @@
 }
 
 .particle:nth-child(14) {
-  left: 45%; top: 52%; width: 4px; height: 4px;
+  left: 45%;
+  top: 52%;
+  width: 4px;
+  height: 4px;
   color: rgba(245, 130, 32, 0.6);
   background: currentColor;
   animation: float-up-straight 21s linear infinite;
@@ -314,7 +391,10 @@
 }
 
 .particle:nth-child(15) {
-  left: 58%; top: 48%; width: 6px; height: 6px;
+  left: 58%;
+  top: 48%;
+  width: 6px;
+  height: 6px;
   color: rgba(0, 102, 204, 0.7);
   background: currentColor;
   animation: float-up-zigzag 18s linear infinite;
@@ -322,7 +402,10 @@
 }
 
 .particle:nth-child(16) {
-  left: 72%; top: 55%; width: 3px; height: 3px;
+  left: 72%;
+  top: 55%;
+  width: 3px;
+  height: 3px;
   color: rgba(245, 130, 32, 0.5);
   background: currentColor;
   animation: float-up-right 24s linear infinite;
@@ -330,7 +413,10 @@
 }
 
 .particle:nth-child(17) {
-  left: 85%; top: 40%; width: 5px; height: 5px;
+  left: 85%;
+  top: 40%;
+  width: 5px;
+  height: 5px;
   color: rgba(0, 102, 204, 0.6);
   background: currentColor;
   animation: float-up-left 20s linear infinite;
@@ -338,7 +424,10 @@
 }
 
 .particle:nth-child(18) {
-  left: 12%; top: 38%; width: 4px; height: 4px;
+  left: 12%;
+  top: 38%;
+  width: 4px;
+  height: 4px;
   color: rgba(245, 130, 32, 0.7);
   background: currentColor;
   animation: float-up-wave 22s linear infinite;
@@ -346,7 +435,10 @@
 }
 
 .particle:nth-child(19) {
-  left: 52%; top: 62%; width: 5px; height: 5px;
+  left: 52%;
+  top: 62%;
+  width: 5px;
+  height: 5px;
   color: rgba(0, 102, 204, 0.5);
   background: currentColor;
   animation: float-up-straight 19s linear infinite;
@@ -354,7 +446,10 @@
 }
 
 .particle:nth-child(20) {
-  left: 78%; top: 35%; width: 4px; height: 4px;
+  left: 78%;
+  top: 35%;
+  width: 4px;
+  height: 4px;
   color: rgba(245, 130, 32, 0.6);
   background: currentColor;
   animation: float-up-zigzag 21s linear infinite;
@@ -363,7 +458,10 @@
 
 /* Partículas 21-30: Zona superior */
 .particle:nth-child(21) {
-  left: 10%; top: 18%; width: 3px; height: 3px;
+  left: 10%;
+  top: 18%;
+  width: 3px;
+  height: 3px;
   color: rgba(0, 102, 204, 0.7);
   background: currentColor;
   animation: float-up-right 23s linear infinite;
@@ -371,7 +469,10 @@
 }
 
 .particle:nth-child(22) {
-  left: 25%; top: 25%; width: 5px; height: 5px;
+  left: 25%;
+  top: 25%;
+  width: 5px;
+  height: 5px;
   color: rgba(245, 130, 32, 0.5);
   background: currentColor;
   animation: float-up-left 18s linear infinite;
@@ -379,7 +480,10 @@
 }
 
 .particle:nth-child(23) {
-  left: 38%; top: 12%; width: 4px; height: 4px;
+  left: 38%;
+  top: 12%;
+  width: 4px;
+  height: 4px;
   color: rgba(0, 102, 204, 0.6);
   background: currentColor;
   animation: float-up-wave 20s linear infinite;
@@ -387,7 +491,10 @@
 }
 
 .particle:nth-child(24) {
-  left: 55%; top: 22%; width: 6px; height: 6px;
+  left: 55%;
+  top: 22%;
+  width: 6px;
+  height: 6px;
   color: rgba(245, 130, 32, 0.7);
   background: currentColor;
   animation: float-up-straight 22s linear infinite;
@@ -395,7 +502,10 @@
 }
 
 .particle:nth-child(25) {
-  left: 70%; top: 15%; width: 3px; height: 3px;
+  left: 70%;
+  top: 15%;
+  width: 3px;
+  height: 3px;
   color: rgba(0, 102, 204, 0.5);
   background: currentColor;
   animation: float-up-zigzag 19s linear infinite;
@@ -403,7 +513,10 @@
 }
 
 .particle:nth-child(26) {
-  left: 82%; top: 28%; width: 4px; height: 4px;
+  left: 82%;
+  top: 28%;
+  width: 4px;
+  height: 4px;
   color: rgba(245, 130, 32, 0.6);
   background: currentColor;
   animation: float-up-right 21s linear infinite;
@@ -411,7 +524,10 @@
 }
 
 .particle:nth-child(27) {
-  left: 92%; top: 10%; width: 5px; height: 5px;
+  left: 92%;
+  top: 10%;
+  width: 5px;
+  height: 5px;
   color: rgba(0, 102, 204, 0.7);
   background: currentColor;
   animation: float-up-left 24s linear infinite;
@@ -419,7 +535,10 @@
 }
 
 .particle:nth-child(28) {
-  left: 28%; top: 8%; width: 4px; height: 4px;
+  left: 28%;
+  top: 8%;
+  width: 4px;
+  height: 4px;
   color: rgba(245, 130, 32, 0.5);
   background: currentColor;
   animation: float-up-wave 18s linear infinite;
@@ -427,7 +546,10 @@
 }
 
 .particle:nth-child(29) {
-  left: 60%; top: 5%; width: 5px; height: 5px;
+  left: 60%;
+  top: 5%;
+  width: 5px;
+  height: 5px;
   color: rgba(0, 102, 204, 0.6);
   background: currentColor;
   animation: float-up-straight 20s linear infinite;
@@ -435,7 +557,10 @@
 }
 
 .particle:nth-child(30) {
-  left: 95%; top: 20%; width: 3px; height: 3px;
+  left: 95%;
+  top: 20%;
+  width: 3px;
+  height: 3px;
   color: rgba(245, 130, 32, 0.7);
   background: currentColor;
   animation: float-up-zigzag 23s linear infinite;
@@ -443,7 +568,10 @@
 }
 
 .particle:nth-child(31) {
-  left: 68%; top: 95%; width: 6px; height: 6px;
+  left: 68%;
+  top: 95%;
+  width: 6px;
+  height: 6px;
   color: rgba(245, 130, 32, 0.6);
   background: currentColor;
   animation: float-up-zigzag 22s linear infinite;
@@ -451,7 +579,10 @@
 }
 
 .particle:nth-child(32) {
-  left: 75%; top: 98%; width: 5px; height: 5px;
+  left: 75%;
+  top: 98%;
+  width: 5px;
+  height: 5px;
   color: #f58220b3;
   background: currentColor;
   animation: float-up-right 19s linear infinite;
@@ -459,7 +590,10 @@
 }
 
 .particle:nth-child(33) {
-  left: 88%; top: 90%; width: 3px; height: 3px;
+  left: 88%;
+  top: 90%;
+  width: 3px;
+  height: 3px;
   color: rgba(0, 102, 204, 0.6);
   background: currentColor;
   animation: float-up-left 21s linear infinite;
@@ -475,16 +609,19 @@
   transform: translate(-50%, -50%);
   width: 250%;
   height: 250%;
-  background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
   border-radius: 50%;
   animation: pulse 4s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.2;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.3);
     opacity: 0.5;
@@ -505,7 +642,7 @@
   .particle:nth-child(n+13) {
     display: none;
   }
-  
+
   .particle {
     width: 3px !important;
     height: 3px !important;
@@ -535,7 +672,7 @@
   transform: translate(-50%, -50%);
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -545,22 +682,22 @@
   z-index: 10;
   width: 100%;
   max-width: 420px;
-  
+
   /* Modern glassmorphism */
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
-  
+
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
-  
+
   padding: 3rem 2.5rem;
-  
-  box-shadow: 
+
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  
+
   animation: card-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -569,6 +706,7 @@
     opacity: 0;
     transform: translateY(40px) scale(0.9);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -592,7 +730,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
   margin: 0 auto 1.5rem;
-  box-shadow: 
+  box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
@@ -600,7 +738,7 @@
 
 .brand-logo:hover {
   transform: translateY(-4px) scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -642,9 +780,19 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-8px); }
-  75% { transform: translateX(8px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-8px);
+  }
+
+  75% {
+    transform: translateX(8px);
+  }
 }
 
 .error-icon {
@@ -688,19 +836,19 @@
 .input-field {
   width: 100%;
   padding: 1rem 1rem 1rem 3rem;
-  
+
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
-  
+
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  
+
   font-size: 0.9375rem;
   color: #ffffff;
   font-weight: 400;
-  
+
   transition: all 0.3s ease;
-  
+
   outline: none;
 }
 
@@ -711,7 +859,7 @@
 .input-field:focus {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(232, 116, 59, 0.6);
-  box-shadow: 
+  box-shadow:
     0 0 0 3px rgba(232, 116, 59, 0.15),
     0 4px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
@@ -732,7 +880,32 @@
   transition: color 0.3s ease;
 }
 
-.input-field:focus ~ .input-icon {
+/* Campo password: padding derecho para el ojito */
+.input-group:has(#password) .input-field {
+  padding-right: 3rem;
+}
+
+/* Ojito toggle contraseña */
+button.input-icon.toggle-password {
+  left: auto;
+  right: 1rem;
+  pointer-events: all;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+button.input-icon.toggle-password:hover {
+  opacity: 1;
+  color: #f58220;
+}
+
+.input-field:focus~.input-icon {
   color: #e8743b;
 }
 
@@ -741,25 +914,25 @@
   width: 100%;
   padding: 1.125rem 1.5rem;
   margin-top: 0.5rem;
-  
+
   background: linear-gradient(135deg, #e8743b 0%, #d85a28 100%);
-  
+
   border: none;
   border-radius: 12px;
-  
+
   font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
   letter-spacing: 0.3px;
-  
+
   cursor: pointer;
-  
-  box-shadow: 
+
+  box-shadow:
     0 8px 24px rgba(232, 116, 59, 0.35),
     0 4px 8px rgba(0, 0, 0, 0.2);
-  
+
   transition: all 0.3s ease;
-  
+
   position: relative;
   overflow: hidden;
 }
@@ -781,7 +954,7 @@
 
 .btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(232, 116, 59, 0.45),
     0 6px 12px rgba(0, 0, 0, 0.3);
   background: linear-gradient(135deg, #f0814a 0%, #e8743b 100%);
@@ -814,7 +987,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== FOOTER ===== */
@@ -875,6 +1050,7 @@
 
 /* ===== ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -889,7 +1065,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0; /* ya tiene gap en .input-group */
+  margin-bottom: 0;
+  /* ya tiene gap en .input-group */
 }
 
 /* Link de recuperación */

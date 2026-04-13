@@ -37,16 +37,8 @@
       <div class="input-group">
         <label class="input-label">Email</label>
         <div class="input-container">
-          <input
-            id="email"
-            type="email"
-            [(ngModel)]="email"
-            name="email"
-            class="input-field"
-            placeholder="tu@email.com"
-            [disabled]="isLoading"
-            autocomplete="email"
-            required>
+          <input id="email" type="email" [(ngModel)]="email" name="email" class="input-field" placeholder="tu@email.com"
+            [disabled]="isLoading" autocomplete="email" required>
           <div class="input-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="4" width="20" height="16" rx="2"></rect>
@@ -61,30 +53,35 @@
         <div class="password-label-row">
           <label class="input-label">Contraseña</label>
           <!-- 🔑 Link de recuperación -->
-          <button
-            type="button"
-            class="forgot-link"
-            (click)="openForgotPassword()">
+          <button type="button" class="forgot-link" (click)="openForgotPassword()">
             ¿Olvidaste tu contraseña?
           </button>
         </div>
         <div class="input-container">
-          <input
-            id="password"
-            type="password"
-            [(ngModel)]="password"
-            name="password"
-            class="input-field"
-            placeholder="••••••••"
-            [disabled]="isLoading"
-            autocomplete="current-password"
-            required>
+          <input id="password" [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password"
+            class="input-field" placeholder="••••••••" [disabled]="isLoading" autocomplete="current-password" required>
+          <!-- Candado (izquierda) -->
           <div class="input-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
+          <!-- Ojito toggle (derecha) -->
+          <button type="button" class="input-icon toggle-password" (click)="togglePassword()"
+            [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -114,18 +111,9 @@
       <div class="input-group">
         <label class="input-label text-center">Código de verificación</label>
         <div class="input-container code-container">
-          <input
-            id="mfaCode"
-            type="text"
-            [(ngModel)]="mfaCode"
-            name="mfaCode"
-            class="input-field code-input text-center tracking-widest text-xl font-mono"
-            placeholder="000000"
-            maxlength="6"
-            pattern="\d{6}"
-            [disabled]="isLoading"
-            autocomplete="one-time-code"
-            required>
+          <input id="mfaCode" type="text" [(ngModel)]="mfaCode" name="mfaCode"
+            class="input-field code-input text-center tracking-widest text-xl font-mono" placeholder="000000"
+            maxlength="6" pattern="\d{6}" [disabled]="isLoading" autocomplete="one-time-code" required>
         </div>
       </div>
 
@@ -186,14 +174,10 @@
   </div>
 </div>
 
-  <!-- 🔑 Forgot Password Modal -->
-  <app-forgot-password-modal
-    *ngIf="showForgotPassword"
-    (closeModal)="closeForgotPassword()">
-  </app-forgot-password-modal>
+<!-- 🔑 Forgot Password Modal -->
+<app-forgot-password-modal *ngIf="showForgotPassword" (closeModal)="closeForgotPassword()">
+</app-forgot-password-modal>
 
-  <!-- 🛡️ Force MFA Setup Modal -->
-  <app-mfa-settings-modal
-    *ngIf="showForceMfaModal"
-    (closeModal)="closeForceMfaModal()">
-  </app-mfa-settings-modal>
+<!-- 🛡️ Force MFA Setup Modal -->
+<app-mfa-settings-modal *ngIf="showForceMfaModal" (closeModal)="closeForceMfaModal()">
+</app-mfa-settings-modal>
