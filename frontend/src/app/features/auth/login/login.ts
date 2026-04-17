@@ -18,15 +18,15 @@ import { MfaSettingsModal } from '../../../shared/components/mfa-settings/mfa-se
   styleUrls: ['./login.css']
 })
 export class Login implements OnInit {
-  email       = '';
-  password    = '';
-  isLoading   = false;
+  email = '';
+  password = '';
+  isLoading = false;
   errorMessage = '';
-  returnUrl   = '/categorization';
+  returnUrl = '/categorization';
 
   // MFA Form (Verify)
-  showMfaStep   = false;
-  mfaCode       = '';
+  showMfaStep = false;
+  mfaCode = '';
   resolver: MultiFactorResolver | null = null;
 
   // Force MFA Modal (Enrollment)
@@ -35,12 +35,19 @@ export class Login implements OnInit {
   // Modal de recuperación
   showForgotPassword = false;
 
+  // Toggle visibilidad contraseña
+  showPassword = false;
+
+  togglePassword(): void {
+    this.showPassword = !this.showPassword;
+  }
+
   constructor(
     private authService: AuthService,
     private sessionService: SessionService,
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/categorization';
@@ -56,7 +63,7 @@ export class Login implements OnInit {
       return;
     }
 
-    this.isLoading    = true;
+    this.isLoading = true;
     this.errorMessage = '';
 
     this.authService.login(this.email, this.password).subscribe({
@@ -122,7 +129,7 @@ export class Login implements OnInit {
   }
 
   quickLogin(email: string): void {
-    this.email    = email;
+    this.email = email;
     this.password = 'demo';
     this.onSubmit();
   }
@@ -137,10 +144,10 @@ export class Login implements OnInit {
 
   async closeForceMfaModal(): Promise<void> {
     this.showForceMfaModal = false;
-    
+
     // Verificamos si completó el proceso (se actualiza el cache)
     const currentUser = this.authService.getCurrentUser();
-    
+
     if (currentUser?.mfaEnabled) {
       console.log('✅ [LOGIN] Enrolamiento MFA forzado completado. Redirigiendo...');
       this.router.navigate([this.returnUrl]);

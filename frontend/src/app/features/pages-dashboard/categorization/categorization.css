@@ -152,6 +152,23 @@
 }
 
 /* ===== EXPORT DROPDOWN ===== */
+/* Variante azul para el botón de descarga */
+.toolbar-btn--download {
+  background: linear-gradient(135deg, rgba(14, 59, 131, 0.1) 0%, rgba(14, 59, 131, 0.06) 100%);
+  border-color: rgba(14, 59, 131, 0.2);
+  color: #0e3b83;
+}
+
+.toolbar-btn--download:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(14, 59, 131, 0.18) 0%, rgba(14, 59, 131, 0.12) 100%);
+  border-color: rgba(14, 59, 131, 0.35);
+  color: #0d3472;
+}
+
+.toolbar-btn--download svg {
+  color: #0e3b83;
+}
+
 .export-menu-container {
   position: relative;
 }

@@ -253,8 +253,12 @@ async def send_password_reset(request: PasswordResetRequest):
             logger.exception("❌ [RESET] get_user_by_email failed with full details:")
             raise HTTPException(status_code=500, detail="Error verificando usuario")
 
+        # ✅ FIX: usar env var en lugar de request.frontend_url para evitar UNAUTHORIZED_DOMAIN.
+        # El dominio configurado aquí debe estar en Firebase Console →
+        # Authentication → Settings → Authorized domains.
+        _frontend_base = os.getenv("FRONTEND_URL", "https://netoinsight.soyneto.com")
         action_code_settings = firebase_auth.ActionCodeSettings(
-            url=f"{request.frontend_url}/reset-password", handle_code_in_app=False
+            url=f"{_frontend_base}/reset-password", handle_code_in_app=False
         )
 
         try:

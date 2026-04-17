@@ -115,6 +115,8 @@ export class CreateTenantModal implements OnInit {
   magicLink = '';
   linkCopied = false;
 
+  canDownloadClosedMonth = false;
+
   dashboardOptions = [
     { id: 'categorization', label: 'Categorización', checked: true },
     { id: 'skus', label: 'SKUs', checked: true },
@@ -251,6 +253,7 @@ export class CreateTenantModal implements OnInit {
         features: {
           dashboards: this.getSelectedDashboards(),
           exports: true,
+          canDownloadClosedMonth: this.canDownloadClosedMonth,
           api: plan === TenantPlan.ENTERPRISE,
           customReports: plan === TenantPlan.ENTERPRISE
         },

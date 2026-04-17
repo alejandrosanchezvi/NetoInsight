@@ -9,6 +9,7 @@
 //   ✅ Diagnóstico claro de qué hace el clear vs qué hace el apply
 
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
+import { downloadExcel } from '../utils/csv-export.util';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { environment } from '../../../environments/environment';
@@ -22,6 +23,13 @@ export interface TableauEmbedConfig {
     containerSelector: string;
     filterFieldId?: string;
     netoInternalId?: string;
+}
+
+// Configuración de hoja para descarga de mes cerrado
+export interface ClosedMonthSheet {
+    wsName: string;  // nombre exacto de la hoja en Tableau
+    tabName: string;      // nombre de la pestaña en el Excel
+    formatAsPercent?: boolean; // convertir decimales a porcentaje
 }
 
 interface JwtCache {
@@ -41,7 +49,7 @@ const LOAD_TIMEOUT_MS = 20_000;
 const NETO_INTERNAL_ID = 'NETO-INTERNAL';
 const FILTER_FIELD_ID = 'Proveedor Id';   // campo ID numérico
 const FILTER_FIELD_NAME = 'Proveedor';      // campo nombre — también persiste en la vista publicada
-const FILTER_FIELD_NAME_DEFAULT = 'BIMBO, S.A. DE C.V.';      // campo nombre — también persiste en la vista publicada
+const FILTER_FIELD_NAME_DEFAULT = 'GRUPO ALPHALAB DE MEXICO HOME AND BEAUTY CARE SA DE CV';
 
 // ─────────────────────────────────────────────────────────────
 // Helpers de diagnóstico
@@ -190,6 +198,41 @@ export class TableauDashboardService {
     // ──────────────────────────────────────────────
     // JWT con cache
     // ──────────────────────────────────────────────
+
+    /**
+     * Solicita siempre un JWT nuevo al backend SIN tocar la caché.
+     * Necesario para el viz oculto de descarga — el JWT de Tableau Connected Apps
+     * tiene un claim `jti` que lo hace de un solo uso: el viz principal ya lo consumió,
+     * reutilizarlo en un segundo viz hace que Tableau lo rechace silenciosamente
+     * (sin disparar vizloadError, solo timeout).
+     */
+    private async getJwtFresh(dashboardKey: string): Promise<{ jwt: string; embedUrl: string }> {
+        console.log(`[Tableau:${dashboardKey}] 🔑 Solicitando JWT fresco para viz oculto (sin cache)...`);
+
+        let firebaseToken: string | null = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            firebaseToken = await this.authService.getFirebaseToken();
+            if (firebaseToken) break;
+            console.warn(`[Tableau:${dashboardKey}] ⚠️ Sin token Firebase (intento ${attempt}/3) — esperando 500ms...`);
+            await new Promise(r => setTimeout(r, 500));
+        }
+        if (!firebaseToken) throw new Error('No Firebase token');
+
+        const response = await this.http.get<any>(
+            `${environment.apiUrl}/api/tableau/embed-url`,
+            {
+                params: { dashboard: dashboardKey },
+                headers: { 'Authorization': `Bearer ${firebaseToken}` },
+            }
+        ).toPromise();
+
+        if (!response?.jwt || !response?.embedUrl) throw new Error('JWT o URL no recibido');
+
+        // ⚠️ NO actualizamos el cache — este JWT es exclusivo del viz oculto
+        // El viz principal conserva su propio token en cache intacto
+        console.log(`[Tableau:${dashboardKey}] ✅ JWT fresco obtenido para viz oculto`);
+        return { jwt: response.jwt, embedUrl: response.embedUrl };
+    }
 
     private isJwtCached(dashboardKey: string): boolean {
         const c = this.jwtCache.get(dashboardKey);
@@ -478,6 +521,258 @@ export class TableauDashboardService {
         if (container) {
             this.renderer.setStyle(container, 'width', '100%');
             this.renderer.setStyle(container, 'max-width', '100%');
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // Descarga de mes cerrado (Opción C — viz oculto)
+    // ──────────────────────────────────────────────
+
+    /**
+     * Descarga los datos del mes anterior para el proveedor dado.
+     * Crea un tableau-viz oculto con filtros pre-aplicados,
+     * extrae los datos de la hoja indicada y genera un .xlsx.
+     *
+     * @param dashboardKey  clave del dashboard (ej. 'categorization')
+     * @param sheetName     nombre exacto de la hoja en Tableau (ej. 'Tabla-arts')
+     * @param providerId    proveedorIdInterno del usuario
+     * @param config        config opcional de filtro de proveedor
+     * @param onProgress    callback para actualizar el estado al componente
+     */
+    async downloadClosedMonthData(
+        dashboardKey: string,
+        sheets: ClosedMonthSheet[],
+        providerId: string,
+        config: TableauEmbedConfig,
+        onProgress?: (step: string) => void
+    ): Promise<{ success: boolean; error?: string }> {
+        const tag = `[ClosedMonth:${dashboardKey}]`;
+        const { firstDay, lastDay, label } = this.getLastMonthRange();
+
+        console.group(`${tag} ▶ downloadClosedMonthData — mes: ${label} | proveedor: ${providerId}`);
+
+        // Contenedor temporal invisible — se agrega al body y se elimina al final
+        const tempContainer = document.createElement('div');
+        // ⚠️ El viz DEBE estar dentro del viewport para que Tableau dispare firstinteractive.
+        // Tableau usa IntersectionObserver internamente — si el elemento está fuera de pantalla
+        // (top:-9999px) el observer nunca dispara y el viz se queda congelado.
+        // visibility:hidden mantiene el elemento en layout y en viewport sin mostrarlo al usuario.
+        tempContainer.style.cssText = [
+            'position:fixed',
+            'top:0',
+            'left:0',
+            'width:1280px',
+            'height:800px',
+            'visibility:hidden',    // en layout, en viewport, pero invisible
+            'pointer-events:none',  // no interactuable
+            'z-index:-9999',        // debajo de todo
+            'overflow:hidden',
+        ].join(';');
+        document.body.appendChild(tempContainer);
+
+        let tempViz: any = null;
+
+        try {
+            // ── 1. JWT fresco (no reutilizar el del viz principal — jti es single-use) ─
+            onProgress?.('Obteniendo acceso seguro...');
+            const { jwt, embedUrl } = await this.getJwtFresh(dashboardKey);
+            console.log(`${tag} 🔑 JWT listo`);
+
+            // ── 2. Crear viz oculto con filtros pre-aplicados ────────
+            onProgress?.('Iniciando conexión con los datos...');
+            console.log(`${tag} 🧩 Creando viz oculto — rango: ${firstDay.toISOString().slice(0, 10)} → ${lastDay.toISOString().slice(0, 10)}`);
+
+            tempViz = document.createElement('tableau-viz');
+            tempViz.setAttribute('src', embedUrl);
+            tempViz.setAttribute('token', jwt);
+            tempViz.setAttribute('width', '1280');
+            tempViz.setAttribute('height', '800');
+            tempViz.setAttribute('toolbar', 'hidden');
+            tempViz.setAttribute('hide-tabs', 'true');
+
+            // Filtro de proveedor (categórico) — pre-inicialización
+            const isNetoAdmin = providerId === (config.netoInternalId ?? NETO_INTERNAL_ID);
+            if (!isNetoAdmin) {
+                const filterProveedor = document.createElement('viz-filter');
+                filterProveedor.setAttribute('field', config.filterFieldId ?? FILTER_FIELD_ID);
+                filterProveedor.setAttribute('value', providerId);
+                tempViz.appendChild(filterProveedor);
+                console.log(`${tag} 🔗 Filtro proveedor pre-aplicado: ${providerId}`);
+            }
+
+            // Filtro de fecha (rango) — se aplicará después de firstinteractive
+            // Los range filters de fecha no se pueden hacer con viz-filter en pre-init
+            // los aplicamos vía applyRangeFilterAsync post-firstinteractive
+
+            tempContainer.appendChild(tempViz);
+
+            // ── 3. Esperar firstinteractive del viz oculto ───────────
+            onProgress?.('Cargando datos del mes anterior...');
+            const vizReady = await this.waitForVizReady(tempViz, dashboardKey);
+            if (!vizReady) {
+                throw new Error('timeout_hidden_viz');
+            }
+            console.log(`${tag} 🎯 viz oculto listo`);
+
+            // ── 4. Aplicar filtro de proveedor (para asegurar aislamiento) ─
+            onProgress?.('Aplicando filtros...');
+            await this.applyProviderFilter(tempViz, providerId, config);
+
+            // ── 5. Aplicar filtro de rango de fecha ──────────────────
+            console.log(`${tag} 📅 Aplicando filtro de fecha: ${label}`);
+            await this.applyDateRangeFilter(tempViz, firstDay, lastDay, dashboardKey);
+
+            // ── 6. Estabilizar y extraer datos ───────────────────────
+            onProgress?.('Extrayendo datos...');
+            await new Promise(r => setTimeout(r, 2000)); // esperar que Tableau procese el filtro de fecha
+
+            const workbook = await tempViz.workbook;
+            const activeSheet = await workbook.activeSheet;
+
+            // ── 6b. Extraer datos de cada hoja configurada ──────────
+            // ⚠️ allWs para no colisionar con el parámetro `sheets: ClosedMonthSheet[]`
+            const allWs: any[] = activeSheet.sheetType === 'dashboard'
+                ? activeSheet.worksheets
+                : [activeSheet];
+            const available = allWs.map((ws: any) => ws.name);
+            console.log(`${tag} 📋 Hojas disponibles en viz oculto:`, available);
+
+            const excelSheets: any[] = [];
+
+            for (const sheetCfg of sheets) {
+                const targetWs = allWs.find((ws: any) => ws.name === sheetCfg.wsName);
+                if (!targetWs) {
+                    console.warn(`${tag} ⚠️ Hoja "${sheetCfg.wsName}" no encontrada. Disponibles: ${available.join(', ')}`);
+                    continue;
+                }
+                console.log(`${tag} 📊 Extrayendo datos de "${sheetCfg.wsName}"...`);
+                const data = await targetWs.getSummaryDataAsync({ ignoreSelection: true });
+                console.log(`${tag} ✅ "${sheetCfg.wsName}" — ${data.data?.length ?? 0} filas`);
+                excelSheets.push({
+                    sheetName: sheetCfg.tabName,
+                    tableauData: data,
+                    formatAsPercent: sheetCfg.formatAsPercent ?? false,
+                });
+            }
+
+            if (excelSheets.length === 0) {
+                throw new Error('no_sheets_found');
+            }
+
+            // ── 7. Generar Excel y descargar ─────────────────────────
+            onProgress?.('Generando archivo...');
+            const filename = `${dashboardKey}_${label.replace(' ', '_')}.xlsx`;
+            downloadExcel(excelSheets, filename);
+
+            console.log(`${tag} ⬇️ Descarga iniciada: ${filename}`);
+            console.groupEnd();
+            return { success: true };
+
+        } catch (err: any) {
+            const errMsg = err?.message ?? String(err);
+            console.error(`${tag} 💥 Error:`, errMsg);
+            console.groupEnd();
+            return { success: false, error: errMsg };
+
+        } finally {
+            // ── 8. Limpiar viz oculto siempre ────────────────────────
+            if (tempViz) {
+                try { tempViz.dispose?.(); } catch { }
+            }
+            if (tempContainer.parentNode) {
+                document.body.removeChild(tempContainer);
+            }
+            console.log(`${tag} 🗑 Viz oculto eliminado`);
+        }
+    }
+
+    /** Calcula el primer y último día del mes anterior */
+    getLastMonthRange(): { firstDay: Date; lastDay: Date; label: string; monthName: string; year: number } {
+        const now = new Date();
+        const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+        const month = now.getMonth() === 0 ? 11 : now.getMonth() - 1; // 0-indexed
+
+        const firstDay = new Date(year, month, 1, 0, 0, 0, 0);
+        const lastDay = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+        const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const monthName = MESES[month];
+        const label = `${monthName} ${year}`;
+
+        const fmt = (d: Date) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        console.log(`📅 [ClosedMonth] Rango: ${fmt(firstDay)}  →  ${fmt(lastDay)}  (${label})`);
+        return { firstDay, lastDay, label, monthName, year };
+    }
+
+    /** Espera el firstinteractive del viz oculto con timeout de 30s */
+    private waitForVizReady(viz: any, dashboardKey: string): Promise<boolean> {
+        const tag = `[ClosedMonth:${dashboardKey}]`;
+        const TIMEOUT_MS = 30_000;
+
+        return new Promise((resolve) => {
+            let settled = false;
+
+            const timer = setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                console.warn(`${tag} ⏱ Timeout viz oculto (${TIMEOUT_MS / 1000}s)`);
+                resolve(false);
+            }, TIMEOUT_MS);
+
+            viz.addEventListener('firstinteractive', () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(true);
+            });
+
+            viz.addEventListener('vizloadError', (event: any) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                const code = event.detail?.errorCode;
+                console.error(`${tag} ❌ vizloadError en viz oculto — código: ${code}`);
+                if (code === 16) this.invalidateJwtCache(dashboardKey);
+                resolve(false);
+            });
+        });
+    }
+
+    /** Aplica el filtro de rango de fecha en todas las worksheets */
+    private async applyDateRangeFilter(
+        vizElement: any,
+        firstDay: Date,
+        lastDay: Date,
+        dashboardKey: string
+    ): Promise<void> {
+        const tag = `[ClosedMonth:${dashboardKey}]`;
+        const FIELD = 'Fecha';
+
+        try {
+            const workbook = await vizElement.workbook;
+            const activeSheet = await workbook.activeSheet;
+            const sheets: any[] = activeSheet.sheetType === 'dashboard'
+                ? activeSheet.worksheets
+                : [activeSheet];
+
+            let applied = false;
+            for (const ws of sheets) {
+                try {
+                    await ws.applyRangeFilterAsync(FIELD, { min: firstDay, max: lastDay });
+                    console.log(`${tag} 📅 Filtro de fecha aplicado en "${ws.name}"`);
+                    applied = true;
+                    break; // Tableau propaga el filtro al resto del dashboard
+                } catch (e: any) {
+                    console.warn(`${tag} ⚠️ Filtro fecha no aplicó en "${ws.name}":`, e?.message ?? e);
+                }
+            }
+
+            if (!applied) {
+                console.warn(`${tag} ⚠️ Ninguna hoja aceptó el filtro de fecha — los datos pueden incluir todos los periodos`);
+            }
+        } catch (e) {
+            console.error(`${tag} 💥 Error en applyDateRangeFilter:`, e);
         }
     }
 

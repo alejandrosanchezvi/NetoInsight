@@ -205,6 +205,22 @@
         </div>
       </div>
 
+
+      <!-- ══ PERMISOS ESPECIALES ══ -->
+      <div class="form-section" *ngIf="currentStep === 3">
+        <h3 class="section-title">Permisos Especiales</h3>
+        <div class="feature-toggle-row">
+          <div class="feature-toggle-info">
+            <span class="feature-toggle-label">Descarga de mes cerrado</span>
+            <span class="feature-toggle-hint">Permite al proveedor descargar sus datos del mes anterior en Excel</span>
+          </div>
+          <button type="button" class="toggle-switch" [class.toggle-switch--on]="canDownloadClosedMonth"
+            (click)="canDownloadClosedMonth = !canDownloadClosedMonth">
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+      </div>
+
       <!-- ══ PASO 4: Acceso ══ -->
       <div class="form-section" *ngIf="currentStep === 4">
         <h3 class="section-title">Acceso del Administrador</h3>

@@ -1,0 +1,3077 @@
+{
+  "documents": [
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-alceda",
+      "fields": {
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000082'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@alceda.com"
+        },
+        "name": {
+          "stringValue": "ALCEDA"
+        },
+        "tableauGroup": {
+          "stringValue": "ALCEDA_Viewers"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000082"
+        },
+        "tenantId": {
+          "stringValue": "tenant-alceda"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:18.241Z"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_alceda"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "ALCEDA SA DE CV"
+        }
+      },
+      "createTime": "2026-03-04T23:35:18.264444Z",
+      "updateTime": "2026-03-05T16:20:36.880161Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-alphalab",
+      "fields": {
+        "plan": {
+          "stringValue": "starter"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_alphalab"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:34.875Z"
+        },
+        "legalName": {
+          "stringValue": "GRUPO ALPHALAB DE MEXICO HOME AND BEAUTY CARE SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "tableauGroup": {
+          "stringValue": "ALPHALAB_Viewers"
+        },
+        "name": {
+          "stringValue": "ALPHALAB"
+        },
+        "adminEmail": {
+          "stringValue": "admin@alphalab.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000819'"
+        },
+        "updatedBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "tenantId": {
+          "stringValue": "tenant-alphalab"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000819"
+        },
+        "updatedAt": {
+          "timestampValue": "2026-03-05T22:41:32.402Z"
+        }
+      },
+      "createTime": "2026-03-04T23:35:34.894021Z",
+      "updateTime": "2026-03-05T22:41:32.437776Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-alpura",
+      "fields": {
+        "tenantId": {
+          "stringValue": "tenant-alpura"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000093"
+        },
+        "tableauGroup": {
+          "stringValue": "ALPURA_Viewers"
+        },
+        "name": {
+          "stringValue": "ALPURA"
+        },
+        "adminEmail": {
+          "stringValue": "admin@alpura.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000093'"
+        },
+        "legalName": {
+          "stringValue": "GANADEROS PRODUCTORES DE LECHE PURA SAPI DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_alpura"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:17.059Z"
+        }
+      },
+      "createTime": "2026-03-04T23:35:17.067704Z",
+      "updateTime": "2026-03-05T16:21:05.460976Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-barcel",
+      "fields": {
+        "bigQueryDataset": {
+          "stringValue": "proveedores_barcel"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:28.612Z"
+        },
+        "legalName": {
+          "stringValue": "BARCEL SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "adminEmail": {
+          "stringValue": "admin@barcel.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "tableauGroup": {
+          "stringValue": "BARCEL_Viewers"
+        },
+        "name": {
+          "stringValue": "BARCEL"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000006'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000006"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-barcel"
+        }
+      },
+      "createTime": "2026-03-04T23:34:28.631102Z",
+      "updateTime": "2026-03-05T16:21:33.872684Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-benefits",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "ALIMENTOS BENEFITS SA DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:17.714Z"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_benefits"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000825"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-benefits"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000825'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@benefits.com"
+        },
+        "tableauGroup": {
+          "stringValue": "BENEFITS_Viewers"
+        },
+        "name": {
+          "stringValue": "BENEFITS"
+        }
+      },
+      "createTime": "2026-03-04T23:35:17.727497Z",
+      "updateTime": "2026-03-05T16:21:40.509176Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-bimbo",
+      "fields": {
+        "updatedAt": {
+          "timestampValue": "2026-04-07T20:50:32.713Z"
+        },
+        "tenantId": {
+          "stringValue": "tenant-bimbo"
+        },
+        "usedLicenses": {
+          "integerValue": "1"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000007"
+        },
+        "maxLicenses": {
+          "integerValue": "3"
+        },
+        "updatedBy": {
+          "stringValue": "7GPffZMLP9bRBkZMmOg3tPQaxn73"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000007'"
+        },
+        "tableauGroup": {
+          "stringValue": "BIMBO_Viewers"
+        },
+        "name": {
+          "stringValue": "BIMBO"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "margarita.montes@grupobimbo.com"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "BIMBO SA DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:28.458Z"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_bimbo"
+        }
+      },
+      "createTime": "2026-03-04T23:34:28.478509Z",
+      "updateTime": "2026-04-16T16:44:35.730451Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-bq-pharma",
+      "fields": {
+        "tenantId": {
+          "stringValue": "tenant-bq-pharma"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000942"
+        },
+        "name": {
+          "stringValue": "BQ PHARMA"
+        },
+        "tableauGroup": {
+          "stringValue": "BQ_PHARMA_Viewers"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@bqpharma.com"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000942'"
+        },
+        "legalName": {
+          "stringValue": "BQ PHARMA SC DE RL DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_bq_pharma"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:27.377Z"
+        }
+      },
+      "createTime": "2026-03-04T23:34:27.395633Z",
+      "updateTime": "2026-03-05T16:21:52.941527Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-campo-fresco",
+      "fields": {
+        "plan": {
+          "stringValue": "starter"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_campo_fresco"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:18.418Z"
+        },
+        "legalName": {
+          "stringValue": "INDUSTRIAS CAMPO FRESCO SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "name": {
+          "stringValue": "CAMPO FRESCO"
+        },
+        "tableauGroup": {
+          "stringValue": "CAMPO_FRESCO_Viewers"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@campofresco.com"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000696'"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-campo-fresco"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000696"
+        }
+      },
+      "createTime": "2026-03-04T23:35:18.439487Z",
+      "updateTime": "2026-03-05T16:22:00.011834Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-colgate",
+      "fields": {
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:29.623Z"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_colgate"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "COLGATE PALMOLIVE SA DE CV"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000016'"
+        },
+        "tableauGroup": {
+          "stringValue": "COLGATE_Viewers"
+        },
+        "name": {
+          "stringValue": "COLGATE"
+        },
+        "adminEmail": {
+          "stringValue": "admin@colgate.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "tenantId": {
+          "stringValue": "tenant-colgate"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000016"
+        }
+      },
+      "createTime": "2026-03-04T23:34:29.643454Z",
+      "updateTime": "2026-03-05T16:22:05.191552Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-danone",
+      "fields": {
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:34.562Z"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_danone"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "DANONE DE MEXICO SA DE CV"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000023'"
+        },
+        "tableauGroup": {
+          "stringValue": "DANONE_Viewers"
+        },
+        "name": {
+          "stringValue": "DANONE"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@danone.com"
+        },
+        "tenantId": {
+          "stringValue": "tenant-danone"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000023"
+        }
+      },
+      "createTime": "2026-03-04T23:35:34.570055Z",
+      "updateTime": "2026-03-05T16:22:10.965063Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-el-calvario",
+      "fields": {
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:17.865Z"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_el_calvario"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "ACEITES Y PROTEINAS EL CALVARIO S DE RL DE CV"
+        },
+        "updatedBy": {
+          "stringValue": "7GPffZMLP9bRBkZMmOg3tPQaxn73"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '2000171'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "alejandro.sanchezvi@tiendasneto.com"
+        },
+        "tableauGroup": {
+          "stringValue": "EL_CALVARIO_Viewers"
+        },
+        "name": {
+          "stringValue": "EL CALVARIO"
+        },
+        "updatedAt": {
+          "timestampValue": "2026-04-15T18:41:23.471Z"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "2000171"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-el-calvario"
+        }
+      },
+      "createTime": "2026-03-04T23:35:17.925059Z",
+      "updateTime": "2026-04-15T18:41:23.494420Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-ersa-pack",
+      "fields": {
+        "name": {
+          "stringValue": "ERSA PACK"
+        },
+        "tableauGroup": {
+          "stringValue": "ERSA_PACK_Viewers"
+        },
+        "adminEmail": {
+          "stringValue": "admin@ersapack.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '2000341'"
+        },
+        "tenantId": {
+          "stringValue": "tenant-ersa-pack"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "2000341"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_ersa_pack"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:17.199Z"
+        },
+        "legalName": {
+          "stringValue": "ERSA PACK SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        }
+      },
+      "createTime": "2026-03-04T23:35:17.221704Z",
+      "updateTime": "2026-03-05T16:22:24.786239Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-essity",
+      "fields": {
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_essity"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:27.061Z"
+        },
+        "legalName": {
+          "stringValue": "ESSITY HIGIENE Y SALUD MEXICO SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@essity.com"
+        },
+        "tableauGroup": {
+          "stringValue": "ESSITY_Viewers"
+        },
+        "name": {
+          "stringValue": "ESSITY"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000658'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000658"
+        },
+        "tenantId": {
+          "stringValue": "tenant-essity"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        }
+      },
+      "createTime": "2026-03-04T23:34:27.086875Z",
+      "updateTime": "2026-03-05T16:22:32.282712Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-genoma-lab",
+      "fields": {
+        "legalName": {
+          "stringValue": "GENOMA LAB INTERNACIONAL SAB DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_genoma_lab"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:28.904Z"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000916"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-genoma-lab"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@genomalab.com"
+        },
+        "name": {
+          "stringValue": "GENOMA LAB"
+        },
+        "tableauGroup": {
+          "stringValue": "GENOMA_LAB_Viewers"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000916'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        }
+      },
+      "createTime": "2026-03-04T23:34:28.925221Z",
+      "updateTime": "2026-03-05T16:22:40.767483Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-huevo-del-sureste",
+      "fields": {
+        "tableauGroup": {
+          "stringValue": "HUEVO_DEL_SURESTE_Viewers"
+        },
+        "name": {
+          "stringValue": "HUEVO DEL SURESTE"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@huevosureste.com"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000710'"
+        },
+        "tenantId": {
+          "stringValue": "tenant-huevo-del-sureste"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000710"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_huevo_del_sureste"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:18.578Z"
+        },
+        "legalName": {
+          "stringValue": "ABASTECEDORA DE HUEVO DEL SURESTE"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        }
+      },
+      "createTime": "2026-03-04T23:35:18.588260Z",
+      "updateTime": "2026-03-05T16:22:46.216382Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-industrial-aceitera",
+      "fields": {
+        "proveedorIdInterno": {
+          "stringValue": "1000035"
+        },
+        "tenantId": {
+          "stringValue": "tenant-industrial-aceitera"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000035'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "adminEmail": {
+          "stringValue": "admin@aceitera.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "name": {
+          "stringValue": "INDUSTRIAL ACEITERA"
+        },
+        "tableauGroup": {
+          "stringValue": "INDUSTRIAL_ACEITERA_Viewers"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "INDUSTRIAL ACEITERA SA DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:27.680Z"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_industrial_aceitera"
+        },
+        "plan": {
+          "stringValue": "starter"
+        }
+      },
+      "createTime": "2026-03-04T23:34:27.703042Z",
+      "updateTime": "2026-03-05T16:22:52.069904Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-indw-trading",
+      "fields": {
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000966'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@indw.com"
+        },
+        "tableauGroup": {
+          "stringValue": "INDW_TRADING_Viewers"
+        },
+        "name": {
+          "stringValue": "INDW TRADING"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000966"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-indw-trading"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:35.030Z"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_indw_trading"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "INDW TRADING SA DE CV"
+        }
+      },
+      "createTime": "2026-03-04T23:35:35.041399Z",
+      "updateTime": "2026-03-05T16:22:58.673360Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-kellogg",
+      "fields": {
+        "tenantId": {
+          "stringValue": "tenant-kellogg"
+        },
+        "usedLicenses": {
+          "integerValue": "1"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000594"
+        },
+        "updatedAt": {
+          "timestampValue": "2026-04-07T23:16:03.937Z"
+        },
+        "tableauGroup": {
+          "stringValue": "KELLOGG_Viewers"
+        },
+        "name": {
+          "stringValue": "KELLOGG"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "ricardo.salgado@kellanova.com"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "updatedBy": {
+          "stringValue": "7GPffZMLP9bRBkZMmOg3tPQaxn73"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000594'"
+        },
+        "legalName": {
+          "stringValue": "KELLOGG COMPANY MEXICO S DE RL DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_kellogg"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:33.968Z"
+        }
+      },
+      "createTime": "2026-03-04T23:35:33.984968Z",
+      "updateTime": "2026-04-08T00:34:47.670826Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-kimberly-clark",
+      "fields": {
+        "adminEmail": {
+          "stringValue": "admin@kimberlyclark.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "tableauGroup": {
+          "stringValue": "KIMBERLY_CLARK_Viewers"
+        },
+        "name": {
+          "stringValue": "KIMBERLY CLARK"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1001011'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1001011"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-kimberly-clark"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_kimberly_clark"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:35.487Z"
+        },
+        "legalName": {
+          "stringValue": "KIMBERLY CLARK DE MEXICO SAB DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        }
+      },
+      "createTime": "2026-03-04T23:35:35.505947Z",
+      "updateTime": "2026-03-05T16:23:09.373892Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-la-anita",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "LA ANITA SALSAS Y CONDIMENTOS SA DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:35.648Z"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_la_anita"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-la-anita"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1001013"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1001013'"
+        },
+        "tableauGroup": {
+          "stringValue": "LA_ANITA_Viewers"
+        },
+        "name": {
+          "stringValue": "LA ANITA"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@laanita.com"
+        }
+      },
+      "createTime": "2026-03-04T23:35:35.664609Z",
+      "updateTime": "2026-03-05T16:23:15.845233Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-lala",
+      "fields": {
+        "proveedorIdInterno": {
+          "stringValue": "1000017"
+        },
+        "usedLicenses": {
+          "integerValue": "1"
+        },
+        "tenantId": {
+          "stringValue": "tenant-lala"
+        },
+        "billingEmail": {
+          "stringValue": "alejandro.sanchezvi@tiendasnetows.com"
+        },
+        "updatedAt": {
+          "timestampValue": "2026-03-05T16:45:36.103Z"
+        },
+        "adminEmail": {
+          "stringValue": "alejandro.sanchezvi@tiendasnetows.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "name": {
+          "stringValue": "LALA"
+        },
+        "tableauGroup": {
+          "stringValue": "LALA_Viewers"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000017'"
+        },
+        "updatedBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "legalName": {
+          "stringValue": "COMERCIALIZADORA DE LACTEOS Y DERIVADOS, S.A. DE C.V."
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_lala"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T17:08:42.939Z"
+        }
+      },
+      "createTime": "2026-03-04T17:08:42.980667Z",
+      "updateTime": "2026-03-05T16:45:36.137491Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-mayorista-del-golfo",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "COMERCIALIZADORA MAYORISTA DEL GOLFO SA DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:16.905Z"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_mayorista_del_golfo"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000627"
+        },
+        "tenantId": {
+          "stringValue": "tenant-mayorista-del-golfo"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000627'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "adminEmail": {
+          "stringValue": "admin@cmg.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "tableauGroup": {
+          "stringValue": "MAYORISTA_DEL_GOLFO_Viewers"
+        },
+        "name": {
+          "stringValue": "MAYORISTA DEL GOLFO"
+        }
+      },
+      "createTime": "2026-03-04T23:35:16.926924Z",
+      "updateTime": "2026-03-05T16:23:26.218731Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-mexicana-de-arroz",
+      "fields": {
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_mexicana_de_arroz"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:35.313Z"
+        },
+        "legalName": {
+          "stringValue": "PRODUCTORA MEXICANA DE ARROZ SAPI DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "name": {
+          "stringValue": "MEXICANA DE ARROZ"
+        },
+        "tableauGroup": {
+          "stringValue": "MEXICANA_DE_ARROZ_Viewers"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@mexicanadearroz.com"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000884'"
+        },
+        "tenantId": {
+          "stringValue": "tenant-mexicana-de-arroz"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000884"
+        }
+      },
+      "createTime": "2026-03-04T23:35:35.334957Z",
+      "updateTime": "2026-03-05T16:23:32.128678Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-nestle",
+      "fields": {
+        "proveedorIdInterno": {
+          "stringValue": "1000062"
+        },
+        "tenantId": {
+          "stringValue": "tenant-nestle"
+        },
+        "usedLicenses": {
+          "integerValue": "1"
+        },
+        "updatedAt": {
+          "timestampValue": "2026-04-07T22:32:04.698Z"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "karla.lozada@mx.nestle.com"
+        },
+        "name": {
+          "stringValue": "NESTLE"
+        },
+        "tableauGroup": {
+          "stringValue": "NESTLE_Viewers"
+        },
+        "updatedBy": {
+          "stringValue": "7GPffZMLP9bRBkZMmOg3tPQaxn73"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000062'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "legalName": {
+          "stringValue": "MARCAS NESTLE SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_nestle"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:28.001Z"
+        }
+      },
+      "createTime": "2026-03-04T23:34:28.021102Z",
+      "updateTime": "2026-04-16T17:18:16.837024Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-neto",
+      "fields": {
+        "maxLicenses": {
+          "integerValue": "999"
+        },
+        "updatedBy": {
+          "stringValue": "slqE2ntTaRbcIxjo0aw3rHo2l6S2"
+        },
+        "tableauGroup": {
+          "stringValue": "Neto_Admins"
+        },
+        "name": {
+          "stringValue": "Tiendas neto"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "updatedAt": {
+          "timestampValue": "2026-02-18T02:23:25.136Z"
+        },
+        "tenantId": {
+          "stringValue": "tenant-neto"
+        },
+        "usedLicenses": {
+          "integerValue": "14"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "NETO-INTERNAL"
+        },
+        "createdAt": {
+          "timestampValue": "2026-01-29T20:25:36.310Z"
+        },
+        "plan": {
+          "stringValue": "internal"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "stores"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "canDownloadClosedMonth": {
+                "booleanValue": true
+              },
+              "api": {
+                "booleanValue": true
+              },
+              "customReports ": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "legalName": {
+          "stringValue": "Tiendas Neto S.A. de C.V."
+        }
+      },
+      "createTime": "2026-01-29T20:25:44.447096Z",
+      "updateTime": "2026-04-16T16:48:57.910898Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-nitram",
+      "fields": {
+        "legalName": {
+          "stringValue": "INDUSTRIAS NITRAM SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_nitram"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:34.259Z"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000976"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-nitram"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@nitram.com"
+        },
+        "tableauGroup": {
+          "stringValue": "NITRAM_Viewers"
+        },
+        "name": {
+          "stringValue": "NITRAM"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000976'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        }
+      },
+      "createTime": "2026-03-04T23:35:34.279914Z",
+      "updateTime": "2026-03-05T16:23:49.078661Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-nor-ver",
+      "fields": {
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_nor_ver"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:35.162Z"
+        },
+        "legalName": {
+          "stringValue": "EMPACADORA NOR VER"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "tableauGroup": {
+          "stringValue": "NOR_VER_Viewers"
+        },
+        "name": {
+          "stringValue": "NOR VER"
+        },
+        "adminEmail": {
+          "stringValue": "admin@norver.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000936'"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-nor-ver"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000936"
+        }
+      },
+      "createTime": "2026-03-04T23:35:35.178669Z",
+      "updateTime": "2026-03-05T16:23:53.667792Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-pepsico",
+      "fields": {
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000260'"
+        },
+        "name": {
+          "stringValue": "PEPSICO"
+        },
+        "tableauGroup": {
+          "stringValue": "PEPSICO_Viewers"
+        },
+        "adminEmail": {
+          "stringValue": "admin@pepsico.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "tenantId": {
+          "stringValue": "tenant-pepsico"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000260"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:28.761Z"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_pepsico"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "COMERCIALIZADORA PEPSICO MEXICO S DE RL DE CV"
+        }
+      },
+      "createTime": "2026-03-04T23:34:28.780757Z",
+      "updateTime": "2026-03-05T16:23:58.662766Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-potosi",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "FABRICAS DE PAPEL POTOSI SA DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:17.379Z"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_potosi"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000778"
+        },
+        "tenantId": {
+          "stringValue": "tenant-potosi"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000778'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "adminEmail": {
+          "stringValue": "admin@potosi.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "name": {
+          "stringValue": "POTOSI"
+        },
+        "tableauGroup": {
+          "stringValue": "POTOSI_Viewers"
+        }
+      },
+      "createTime": "2026-03-04T23:35:17.392376Z",
+      "updateTime": "2026-03-05T16:24:03.252642Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-ragasa",
+      "fields": {
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000581'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@ragasa.com"
+        },
+        "name": {
+          "stringValue": "RAGASA"
+        },
+        "tableauGroup": {
+          "stringValue": "RAGASA_Viewers"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000581"
+        },
+        "tenantId": {
+          "stringValue": "tenant-ragasa"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:18.071Z"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_ragasa"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "RAGASA INDUSTRIAS SA DE CV"
+        }
+      },
+      "createTime": "2026-03-04T23:35:18.092137Z",
+      "updateTime": "2026-03-05T16:24:09.716519Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-sanchez-y-martin",
+      "fields": {
+        "tenantId": {
+          "stringValue": "tenant-sanchez-y-martin"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000771"
+        },
+        "tableauGroup": {
+          "stringValue": "SANCHEZ_Y_MARTIN_Viewers"
+        },
+        "name": {
+          "stringValue": "SANCHEZ Y MARTIN"
+        },
+        "adminEmail": {
+          "stringValue": "admin@sanchezymartin.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000771'"
+        },
+        "legalName": {
+          "stringValue": "SANCHEZ Y MARTIN SA DE CV"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_sanchez_y_martin"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:29.310Z"
+        }
+      },
+      "createTime": "2026-03-04T23:34:29.329665Z",
+      "updateTime": "2026-03-05T16:24:16.579887Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-sasil",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "DETERGENTES Y JABONES SASIL, S.A.P.I. DE C.V."
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:19:45.720Z"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_sasil"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-sasil"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000636"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000636'"
+        },
+        "tableauGroup": {
+          "stringValue": "SASIL_Viewers"
+        },
+        "name": {
+          "stringValue": "SASIL"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@lala.com"
+        }
+      },
+      "createTime": "2026-03-04T23:19:45.746014Z",
+      "updateTime": "2026-03-05T16:24:21.636347Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-sc-johnson",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "SC JOHNSON SRL DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:34.128Z"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_sc_johnson"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1001010"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-sc-johnson"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1001010'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@scjohnson.com"
+        },
+        "name": {
+          "stringValue": "SC JOHNSON"
+        },
+        "tableauGroup": {
+          "stringValue": "SC_JOHNSON_Viewers"
+        }
+      },
+      "createTime": "2026-03-04T23:35:34.135618Z",
+      "updateTime": "2026-03-05T16:24:26.563722Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-t-taio",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "INDUSTRIAS T TAIO SA DE CV"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:17.523Z"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "exports": {
+                "booleanValue": true
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "customReports": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_t_taio"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000847"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-t-taio"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000847'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "adminEmail": {
+          "stringValue": "admin@ttaio.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "tableauGroup": {
+          "stringValue": "T_TAIO_Viewers"
+        },
+        "name": {
+          "stringValue": "T TAIO"
+        }
+      },
+      "createTime": "2026-03-04T23:35:17.541831Z",
+      "updateTime": "2026-03-05T16:24:31.427563Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-target-media",
+      "fields": {
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000654'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@targetmedia.com"
+        },
+        "name": {
+          "stringValue": "TARGET MEDIA"
+        },
+        "tableauGroup": {
+          "stringValue": "TARGET_MEDIA_Viewers"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000654"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "tenantId": {
+          "stringValue": "tenant-target-media"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:34:28.313Z"
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_target_media"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "TARGET MEDIA SA DE CV"
+        }
+      },
+      "createTime": "2026-03-04T23:34:28.325038Z",
+      "updateTime": "2026-03-05T16:24:36.001535Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-velaluz",
+      "fields": {
+        "proveedorIdInterno": {
+          "stringValue": "1000818"
+        },
+        "tenantId": {
+          "stringValue": "tenant-velaluz"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "adminEmail": {
+          "stringValue": "admin@velaluz.com"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "name": {
+          "stringValue": "VELALUZ"
+        },
+        "tableauGroup": {
+          "stringValue": "VELALUZ_Viewers"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000818'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "legalName": {
+          "stringValue": "VELALUZ VELADORAS Y PARAFINAS DE MEXICO"
+        },
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              },
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_velaluz"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:34.721Z"
+        }
+      },
+      "createTime": "2026-03-04T23:35:34.737914Z",
+      "updateTime": "2026-03-05T16:24:43.498338Z"
+    },
+    {
+      "name": "projects/netoinsight-fed03/databases/(default)/documents/tenants/tenant-xsant",
+      "fields": {
+        "createdBy": {
+          "stringValue": "sNo1gyqDQ4Y309kW1az4Se9ljoE2"
+        },
+        "legalName": {
+          "stringValue": "XSANT"
+        },
+        "createdAt": {
+          "timestampValue": "2026-03-04T23:35:34.408Z"
+        },
+        "features": {
+          "mapValue": {
+            "fields": {
+              "customReports": {
+                "booleanValue": false
+              },
+              "api": {
+                "booleanValue": false
+              },
+              "dashboards": {
+                "arrayValue": {
+                  "values": [
+                    {
+                      "stringValue": "categorization"
+                    },
+                    {
+                      "stringValue": "skus"
+                    },
+                    {
+                      "stringValue": "stocks"
+                    },
+                    {
+                      "stringValue": "purchase-orders"
+                    }
+                  ]
+                }
+              },
+              "exports": {
+                "booleanValue": true
+              }
+            }
+          }
+        },
+        "bigQueryDataset": {
+          "stringValue": "proveedores_xsant"
+        },
+        "plan": {
+          "stringValue": "starter"
+        },
+        "proveedorIdInterno": {
+          "stringValue": "1000670"
+        },
+        "tenantId": {
+          "stringValue": "tenant-xsant"
+        },
+        "usedLicenses": {
+          "integerValue": "0"
+        },
+        "bigQueryFilter": {
+          "stringValue": "proveedor_id = '1000670'"
+        },
+        "maxLicenses": {
+          "integerValue": "1"
+        },
+        "isActive": {
+          "booleanValue": true
+        },
+        "adminEmail": {
+          "stringValue": "admin@xsant.com"
+        },
+        "name": {
+          "stringValue": "XSANT"
+        },
+        "tableauGroup": {
+          "stringValue": "XSANT_Viewers"
+        }
+      },
+      "createTime": "2026-03-04T23:35:34.424829Z",
+      "updateTime": "2026-03-05T16:24:49.637011Z"
+    }
+  ]
+}

@@ -43,7 +43,10 @@ export class EditTenantModal implements OnInit {
     });
   }
 
+  canDownloadClosedMonth = false;
+
   ngOnInit(): void {
+    this.canDownloadClosedMonth = this.tenant.features?.canDownloadClosedMonth === true;
     this.editForm.patchValue({
       legalName: this.tenant.legalName || '',
       rfc: this.tenant.rfc || '',
@@ -70,7 +73,10 @@ export class EditTenantModal implements OnInit {
         legalName: fv.legalName?.trim() || this.tenant.name,
         adminEmail: fv.adminEmail.trim(),
         // Mantener features/dashboards existentes sin cambiarlos
-        features: this.tenant.features,
+        features: {
+          ...this.tenant.features,
+          canDownloadClosedMonth: this.canDownloadClosedMonth,
+        },
         // Mantener plan y licencias sin cambiarlos
         plan: this.tenant.plan,
         maxLicenses: this.tenant.maxLicenses,
@@ -90,6 +96,10 @@ export class EditTenantModal implements OnInit {
       this.notificationService.error('Error al Actualizar', this.errorMessage);
       this.isSubmitting = false;
     }
+  }
+
+  toggleDownloadClosedMonth(): void {
+    this.canDownloadClosedMonth = !this.canDownloadClosedMonth;
   }
 
   onClose(): void {

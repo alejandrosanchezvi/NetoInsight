@@ -8,13 +8,15 @@ import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
+import { TenantService } from '../../../core/services/tenant.service';
 import { TableauDashboardService } from '../../../core/services/tableau-dashboard.service';
 import { downloadExcel } from '../../../core/utils/csv-export.util';
+import { DownloadClosedMonthModal } from '../../../shared/components/download-closed-month-modal/download-closed-month-modal';
 
 @Component({
   selector: 'app-ordenes-compra',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DownloadClosedMonthModal],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './ordenes-compra.html',
   styleUrls: ['./ordenes-compra.css']
@@ -29,6 +31,14 @@ export class OrdenesDeCompra implements OnInit, AfterViewInit, OnDestroy {
   isFullscreen = false;
   showExportMenu = false;
 
+  readonly downloadSheets = [
+    { wsName: 'TablaFRTda', tabName: 'Fill Rate Tienda', formatAsPercent: true },
+    { wsName: 'TablaFRArt', tabName: 'Fill Rate Artículo', formatAsPercent: true }
+  ];
+
+  showDownloadModal = false;
+  canDownloadClosedMonth = false;
+
   private vizElement: any = null;
   private resizeObserver?: ResizeObserver;
   private destroy$ = new Subject<void>();
@@ -39,6 +49,7 @@ export class OrdenesDeCompra implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private tenantService: TenantService,
     private tableau: TableauDashboardService,
     private renderer: Renderer2
   ) { }
@@ -56,6 +67,12 @@ export class OrdenesDeCompra implements OnInit, AfterViewInit, OnDestroy {
       .subscribe(user => {
         this.currentProviderName = user!.tenantName;
         this.currentProviderId = user!.proveedorIdInterno || '';
+
+        if (user!.tenantId) {
+          this.tenantService.getTenantById(user!.tenantId).then(tenant => {
+            this.canDownloadClosedMonth = tenant?.features?.canDownloadClosedMonth === true;
+          });
+        }
         console.log(`[OrdenesDeCompra] 👤 proveedor="${this.currentProviderId}" | nombre="${this.currentProviderName}"`);
 
         if (this.viewReady) {
@@ -199,6 +216,9 @@ export class OrdenesDeCompra implements OnInit, AfterViewInit, OnDestroy {
       this.exportToPDF();
     }
   }
+
+  openDownloadModal(): void { this.showDownloadModal = true; }
+  closeDownloadModal(): void { this.showDownloadModal = false; }
 
   toggleFullscreen(): void {
     const c = document.querySelector(this.CONTAINER_SELECTOR) as HTMLElement;

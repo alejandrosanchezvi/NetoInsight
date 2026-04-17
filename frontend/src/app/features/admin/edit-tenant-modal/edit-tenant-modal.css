@@ -41,3 +41,94 @@
     margin: 0;
     line-height: 1.5;
 }
+
+/* ===== TOGGLE DE PERMISOS ESPECIALES ===== */
+/* Agregar al final de edit-tenant-modal.css y create-tenant-modal.css */
+
+.feature-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.feature-toggle-row:last-child {
+    border-bottom: none;
+}
+
+.feature-toggle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.feature-toggle-label {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #1d1d1f;
+}
+
+.feature-toggle-hint {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* El switch en sí */
+.toggle-switch {
+    flex-shrink: 0;
+    width: 48px;
+    height: 28px;
+    border-radius: 100px;
+    background: #d1d5db;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s ease;
+    padding: 0;
+}
+
+.toggle-switch--on {
+    background: #0e3b83;
+}
+
+.toggle-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+    display: block;
+}
+
+.toggle-switch--on .toggle-knob {
+    transform: translateX(20px);
+}
+
+/* ===== ESPACIADO form-section (fix padding/margin) ===== */
+/* Agregar SOLO al edit-tenant-modal.css               */
+
+.form-section {
+    padding: 1.25rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.form-section:first-of-type {
+    border-top: none;
+    padding-top: 0;
+}
+
+.section-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #0e3b83;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.07);
+}
