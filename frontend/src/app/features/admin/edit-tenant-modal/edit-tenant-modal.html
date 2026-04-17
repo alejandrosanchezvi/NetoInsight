@@ -105,7 +105,25 @@
           proveedor.</p>
       </div>
 
+      <div class="form-section">
+        <h3 class="section-title">Permisos Especiales</h3>
+        <div class="feature-toggle-row">
+          <div class="feature-toggle-info">
+            <span class="feature-toggle-label">Descarga de mes cerrado</span>
+            <span class="feature-toggle-hint">Permite al proveedor descargar sus datos del mes anterior en Excel</span>
+          </div>
+          <button type="button" class="toggle-switch" [class.toggle-switch--on]="canDownloadClosedMonth"
+            (click)="toggleDownloadClosedMonth()">
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+      </div>
     </form>
+
+
+    <!-- Permiso: Descarga de mes cerrado -->
+
+
 
     <!-- Footer -->
     <div class="modal-footer">

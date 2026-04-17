@@ -62,6 +62,7 @@ export type SubscriptionDuration = '30d' | '3m' | '6m' | '1y';
 export interface TenantFeatures {
   dashboards: string[];
   exports: boolean;
+  canDownloadClosedMonth: boolean; // ← permiso manual de descarga de mes cerrado
   api: boolean;
   customReports: boolean;
 }

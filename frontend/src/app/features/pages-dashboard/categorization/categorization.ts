@@ -8,13 +8,15 @@ import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
+import { TenantService } from '../../../core/services/tenant.service';
 import { TableauDashboardService } from '../../../core/services/tableau-dashboard.service';
 import { buildCsv, downloadCsv } from '../../../core/utils/csv-export.util';
+import { DownloadClosedMonthModal } from '../../../shared/components/download-closed-month-modal/download-closed-month-modal';
 
 @Component({
   selector: 'app-categorization',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DownloadClosedMonthModal],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './categorization.html',
   styleUrls: ['./categorization.css']
@@ -29,6 +31,14 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
   isFullscreen = false
   showExportMenu = false;
 
+  // Descarga mes cerrado
+  readonly downloadSheets = [
+    { wsName: 'Tabla-arts', tabName: 'Categorización' }
+  ];
+
+  showDownloadModal = false;
+  canDownloadClosedMonth = false;
+
   private vizElement: any = null;
   private resizeObserver?: ResizeObserver;
   private destroy$ = new Subject<void>();
@@ -39,6 +49,7 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private tenantService: TenantService,
     private tableau: TableauDashboardService,
     private renderer: Renderer2
   ) { }
@@ -71,6 +82,14 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
         this.currentProviderName = user!.tenantName;
         this.currentProviderId = user!.proveedorIdInterno || '';
         console.log(`[Categorization] 👤 proveedor="${this.currentProviderId}" | nombre="${this.currentProviderName}"`);
+
+        // Cargar permiso de descarga de mes cerrado
+        if (user!.tenantId) {
+          this.tenantService.getTenantById(user!.tenantId).then(tenant => {
+            this.canDownloadClosedMonth = tenant?.features?.canDownloadClosedMonth === true;
+            console.log(`[Categorization] 📥 canDownloadClosedMonth: ${this.canDownloadClosedMonth}`);
+          });
+        }
 
         // Si el DOM ya está listo, cargar inmediatamente
         // Si no, ngAfterViewInit lo hará cuando esté listo
@@ -216,6 +235,18 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
       e.preventDefault();
       this.exportToPDF();
     }
+  }
+
+  // ──────────────────────────────────────────────
+  // Descarga de mes cerrado
+  // ──────────────────────────────────────────────
+
+  openDownloadModal(): void {
+    this.showDownloadModal = true;
+  }
+
+  closeDownloadModal(): void {
+    this.showDownloadModal = false;
   }
 
   toggleFullscreen(): void {
