@@ -37,11 +37,13 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
 
   showDownloadModal = false;
   canDownloadClosedMonth = false;
+  isTrial = false;
 
   private vizElement: any = null;
   private resizeObserver?: ResizeObserver;
   private destroy$ = new Subject<void>();
   private viewReady = false;
+  private tenantLoaded = false;
 
   private readonly CONTAINER_SELECTOR = '.skus-container';
   private readonly DASHBOARD_KEY = 'skus';
@@ -70,12 +72,13 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
         if (user!.tenantId) {
           this.tenantService.getTenantById(user!.tenantId).then(tenant => {
             this.canDownloadClosedMonth = tenant?.features?.canDownloadClosedMonth === true;
+            this.isTrial = tenant?.plan === 'trial';
+            this.tenantLoaded = true;
+            console.log(`[Skus] 📥 isTrial: ${this.isTrial} | canDownloadClosedMonth: ${this.canDownloadClosedMonth}`);
+            if (this.viewReady) {
+              this.initDashboard();
+            }
           });
-        }
-        console.log(`[Skus] 👤 proveedor="${this.currentProviderId}" | nombre="${this.currentProviderName}"`);
-
-        if (this.viewReady) {
-          this.initDashboard();
         }
       });
   }
@@ -84,11 +87,8 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
     this.viewReady = true;
     console.log('[Skus] 🟡 ngAfterViewInit');
     this.adjustForSidebar();
-
-    if (this.currentProviderId !== '' || this.authService.getCurrentUser() !== null) {
-      this.initDashboard();
-    } else {
-      console.log('[Skus] ⏳ DOM listo — esperando usuario de Firebase...');
+    if (!this.tenantLoaded) {
+      console.log('[Skus] ⏳ DOM listo — esperando tenant de Firestore...');
     }
   }
 
@@ -109,7 +109,8 @@ export class Skus implements OnInit, AfterViewInit, OnDestroy {
     const result = await this.tableau.loadDashboard(
       this.tableauContainer.nativeElement,
       { dashboardKey: this.DASHBOARD_KEY, containerSelector: this.CONTAINER_SELECTOR },
-      this.currentProviderId
+      this.currentProviderId,
+      false // filtro trial de fecha solo activo en categorización
     );
 
     this.vizElement = result.vizElement;

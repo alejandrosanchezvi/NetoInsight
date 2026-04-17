@@ -14,6 +14,7 @@ import { AcceptInvite } from './features/auth/accept-invite/accept-invite';
 import { TenantManagement } from './features/admin/tenant-management/tenant-management';
 import { HelpComponent } from './features/help/help';
 import { internalAdminGuard } from './core/guards/internal-admin.guard';
+import { MetricsComponent } from './features/admin/metrics/metrics';
 import { ResetPassword } from './features/auth/reset-password/reset-password';
 import { SubscriptionSuspended } from './features/auth/subscription-suspended/subscription-suspended';
 
@@ -78,6 +79,11 @@ export const routes: Routes = [
       {
         path: 'admin/tenants',
         component: TenantManagement,
+        canActivate: [internalAdminGuard],
+      },
+      {
+        path: 'admin/metrics',
+        component: MetricsComponent,
         canActivate: [internalAdminGuard],
       },
     ],

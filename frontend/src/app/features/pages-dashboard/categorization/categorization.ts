@@ -38,11 +38,13 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
 
   showDownloadModal = false;
   canDownloadClosedMonth = false;
+  isTrial = false;
 
   private vizElement: any = null;
   private resizeObserver?: ResizeObserver;
   private destroy$ = new Subject<void>();
   private viewReady = false;
+  private tenantLoaded = false;
 
   private readonly CONTAINER_SELECTOR = '.categorization-container';
   private readonly DASHBOARD_KEY = 'categorization';
@@ -87,14 +89,13 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
         if (user!.tenantId) {
           this.tenantService.getTenantById(user!.tenantId).then(tenant => {
             this.canDownloadClosedMonth = tenant?.features?.canDownloadClosedMonth === true;
-            console.log(`[Categorization] 📥 canDownloadClosedMonth: ${this.canDownloadClosedMonth}`);
+            this.isTrial = tenant?.plan === 'trial';
+            console.log(`[Categorization] 📥 isTrial: ${this.isTrial} | canDownloadClosedMonth: ${this.canDownloadClosedMonth}`);
+            // Cargar dashboard DESPUÉS de conocer isTrial
+            if (this.viewReady) {
+              this.initDashboard();
+            }
           });
-        }
-
-        // Si el DOM ya está listo, cargar inmediatamente
-        // Si no, ngAfterViewInit lo hará cuando esté listo
-        if (this.viewReady) {
-          this.initDashboard();
         }
       });
   }
@@ -103,13 +104,10 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
     this.viewReady = true;
     console.log('[Categorization] 🟡 ngAfterViewInit');
     this.adjustForSidebar();
-
-    // Solo cargar si el usuario ya está disponible (caso local/sesión rápida)
-    // Si el usuario aún no llegó, la suscripción de ngOnInit lo hará
-    if (this.currentProviderId !== '' || this.authService.getCurrentUser() !== null) {
-      this.initDashboard();
-    } else {
-      console.log('[Categorization] ⏳ DOM listo — esperando usuario de Firebase...');
+    // initDashboard se llama desde el .then() del tenant, no aquí.
+    // Así garantizamos que isTrial y canDownloadClosedMonth ya están listos.
+    if (!this.tenantLoaded) {
+      console.log('[Categorization] ⏳ DOM listo — esperando tenant de Firestore...');
     }
   }
 
@@ -134,7 +132,8 @@ export class Categorization implements OnInit, AfterViewInit, OnDestroy {
     const result = await this.tableau.loadDashboard(
       this.tableauContainer.nativeElement,
       { dashboardKey: this.DASHBOARD_KEY, containerSelector: this.CONTAINER_SELECTOR },
-      this.currentProviderId
+      this.currentProviderId,
+      this.isTrial
     );
 
     this.vizElement = result.vizElement;

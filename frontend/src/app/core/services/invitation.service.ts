@@ -65,10 +65,13 @@ export class InvitationService {
         throw new Error('No hay licencias disponibles. Contacta a Neto para ampliar tu plan.');
       }
 
-      // 2. Verificar que no exista invitación pendiente
+      // 2. Si existe invitación pendiente anterior → cancelarla automáticamente
+      //    Así siempre se puede reinvitar sin necesidad de cancelar manualmente
       const existingInvitation = await this.findPendingInvitationByEmail(data.email, data.tenantId);
       if (existingInvitation) {
-        throw new Error('Ya existe una invitación pendiente para este email.');
+        console.log('📧 [INVITATION] Cancelando invitación anterior:', existingInvitation.id);
+        await this.cancelInvitation(existingInvitation.id);
+        console.log('✅ [INVITATION] Invitación anterior cancelada');
       }
 
       // 3. Obtener tenant

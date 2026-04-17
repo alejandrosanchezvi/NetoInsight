@@ -1,0 +1,285 @@
+<!-- 📊 NetoInsight - Métricas del Portal -->
+
+<div class="metrics-container">
+
+    <!-- ===== HEADER ===== -->
+    <div class="metrics-header">
+        <div class="header-left">
+            <h1 class="metrics-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Métricas del Portal
+            </h1>
+            <p class="metrics-subtitle" *ngIf="lastUpdated">
+                Actualizado {{ formatLastLogin(lastUpdated) }}
+            </p>
+        </div>
+        <button class="btn-refresh" (click)="loadMetrics()" [disabled]="isLoading">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                [class.spinning]="isLoading">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Actualizar
+        </button>
+    </div>
+
+    <!-- ===== LOADING ===== -->
+    <div *ngIf="isLoading" class="metrics-loading">
+        <div class="loading-spinner-lg"></div>
+        <p>Cargando métricas...</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+
+        <!-- ===== BLOQUE 1: RESUMEN EJECUTIVO ===== -->
+        <section class="metrics-section">
+            <h2 class="section-title">Resumen General</h2>
+            <div class="cards-grid">
+
+                <div class="metric-card metric-card--blue">
+                    <div class="card-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value">{{ activeTenants }}</span>
+                        <span class="card-label">Proveedores activos</span>
+                        <span class="card-sub">de {{ totalTenants }} registrados</span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-card--orange">
+                    <div class="card-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value">{{ trialTenants }}</span>
+                        <span class="card-label">En periodo de prueba</span>
+                        <span class="card-sub" [class.urgent]="trialsExpiringIn7Days > 0">
+                            {{ trialsExpiringIn7Days > 0 ? (trialsExpiringIn7Days + ' vencen en 7 días') : 'Sin
+                            vencimientos próximos' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-card--green">
+                    <div class="card-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value">{{ totalUsers }}</span>
+                        <span class="card-label">Usuarios registrados</span>
+                        <span class="card-sub">{{ activeUsersLast30 }} activos últimos 30 días</span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-card--gray">
+                    <div class="card-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.68 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9a16 16 0 0 0 6.93 6.93l1.18-1.18a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value">{{ pendingInvitations }}</span>
+                        <span class="card-label">Invitaciones pendientes</span>
+                        <span class="card-sub">{{ invitationsSentThisMonth }} enviadas este mes</span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-card--red">
+                    <div class="card-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value">{{ tenantsNeverUsed }}</span>
+                        <span class="card-label">Sin actividad</span>
+                        <span class="card-sub">Proveedores sin usuarios</span>
+                    </div>
+                </div>
+
+                <div class="metric-card metric-card--purple">
+                    <div class="card-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-value">{{ activeUsersLast30 }}</span>
+                        <span class="card-label">Usuarios activos</span>
+                        <span class="card-sub">últimos 30 días</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ===== BLOQUE 2: GRÁFICA DE CRECIMIENTO ===== -->
+        <section class="metrics-section">
+            <h2 class="section-title">Crecimiento de Proveedores (últimos 6 meses)</h2>
+            <div class="chart-card">
+                <div class="bar-chart">
+                    <div *ngFor="let d of growthData" class="bar-group">
+                        <div class="bar-wrapper">
+                            <div class="bar-value">{{ d.tenants }}</div>
+                            <div class="bar" [style.height.%]="getBarHeight(d.tenants)"></div>
+                        </div>
+                        <span class="bar-label">{{ d.month }}</span>
+                    </div>
+                </div>
+                <p class="chart-note">Proveedores acumulados registrados hasta fin de cada mes</p>
+            </div>
+        </section>
+
+        <!-- ===== BLOQUE 3: TABLA DE PROVEEDORES ===== -->
+        <section class="metrics-section">
+            <h2 class="section-title">Detalle de Proveedores</h2>
+            <div class="table-card">
+                <table class="metrics-table">
+                    <thead>
+                        <tr>
+                            <th (click)="setSort('name')" class="sortable">
+                                Proveedor
+                                <span class="sort-icon" *ngIf="sortField === 'name'">{{ sortDesc ? '↓' : '↑' }}</span>
+                            </th>
+                            <th (click)="setSort('plan')" class="sortable">
+                                Plan
+                                <span class="sort-icon" *ngIf="sortField === 'plan'">{{ sortDesc ? '↓' : '↑' }}</span>
+                            </th>
+                            <th>Usuarios</th>
+                            <th (click)="setSort('createdAt')" class="sortable">
+                                Alta
+                                <span class="sort-icon" *ngIf="sortField === 'createdAt'">{{ sortDesc ? '↓' : '↑'
+                                    }}</span>
+                            </th>
+                            <th (click)="setSort('daysLeft')" class="sortable">
+                                Vencimiento
+                                <span class="sort-icon" *ngIf="sortField === 'daysLeft'">{{ sortDesc ? '↓' : '↑'
+                                    }}</span>
+                            </th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let t of tenantsSorted" [class.row-inactive]="!t.isActive">
+                            <td>
+                                <div class="tenant-name">{{ t.name }}</div>
+                                <div class="tenant-email">{{ t.adminEmail }}</div>
+                            </td>
+                            <td>
+                                <span class="badge" [ngClass]="getPlanClass(t.plan)">{{ getPlanLabel(t.plan) }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span [class.zero-users]="t.usedLicenses === 0">{{ t.usedLicenses }}/{{ t.maxLicenses
+                                    }}</span>
+                            </td>
+                            <td class="text-muted">{{ formatDate(t.createdAt) }}</td>
+                            <td>
+                                <span class="days-badge" [ngClass]="getDaysLeftClass(t)">{{ getDaysLeftLabel(t)
+                                    }}</span>
+                            </td>
+                            <td>
+                                <span class="status-dot" [class.status-active]="t.isActive"
+                                    [class.status-inactive]="!t.isActive">
+                                    {{ t.isActive ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== BLOQUE 4: ÚLTIMO LOGIN POR USUARIO ===== -->
+        <section class="metrics-section">
+            <div class="section-header-row">
+                <h2 class="section-title">Actividad de Usuarios</h2>
+                <button class="btn-toggle" (click)="toggleNeverLogin()">
+                    {{ showNeverLogin ? 'Ver recientes' : 'Ver sin actividad (' + neverLoggedIn + ')' }}
+                </button>
+            </div>
+
+            <div class="table-card">
+                <ng-container *ngIf="!showNeverLogin">
+                    <p class="table-caption">Últimos 10 accesos al portal</p>
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Proveedor</th>
+                                <th>Último acceso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let u of recentUsers">
+                                <td>
+                                    <div class="user-name">{{ u.name }}</div>
+                                    <div class="tenant-email">{{ u.email }}</div>
+                                </td>
+                                <td class="text-muted">{{ u.tenantName }}</td>
+                                <td>
+                                    <span class="last-login-badge">{{ formatLastLogin(u.lastLogin) }}</span>
+                                </td>
+                            </tr>
+                            <tr *ngIf="recentUsers.length === 0">
+                                <td colspan="3" class="empty-row">Sin registros de acceso aún</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </ng-container>
+
+                <ng-container *ngIf="showNeverLogin">
+                    <p class="table-caption">Usuarios registrados que nunca han entrado al portal</p>
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Proveedor</th>
+                                <th>Registrado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let u of neverLoginUsers">
+                                <td>
+                                    <div class="user-name">{{ u.name }}</div>
+                                    <div class="tenant-email">{{ u.email }}</div>
+                                </td>
+                                <td class="text-muted">{{ u.tenantName }}</td>
+                                <td class="text-muted">{{ formatDate(u.createdAt) }}</td>
+                            </tr>
+                            <tr *ngIf="neverLoginUsers.length === 0">
+                                <td colspan="3" class="empty-row">¡Todos los usuarios han entrado al menos una vez!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </ng-container>
+            </div>
+        </section>
+
+    </ng-container>
+</div>

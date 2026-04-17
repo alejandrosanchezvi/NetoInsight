@@ -126,7 +126,8 @@ export class TableauDashboardService {
     async loadDashboard(
         container: HTMLElement,
         config: TableauEmbedConfig,
-        providerId: string
+        providerId: string,
+        isTrial: boolean = false
     ): Promise<{ vizElement: any; error?: string }> {
         const tag = `[Tableau:${config.dashboardKey}]`;
         const t0 = performance.now();
@@ -151,7 +152,7 @@ export class TableauDashboardService {
 
             // ── 3. Viz ───────────────────────────────────────────────
             const tViz = performance.now();
-            const result = await this.createViz(container, embedUrl, jwt, config, providerId, tViz);
+            const result = await this.createViz(container, embedUrl, jwt, config, providerId, tViz, isTrial);
 
             if (result.error) {
                 console.warn(`${tag} ❌ Resultado: ${result.error} | total: ${ms(t0)}`);
@@ -289,7 +290,8 @@ export class TableauDashboardService {
         jwt: string,
         config: TableauEmbedConfig,
         providerId: string,
-        tVizStart: number
+        tVizStart: number,
+        isTrial: boolean = false
     ): Promise<{ vizElement: any; error?: string }> {
         const tag = `[Tableau:${config.dashboardKey}]`;
 
@@ -325,6 +327,9 @@ export class TableauDashboardService {
 
                 const tFilter = performance.now();
                 await this.applyProviderFilter(viz, providerId, config);
+                if (isTrial) {
+                    await this.applyTrialDateFilter(viz, config.dashboardKey);
+                }
                 console.log(`${tag} ⏱ Filtrado completo en ${ms(tFilter)}`);
 
                 // Pequeña espera para que Tableau termine de procesar el filtro
@@ -342,6 +347,18 @@ export class TableauDashboardService {
                 settled = true;
                 resolve({ vizElement: viz });
             });
+
+            // ── filterchanged — re-aplicar filtro trial si usuario lo mueve ──
+            if (isTrial) {
+                viz.addEventListener('filterchanged', async (event: any) => {
+                    const fieldName = event.detail?.fieldName ?? '';
+                    if (fieldName === 'Fecha') {
+                        console.log(`${tag} 🔒 Trial — filtro de fecha cambiado, reaplicando restricción...`);
+                        await new Promise(r => setTimeout(r, 300));
+                        await this.applyTrialDateFilter(viz, config.dashboardKey);
+                    }
+                });
+            }
 
             // ── vizloadError ─────────────────────────────────────────
             viz.addEventListener('vizloadError', (event: any) => {
@@ -773,6 +790,37 @@ export class TableauDashboardService {
             }
         } catch (e) {
             console.error(`${tag} 💥 Error en applyDateRangeFilter:`, e);
+        }
+    }
+
+    /** Restringe el filtro de fecha a los últimos 30 días para usuarios en trial */
+    private async applyTrialDateFilter(vizElement: any, dashboardKey: string): Promise<void> {
+        const tag = `[Tableau:${dashboardKey}]`;
+        const max = new Date();
+        const min = new Date();
+        min.setDate(min.getDate() - 30);
+
+        console.log(`${tag} 🔒 Trial — restringiendo fechas: ${min.toLocaleDateString('es-MX')} → ${max.toLocaleDateString('es-MX')}`);
+
+        try {
+            const workbook = await vizElement.workbook;
+            const activeSheet = await workbook.activeSheet;
+            const sheets: any[] = activeSheet.sheetType === 'dashboard'
+                ? activeSheet.worksheets
+                : [activeSheet];
+
+            let applied = false;
+            for (const ws of sheets) {
+                try {
+                    await ws.applyRangeFilterAsync('Fecha', { min, max });
+                    console.log(`${tag} 🔒 Filtro trial aplicado en "${ws.name}"`);
+                    applied = true;
+                    break;
+                } catch { continue; }
+            }
+            if (!applied) console.warn(`${tag} ⚠️ No se pudo aplicar filtro trial de fecha`);
+        } catch (e: any) {
+            console.error(`${tag} 💥 Error en applyTrialDateFilter:`, e?.message ?? e);
         }
     }
 

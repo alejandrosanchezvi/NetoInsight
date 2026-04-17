@@ -1,0 +1,124 @@
+<!-- 📥 NetoInsight - Modal Descarga Mes Cerrado -->
+
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-card">
+
+    <!-- ===== CONFIRMING ===== -->
+    <ng-container *ngIf="step === 'confirming'">
+      <div class="modal-icon modal-icon--download">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </div>
+
+      <h2 class="modal-title">Descargar datos de {{ monthLabel }}</h2>
+
+      <p class="modal-description">
+        Se generará un archivo <strong>.xlsx</strong> con la información del dashboard
+        <strong>{{ dashboardDisplayName }}</strong> correspondiente al mes cerrado de
+        <strong>{{ monthLabel }}</strong>.
+      </p>
+
+      <div class="modal-info-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>La descarga puede tardar entre 20 y 40 segundos</span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="onClose()">Cancelar</button>
+        <button class="btn-confirm" (click)="onConfirm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Descargar {{ monthName }} {{ year }}
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- ===== LOADING ===== -->
+    <ng-container *ngIf="step === 'loading'">
+      <div class="modal-loading-ring">
+        <div class="ring ring-outer"></div>
+        <div class="ring ring-middle"></div>
+        <div class="ring ring-inner"></div>
+        <div class="ring-center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </div>
+      </div>
+
+      <h2 class="modal-title">Preparando tu descarga</h2>
+      <p class="modal-subtitle">{{ monthLabel }}</p>
+
+      <div class="modal-progress-track">
+        <div class="modal-progress-bar"></div>
+      </div>
+
+      <p class="modal-progress-msg">{{ progressMessage }}</p>
+      <p class="modal-loading-note">No cierres esta ventana mientras se prepara el archivo</p>
+    </ng-container>
+
+    <!-- ===== SUCCESS ===== -->
+    <ng-container *ngIf="step === 'success'">
+      <div class="modal-icon modal-icon--success">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+
+      <h2 class="modal-title">¡Descarga lista!</h2>
+      <p class="modal-description">
+        Tu archivo con los datos de <strong>{{ monthLabel }}</strong> está listo.
+        Revisa la carpeta de descargas de tu navegador.
+      </p>
+
+      <div class="modal-actions modal-actions--single">
+        <button class="btn-confirm" (click)="onClose()">Cerrar</button>
+      </div>
+    </ng-container>
+
+    <!-- ===== ERROR ===== -->
+    <ng-container *ngIf="step === 'error'">
+      <div class="modal-icon modal-icon--error">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+
+      <h2 class="modal-title">No se pudo generar la descarga</h2>
+      <p class="modal-description">
+        Ocurrió un error al preparar los datos de <strong>{{ monthLabel }}</strong>.
+        Intenta de nuevo en unos momentos.
+      </p>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="onClose()">Cerrar</button>
+        <button class="btn-confirm" (click)="retry()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Intentar de nuevo
+        </button>
+      </div>
+    </ng-container>
+
+  </div>
+</div>

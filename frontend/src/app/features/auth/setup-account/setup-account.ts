@@ -208,17 +208,32 @@ export class SetupAccount implements OnInit {
       await this.invitationService.acceptInvitation(this.invitation.id, uid);
       console.log('✅ [SETUP-ACCOUNT] Invitation marked as accepted');
 
-      // 4. Incrementar licencias usadas del tenant
+      // 4. Si es trial, resetear subscriptionEnd a hoy + 30 días
+      // El trial debe empezar cuando el usuario crea su cuenta, no cuando se creó el tenant.
+      if (tenant?.plan === 'trial') {
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 30);
+        console.log('🔐 [SETUP-ACCOUNT] Resetting trial end to:', trialEnd.toISOString());
+        await this.tenantService.updateTenant(
+          this.invitation.tenantId,
+          { subscriptionEnd: trialEnd, trialEndsAt: trialEnd },
+          uid
+        );
+        console.log('✅ [SETUP-ACCOUNT] Trial end updated to:', trialEnd.toISOString().slice(0, 10));
+      }
+
+      // 5. Incrementar licencias usadas del tenant
       console.log('🔐 [SETUP-ACCOUNT] Updating tenant licenses...');
       await this.tenantService.updateUsedLicenses(this.invitation.tenantId, 1);
       console.log('✅ [SETUP-ACCOUNT] Tenant licenses updated');
 
-      // 5. Auto-login
-      console.log('🔐 [SETUP-ACCOUNT] Auto-login...');
-      await this.authService.login(this.invitation.email, password);
-      console.log('✅ [SETUP-ACCOUNT] User logged in');
+      // 6. Cargar sesión — el usuario ya está autenticado en Firebase desde createUserWithEmailAndPassword,
+      //    no hace falta llamar login() de nuevo. Solo cargamos sus datos en el servicio de auth.
+      console.log('🔐 [SETUP-ACCOUNT] Loading session...');
+      await this.authService.loadSessionFromUid(uid);
+      console.log('✅ [SETUP-ACCOUNT] Session loaded');
 
-      // 6. Redirigir directamente al inicio (MFA deshabilitado temporalmente)
+      // 7. Redirigir directamente al inicio (MFA deshabilitado temporalmente)
       console.log('✅ [SETUP-ACCOUNT] Account setup complete! Redirecting...');
       this.isSubmitting = false;
       this.router.navigate(['/categorization']);
@@ -256,7 +271,7 @@ export class SetupAccount implements OnInit {
       if (!user) throw new Error('Usuario no encontrado en sesión activa');
 
       await this.authService.enrollTotp(user, this.totpSecret, this.mfaCode);
-      
+
       console.log('✅ [SETUP-ACCOUNT] Account and MFA setup complete! Redirecting...');
       this.router.navigate(['/categorization']);
     } catch (error: any) {
