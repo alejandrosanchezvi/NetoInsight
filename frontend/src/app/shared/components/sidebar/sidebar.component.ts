@@ -79,11 +79,18 @@ export class SidebarComponent implements OnInit {
       route: '/admin/tenants',
       internal: true,
     },
+    {
+      id: 'metrics',
+      label: 'Métricas',
+      icon: 'metrics',
+      route: '/admin/metrics',
+      internal: true,
+    },
   ];
 
   activeMenuItem: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
     // ✅ Detectar ruta actual al cargar
@@ -153,7 +160,7 @@ export class SidebarComponent implements OnInit {
   /**
    * Obtener SVG path según el ícono
    */
-    getIconPath(iconName: string): string {
+  getIconPath(iconName: string): string {
     const icons: { [key: string]: string } = {
       grid: 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',
       store:
@@ -168,6 +175,9 @@ export class SidebarComponent implements OnInit {
         'M1 3h15v13H1z M16 8h4l3 3v5h-7V8z M5.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M18.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
     };
 
+    if (iconName === 'metrics') {
+      return 'M18 20V10M12 20V4M6 20V14';
+    }
     return icons[iconName] || '';
   }
 }

@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>Restablece tu contraseña — NetoInsight</title>
+  <title>Invitación para administrar tu proveedor — NetoInsight</title>
   <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
   <style>
     body,
@@ -59,7 +59,7 @@
         <table class="email-container" width="600" cellpadding="0" cellspacing="0" role="presentation"
           style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;">
 
-          <!-- HERO — orange accent for security context -->
+          <!-- HERO — púrpura para proveedor externo -->
           <tr>
             <td bgcolor="#0e3b83" style="background-color:#0e3b83;">
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
@@ -74,24 +74,10 @@
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:20px 40px 0;">
-                    <table cellpadding="0" cellspacing="0" role="presentation">
-                      <tr>
-                        <td bgcolor="#1a3a6e"
-                          style="background-color:#1a3a6e;border:1px solid rgba(245,130,32,0.5);border-radius:100px;padding:5px 16px;">
-                          <span
-                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ffb36b;">SEGURIDAD
-                            DE CUENTA</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
                   <td style="padding:16px 40px 0;">
                     <p class="hero-title"
                       style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:32px;font-weight:800;color:#ffffff;line-height:1.2;margin:0;">
-                      Restablece tu<br><span style="color:#f58220;">contraseña</span>
+                      Administra los datos de<br><span style="color:#f58220;">{{tenantName}}</span>
                     </p>
                   </td>
                 </tr>
@@ -99,7 +85,7 @@
                   <td style="padding:12px 40px 0;">
                     <p
                       style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:15px;color:#ffffff;line-height:1.6;margin:0;">
-                      Recibimos una solicitud para<br>restablecer el acceso a tu cuenta.
+                      Tiendas Neto te da acceso a tus<br>métricas de venta en tiempo real.
                     </p>
                   </td>
                 </tr>
@@ -124,22 +110,22 @@
               </p>
               <p
                 style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:16px;color:#374151;line-height:1.7;margin:0 0 32px;">
-                Recibimos una solicitud para restablecer la contraseña de la cuenta
-                asociada a <strong style="color:#111827;">{{email}}</strong> en NetoInsight.
-                Si fuiste tú, usa el botón de abajo para crear una nueva contraseña.
+                El equipo de <strong style="color:#111827;">Tiendas Neto</strong> te invita a administrar
+                la cuenta de <strong style="color:#111827;">{{tenantName}}</strong> en NetoInsight.
+                Desde aquí podrás consultar tus indicadores de venta, inventario y desempeño en los puntos de venta.
               </p>
 
               <!-- Info card -->
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
                 style="background-color:#f4f6fb;border:1px solid #dde2ef;border-radius:10px;overflow:hidden;margin-bottom:32px;">
                 <tr>
-                  <td height="3" bgcolor="#f58220" style="background-color:#f58220;font-size:0;">&nbsp;</td>
+                  <td height="3" bgcolor="#0e3b83" style="background-color:#0e3b83;font-size:0;">&nbsp;</td>
                 </tr>
                 <tr>
                   <td style="padding:16px 24px 8px;">
                     <p
                       style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;margin:0;">
-                      DETALLES DE LA SOLICITUD</p>
+                      DETALLES DE TU CUENTA</p>
                   </td>
                 </tr>
                 <tr>
@@ -151,7 +137,7 @@
                             &nbsp;</div>
                         </td>
                         <td width="110" style="padding-left:12px;" valign="middle"><span
-                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;color:#9ca3af;font-weight:500;">Cuenta</span>
+                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;color:#9ca3af;font-weight:500;">Email</span>
                         </td>
                         <td valign="middle"><span
                             style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:14px;color:#1f2937;font-weight:600;">{{email}}</span>
@@ -169,10 +155,10 @@
                             &nbsp;</div>
                         </td>
                         <td width="110" style="padding-left:12px;" valign="middle"><span
-                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;color:#9ca3af;font-weight:500;">Fecha</span>
+                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;color:#9ca3af;font-weight:500;">Proveedor</span>
                         </td>
                         <td valign="middle"><span
-                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:14px;color:#1f2937;font-weight:600;">{{requestDate}}</span>
+                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:14px;color:#1f2937;font-weight:600;">{{tenantName}}</span>
                         </td>
                       </tr>
                     </table>
@@ -187,26 +173,35 @@
                             &nbsp;</div>
                         </td>
                         <td width="110" style="padding-left:12px;" valign="middle"><span
-                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;color:#9ca3af;font-weight:500;">Válido
-                            hasta</span></td>
-                        <td valign="middle"><span
-                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:14px;color:#1f2937;font-weight:600;">{{expirationDate}}</span>
+                            style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;color:#9ca3af;font-weight:500;">Rol</span>
+                        </td>
+                        <td valign="middle">
+                          <table cellpadding="0" cellspacing="0" role="presentation">
+                            <tr>
+                              <td bgcolor="#fff3e6"
+                                style="background-color:#fff3e6;border:1px solid #fcd9a8;border-radius:100px;padding:3px 14px;">
+                                <span
+                                  style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;font-weight:700;color:#0e3b83;">{{roleLabel}}</span>
+                              </td>
+                            </tr>
+                          </table>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
+
               </table>
 
               <!-- CTA -->
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:28px;">
                 <tr>
                   <td align="center">
-                    <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{resetUrl}}" style="height:52px;v-text-anchor:middle;width:280px;" arcsize="12%" fillcolor="#f58220" strokecolor="#f58220"><w:anchorlock/><center style="color:#ffffff;font-family:'Segoe UI',Helvetica,sans-serif;font-size:16px;font-weight:700;">Crear nueva contraseña &rarr;</center></v:roundrect><![endif]-->
+                    <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{acceptUrl}}" style="height:52px;v-text-anchor:middle;width:300px;" arcsize="12%" fillcolor="#0e3b83" strokecolor="#0e3b83"><w:anchorlock/><center style="color:#ffffff;font-family:'Segoe UI',Helvetica,sans-serif;font-size:16px;font-weight:700;">Acceder a mi cuenta &rarr;</center></v:roundrect><![endif]-->
                     <!--[if !mso]><!-->
-                    <a href="{{resetUrl}}"
-                      style="background-color:#f58220;color:#ffffff;text-decoration:none;font-family:'Segoe UI',Helvetica,sans-serif;font-size:16px;font-weight:700;padding:16px 48px;border-radius:8px;display:inline-block;mso-hide:all;">Crear
-                      nueva contraseña &rarr;</a>
+                    <a href="{{acceptUrl}}"
+                      style="background-color:#0e3b83;color:#ffffff;text-decoration:none;font-family:'Segoe UI',Helvetica,sans-serif;font-size:16px;font-weight:700;padding:16px 52px;border-radius:8px;display:inline-block;mso-hide:all;">Acceder
+                      a mi cuenta &rarr;</a>
                     <!--<![endif]-->
                   </td>
                 </tr>
@@ -214,29 +209,14 @@
 
               <!-- Expiry -->
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                style="background-color:#fffaf4;border:1px solid #fcd9a8;border-radius:8px;margin-bottom:16px;">
+                style="background-color:#fffaf4;border:1px solid #fcd9a8;border-radius:8px;margin-bottom:20px;">
                 <tr>
                   <td style="padding:14px 18px;">
                     <p
                       style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:13px;color:#6b7280;line-height:1.55;margin:0;">
-                      &#x23F0; Este enlace expira en <strong style="color:#c2570a;">1 hora</strong>.
-                      Si no lo usas a tiempo, tendrás que solicitar un nuevo enlace desde la pantalla de inicio de
-                      sesión.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Security warning -->
-              <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-                style="background-color:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-bottom:24px;">
-                <tr>
-                  <td style="padding:14px 18px;">
-                    <p
-                      style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:13px;color:#6b7280;line-height:1.55;margin:0;">
-                      <strong style="color:#dc2626;">&#x26A0; ¿No solicitaste esto?</strong> Ignora este email — tu
-                      contraseña no cambiará.
-                      Si crees que alguien intentó acceder a tu cuenta, contacta a tu administrador.
+                      &#x23F0; Este enlace es válido hasta el <strong
+                        style="color:#c2570a;">{{expirationDate}}</strong>.
+                      Si tienes dudas, contacta al equipo de Tiendas Neto.
                     </p>
                   </td>
                 </tr>
@@ -254,8 +234,8 @@
                       Copia y pega este enlace directamente en tu navegador:</p>
                     <p
                       style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;word-break:break-all;line-height:1.65;margin:0;">
-                      <a href="{{resetUrl}}"
-                        style="color:#0e3b83;text-decoration:underline;font-weight:600;">{{resetUrl}}</a>
+                      <a href="{{acceptUrl}}"
+                        style="color:#0e3b83;text-decoration:underline;font-weight:600;">{{acceptUrl}}</a>
                     </p>
                   </td>
                 </tr>
@@ -271,12 +251,12 @@
                 style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#1f2937;margin:0 0 4px;">
                 Neto<span style="color:#f58220;">Insight</span></p>
               <p style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:12px;color:#9ca3af;margin:0 0 14px;">
-                Business Intelligence Platform</p>
+                Business Intelligence Platform — Powered by Tiendas Neto</p>
               <p
                 style="font-family:'Segoe UI',Helvetica,sans-serif;font-size:11px;color:#9ca3af;line-height:1.65;margin:0;">
-                Este email fue enviado porque se solicitó un restablecimiento de contraseña<br>
-                para la cuenta <strong style="color:#6b7280;">{{email}}</strong>.<br>
-                Si no fuiste tú, puedes ignorar este mensaje con seguridad.<br><br>
+                Este email fue enviado a {{email}} porque {{invitedByEmail}} de Tiendas Neto<br>
+                configuró una cuenta de proveedor en NetoInsight a tu nombre.<br>
+                Si no esperabas este mensaje, puedes ignorarlo.<br><br>
                 &copy; {{currentYear}} Neto. Todos los derechos reservados.
               </p>
             </td>

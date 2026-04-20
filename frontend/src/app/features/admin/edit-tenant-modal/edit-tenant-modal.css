@@ -132,3 +132,57 @@
     padding-bottom: 0.5rem;
     border-bottom: 2px solid rgba(0, 0, 0, 0.07);
 }
+
+/* Agregar al final de edit-tenant-modal.css */
+
+.license-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 160px;
+}
+
+.license-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.04);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.license-btn:hover:not(:disabled) {
+    background: rgba(14, 59, 131, 0.1);
+    border-color: rgba(14, 59, 131, 0.3);
+    color: #0e3b83;
+}
+
+.license-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.license-input {
+    text-align: center;
+    max-width: 72px;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+/* Ocultar flechas nativas del input number */
+.license-input::-webkit-inner-spin-button,
+.license-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+.license-input {
+    -moz-appearance: textfield;
+}

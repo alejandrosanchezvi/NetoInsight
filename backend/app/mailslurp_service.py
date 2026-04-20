@@ -17,8 +17,9 @@ class MailSlurpService:
             "MAILSLURP_INBOX_ID", "81ab8878-8987-4a9c-a534-299ef25dbe2f"
         )
         self.from_email = os.getenv(
-            "MAILSLURP_FROM_EMAIL", "81ab8878-8987-4a9c-a534-299ef25dbe2f@soyneto.com"
+            "MAILSLURP_FROM_EMAIL", "notificaciones@soyneto.com"
         )
+        self.from_name = os.getenv("MAILSLURP_FROM_NAME", "NetoInsight")
 
         if not self.api_key:
             raise ValueError("MAILSLURP_API_KEY no configurada en variables de entorno")
@@ -45,6 +46,7 @@ class MailSlurpService:
         role: str,
         expires_at: datetime,
         frontend_url: str,
+        template_type: str = "provider",  # "provider" | "user"
     ) -> Dict:
         try:
             logger.info(f"📧 [MAILSLURP] Sending invitation to: {email}")
@@ -58,6 +60,7 @@ class MailSlurpService:
                 role=role,
                 expires_at=expires_at,
                 frontend_url=frontend_url,
+                template_type=template_type,
             )
 
             result = self._send(
@@ -182,6 +185,8 @@ class MailSlurpService:
 
     def _send(self, to: str, subject: str, html: str, reply_to: Optional[str]) -> any:
         """Método centralizado de envío."""
+        # RFC 5322 format: "Display Name <email@domain.com>"
+        from_field = f"{self.from_name} <{self.from_email}>"
         options = mailslurp_client.SendEmailOptions(
             to=[to],
             subject=subject,
@@ -189,8 +194,13 @@ class MailSlurpService:
             is_html=True,
             send_strategy="SINGLE_MESSAGE",
             use_inbox_name=False,
-            _from=self.from_email,
+            _from=from_field,
             charset="UTF-8",
+            custom_headers={
+                "Precedence": "transactional",
+                "X-Mailer": "NetoInsight",
+                "X-Entity-Ref-ID": to,
+            },
         )
         if reply_to:
             options.reply_to = reply_to
@@ -219,11 +229,15 @@ class MailSlurpService:
         role,
         expires_at,
         frontend_url,
+        template_type: str = "provider",
     ) -> str:
-        html = (
-            self._load_template("invitation_email.html")
-            or self._fallback_invitation_html()
-        )
+        # Seleccionar template según tipo de invitación
+        if template_type == "user":
+            template_file = "invitation_user_email.html"
+        else:
+            template_file = "invitation_provider_email.html"
+
+        html = self._load_template(template_file) or self._fallback_invitation_html()
 
         replacements = {
             "{{email}}": email,
@@ -289,7 +303,6 @@ class MailSlurpService:
             self._load_template("support_email.html") or self._fallback_support_html()
         )
 
-        # Reemplazar saltos de línea con <br> para HTML
         formatted_details = details.replace("\n", "<br>")
 
         replacements = {

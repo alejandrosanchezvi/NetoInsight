@@ -38,7 +38,7 @@ import QRCode from 'qrcode';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-  
+
   private mfaStatusChangedSubject = new Subject<void>();
   public mfaStatusChanged$ = this.mfaStatusChangedSubject.asObservable();
 
@@ -48,7 +48,7 @@ export class AuthService {
     private router: Router,
   ) {
     console.log('🔐 [AUTH] AuthService initialized');
-    
+
     // ✅ IMPORTANTE: Solo cargar desde storage, NO mock
     const storedUser = this.getUserFromStorage();
 
@@ -112,10 +112,10 @@ export class AuthService {
         await this.updateLastLogin(credential.user.uid);
 
         console.log('✅ [AUTH] Login complete:', userData.email);
-        
+
         // Guardar en storage
         this.setCurrentUser(userData);
-        
+
         return userData;
       }),
       // Manejo de errores
@@ -149,7 +149,7 @@ export class AuthService {
         if (error.isMfaRequired) {
           throw error;
         }
-        
+
         throw new Error(errorMessage);
       })
     );
@@ -295,6 +295,20 @@ export class AuthService {
   /**
    * Establecer usuario actual y guardar en storage
    */
+  /**
+   * Carga la sesión desde un UID ya autenticado en Firebase.
+   * Usado en setup-account para evitar un doble login después de crear la cuenta.
+   */
+  async loadSessionFromUid(uid: string): Promise<User | null> {
+    const userData = await this.getUserData(uid);
+    if (userData) {
+      await this.updateLastLogin(uid);
+      this.setCurrentUser(userData);
+      console.log('✅ [AUTH] Sesión cargada desde UID:', uid);
+    }
+    return userData;
+  }
+
   setCurrentUser(user: User): void {
     this.currentUserSubject.next(user);
     this.saveUserToStorage(user);
@@ -320,7 +334,7 @@ export class AuthService {
   private getUserFromStorage(): User | null {
     try {
       const userStr = localStorage.getItem('currentUser');
-      
+
       if (!userStr) {
         return null;
       }
@@ -342,7 +356,7 @@ export class AuthService {
         localStorage.removeItem('currentUser');
         return null;
       }
-      
+
       // Convertir fechas de string a Date
       if (userData.createdAt) {
         userData.createdAt = new Date(userData.createdAt);
@@ -350,9 +364,9 @@ export class AuthService {
       if (userData.lastLogin) {
         userData.lastLogin = new Date(userData.lastLogin);
       }
-      
+
       return userData as User;
-      
+
     } catch (error) {
       console.error('❌ [AUTH] Error al leer storage:', error);
       return null;
@@ -369,28 +383,28 @@ export class AuthService {
 
   // 🔑 Agregar este método al AuthService
 
-/**
- * Obtiene el token de Firebase del usuario actual
- * @returns Promise con el token de Firebase o null
- */
-async getFirebaseToken(): Promise<string | null> {
-  try {
-    const user = this.auth.currentUser;
-    
-    if (!user) {
-      console.error('No hay usuario autenticado');
+  /**
+   * Obtiene el token de Firebase del usuario actual
+   * @returns Promise con el token de Firebase o null
+   */
+  async getFirebaseToken(): Promise<string | null> {
+    try {
+      const user = this.auth.currentUser;
+
+      if (!user) {
+        console.error('No hay usuario autenticado');
+        return null;
+      }
+
+      // Obtener el token de Firebase
+      const token = await user.getIdToken();
+      return token;
+
+    } catch (error) {
+      console.error('Error obteniendo token de Firebase:', error);
       return null;
     }
-    
-    // Obtener el token de Firebase
-    const token = await user.getIdToken();
-    return token;
-    
-  } catch (error) {
-    console.error('Error obteniendo token de Firebase:', error);
-    return null;
   }
-}
 
   // ─────────────────────────────────────────────────────────────
   //  MFA - TOTP (Google Authenticator)
@@ -406,7 +420,7 @@ async getFirebaseToken(): Promise<string | null> {
         resolver.hints[0].uid,
         code
       );
-      
+
       const credential = await resolver.resolveSignIn(assertion);
       console.log('✅ [AUTH] MFA successful');
 
@@ -417,7 +431,7 @@ async getFirebaseToken(): Promise<string | null> {
 
       await this.updateLastLogin(credential.user.uid);
       this.setCurrentUser(userData);
-      
+
       return userData;
     } catch (error: any) {
       console.error('❌ [AUTH] MFA Verification error:', error);
@@ -478,13 +492,13 @@ async getFirebaseToken(): Promise<string | null> {
 
       const multiFactorSession = await multiFactor(user).getSession();
       const secret = await TotpMultiFactorGenerator.generateSecret(multiFactorSession);
-      
+
       // Obtener la URI otpauth:// del secreto
       const otpauthUrl = secret.generateQrCodeUrl(
         user.email || 'NetoInsight',
         'NetoInsight'
       );
-      
+
       // Generar imagen QR como Data URL usando la librería qrcode
       const qrCodeUrl = await QRCode.toDataURL(otpauthUrl, {
         width: 250,
@@ -492,7 +506,7 @@ async getFirebaseToken(): Promise<string | null> {
         color: { dark: '#000000', light: '#ffffff' }
       });
       console.log('🛡️ [AUTH] QR Code data URL generada correctamente');
-      
+
       return { secret, qrCodeUrl };
     } catch (error) {
       console.error('❌ [AUTH] Error generando secreto TOTP:', error);
@@ -508,7 +522,7 @@ async getFirebaseToken(): Promise<string | null> {
       console.log('🛡️ [AUTH] Completando enrolamiento TOTP...');
       const assertion = TotpMultiFactorGenerator.assertionForEnrollment(secret, code);
       await multiFactor(user).enroll(assertion, displayName);
-      
+
       // Actualizamos el documento del usuario en Firestore para indicar que tiene MFA
       const uid = user.uid;
       const userRef = doc(this.firestore, 'users', uid);

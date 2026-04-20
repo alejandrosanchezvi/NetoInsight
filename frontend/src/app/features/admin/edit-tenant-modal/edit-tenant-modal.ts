@@ -40,6 +40,8 @@ export class EditTenantModal implements OnInit {
       // Contacto
       adminEmail: ['', [Validators.required, Validators.email]],
       billingEmail: ['', Validators.email],
+      // Licencias
+      maxLicenses: [1, [Validators.required, Validators.min(1), Validators.max(100)]], // min validated dynamically in adjustLicenses
     });
   }
 
@@ -52,6 +54,7 @@ export class EditTenantModal implements OnInit {
       rfc: this.tenant.rfc || '',
       adminEmail: this.tenant.adminEmail || '',
       billingEmail: this.tenant.billingEmail || '',
+      maxLicenses: this.tenant.maxLicenses || 1,
     });
   }
 
@@ -79,7 +82,7 @@ export class EditTenantModal implements OnInit {
         },
         // Mantener plan y licencias sin cambiarlos
         plan: this.tenant.plan,
-        maxLicenses: this.tenant.maxLicenses,
+        maxLicenses: fv.maxLicenses,
       };
 
       if (fv.rfc?.trim()) updateDTO.rfc = fv.rfc.trim().toUpperCase();
@@ -100,6 +103,14 @@ export class EditTenantModal implements OnInit {
 
   toggleDownloadClosedMonth(): void {
     this.canDownloadClosedMonth = !this.canDownloadClosedMonth;
+  }
+
+  adjustLicenses(delta: number): void {
+    const ctrl = this.editForm.get('maxLicenses');
+    if (!ctrl) return;
+    const min = Math.max(1, this.tenant.usedLicenses || 1);
+    const newVal = Math.max(min, Math.min(100, (ctrl.value || 1) + delta));
+    ctrl.setValue(newVal);
   }
 
   onClose(): void {

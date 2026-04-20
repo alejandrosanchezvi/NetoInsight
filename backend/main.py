@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="NetoInsight API",
-    version="2.5.0",
+    version="1.2.0",
     description="API para Tableau + MailSlurp Invitations + User Management + Password Reset",
 )
 
@@ -65,6 +65,7 @@ if os.getenv("ENVIRONMENT") != "production":
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         import time
+
         start_time = time.time()
         # logger.info(f"🌐 {request.method} {request.url.path}")
         response = await call_next(request)
@@ -158,7 +159,7 @@ def read_root():
     return {
         "status": "ok",
         "service": "NetoInsight API",
-        "version": "2.5.0",
+        "version": "1.2.0",
         "features": ["Tableau JWT", "MailSlurp", "User Management", "Password Reset"],
         "environment": os.getenv("ENVIRONMENT", "production"),
     }
@@ -168,7 +169,7 @@ def read_root():
 def health_check():
     return {
         "status": "healthy",
-        "api_version": "v2.5",
+        "api_version": "v1.2",
         "mailslurp_enabled": bool(os.getenv("MAILSLURP_API_KEY")),
         "firebase_admin_initialized": bool(firebase_admin._apps),
         "tableau_proxy_user": TABLEAU_PROXY_USER,
@@ -178,7 +179,7 @@ def health_check():
 
 @app.get("/api/test")
 def test_endpoint():
-    return {"message": "Backend is working!", "version": "2.5.0"}
+    return {"message": "Backend is working!", "version": "1.2.0"}
 
 
 # ===== INVITATIONS =====
@@ -267,7 +268,9 @@ async def send_password_reset(request: PasswordResetRequest):
             )
             # logger.info(f"✅ [RESET] Reset link generated for: {request.email}")
         except Exception as e:
-            logger.exception("❌ [RESET] generate_password_reset_link failed with full details:")
+            logger.exception(
+                "❌ [RESET] generate_password_reset_link failed with full details:"
+            )
             raise HTTPException(
                 status_code=500, detail="Error generando enlace de reset"
             )
