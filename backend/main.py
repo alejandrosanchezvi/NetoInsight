@@ -3,39 +3,17 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional
 from app.auth import verify_token
 from app.tableau_jwt import generate_tableau_jwt
 from app.mailslurp_service import get_mailslurp_service
 import logging
 import os
-import re
 from app.config import TABLEAU_SERVER, TABLEAU_SITE
 
 from app.user_management import router as user_management_router
 from app.bulk_import import router as bulk_import_router
-
-
-# ─────────────────────────────────────────────────────────────
-#  HELPER: parse robusto de fechas ISO 8601
-#  Python < 3.11 no acepta milliseconds + timezone en fromisoformat.
-#  El frontend envía cosas como "2026-04-24T18:00:00.000Z" o
-#  "2026-04-24T18:00:00.000+00:00" que ambas fallan en 3.10.
-# ─────────────────────────────────────────────────────────────
-
-def _parse_iso_datetime(value: str) -> datetime:
-    """Parse an ISO-8601 datetime string robustly across Python versions."""
-    # Normalizar: quitar milisegundos y reemplazar Z → UTC
-    # Ej: "2026-04-24T18:00:00.123Z" → "2026-04-24T18:00:00+00:00"
-    s = re.sub(r"\.\d+", "", value)  # quitar milisegundos
-    s = s.replace("Z", "+00:00")       # Z → +00:00
-    try:
-        return datetime.fromisoformat(s)
-    except ValueError:
-        # Último fallback: intentar sin timezone info
-        s_naive = re.sub(r"[+-]\d{2}:\d{2}$", "", s)
-        return datetime.fromisoformat(s_naive).replace(tzinfo=timezone.utc)
 
 # ===== FIREBASE ADMIN =====
 import firebase_admin
@@ -62,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="NetoInsight API",
-    version="2.5.0",
+    version="1.2.0",
     description="API para Tableau + MailSlurp Invitations + User Management + Password Reset",
 )
 
@@ -87,6 +65,7 @@ if os.getenv("ENVIRONMENT") != "production":
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         import time
+
         start_time = time.time()
         # logger.info(f"🌐 {request.method} {request.url.path}")
         response = await call_next(request)
@@ -180,7 +159,7 @@ def read_root():
     return {
         "status": "ok",
         "service": "NetoInsight API",
-        "version": "2.5.0",
+        "version": "1.2.0",
         "features": ["Tableau JWT", "MailSlurp", "User Management", "Password Reset"],
         "environment": os.getenv("ENVIRONMENT", "production"),
     }
@@ -190,7 +169,7 @@ def read_root():
 def health_check():
     return {
         "status": "healthy",
-        "api_version": "v2.5",
+        "api_version": "v1.2",
         "mailslurp_enabled": bool(os.getenv("MAILSLURP_API_KEY")),
         "firebase_admin_initialized": bool(firebase_admin._apps),
         "tableau_proxy_user": TABLEAU_PROXY_USER,
@@ -200,7 +179,7 @@ def health_check():
 
 @app.get("/api/test")
 def test_endpoint():
-    return {"message": "Backend is working!", "version": "2.5.0"}
+    return {"message": "Backend is working!", "version": "1.2.0"}
 
 
 # ===== INVITATIONS =====
@@ -211,19 +190,12 @@ async def send_invitation_email(
     request: SendInvitationRequest, user_data: dict = Depends(verify_token)
 ):
     try:
-        # ── Parse robusto de expires_at ──
-        # Python < 3.11 no acepta ISO con milisegundos + timezone juntos.
-        # Intentamos múltiples variantes para ser compatibles con todos los entornos.
-        expires_at: datetime = _parse_iso_datetime(request.expires_at)
-
-        # ✅ FIX: usar env var para la URL del frontend — MISMO PATRÓN que password reset.
-        # Evita que al invitar desde localhost el email contenga "http://localhost:4200/..."
-        # que el destinatario no puede abrir.
-        # Si FRONTEND_URL no está configurada, usa la URL de producción como fallback.
-        safe_frontend_url = os.getenv("FRONTEND_URL", "https://netoinsight.soyneto.com")
-        logger.info(
-            f"[INVITATION] Sending to {request.email} | frontend_url requested={request.frontend_url} → using={safe_frontend_url}"
-        )
+        try:
+            expires_at = datetime.fromisoformat(
+                request.expires_at.replace("Z", "+00:00")
+            )
+        except:
+            expires_at = datetime.fromisoformat(request.expires_at)
 
         mailslurp = get_mailslurp_service()
         result = mailslurp.send_invitation_email(
@@ -234,23 +206,22 @@ async def send_invitation_email(
             invited_by_email=request.invited_by_email,
             role=request.role,
             expires_at=expires_at,
-            frontend_url=safe_frontend_url,
+            frontend_url=request.frontend_url,
         )
 
         if result["success"]:
             return SendInvitationResponse(
                 success=True, message_id=result["message_id"], sent_at=result["sent_at"]
             )
+        raise HTTPException(
+            status_code=500, detail=f"Error enviando email: {result.get('error')}"
+        )
 
-        # ⚠️  No levantamos HTTPException — devolvemos success:false para que el frontend
-        # pueda mostrar el magic link aunque el email haya fallado.
-        logger.error(f"[INVITATION] MailSlurp error: {result.get('error')}")
-        return SendInvitationResponse(success=False, error=result.get("error"))
-
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error sending invitation email: {str(e)}")
-        # Devolvemos success:false en lugar de HTTP 500 para no bloquear el flujo del frontend
-        return SendInvitationResponse(success=False, error=str(e))
+        logger.error(f"Error sending invitation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ===== PASSWORD RESET =====
@@ -297,7 +268,9 @@ async def send_password_reset(request: PasswordResetRequest):
             )
             # logger.info(f"✅ [RESET] Reset link generated for: {request.email}")
         except Exception as e:
-            logger.exception("❌ [RESET] generate_password_reset_link failed with full details:")
+            logger.exception(
+                "❌ [RESET] generate_password_reset_link failed with full details:"
+            )
             raise HTTPException(
                 status_code=500, detail="Error generando enlace de reset"
             )

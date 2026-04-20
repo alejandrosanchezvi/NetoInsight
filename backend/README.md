@@ -88,7 +88,8 @@ gcloud run deploy netoinsight-api-staging \
   --region us-central1 \
   --allow-unauthenticated \
   --project netoinsight-fed03 \
-  --service-account=cloud-run-backend-netoinsight@netoinsight-fed03.iam.gserviceaccount.com
+  --service-account=cloud-run-backend-netoinsight@netoinsight-fed03.iam.gserviceaccount.com \
+  --update-env-vars FRONTEND_URL=https://netoinsight.soyneto.com
 ```
 
 ### Producción

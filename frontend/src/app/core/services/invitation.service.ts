@@ -65,8 +65,14 @@ export class InvitationService {
         throw new Error('No hay licencias disponibles. Contacta a Neto para ampliar tu plan.');
       }
 
-      // 2. Si existe invitación pendiente anterior → cancelarla automáticamente
-      //    Así siempre se puede reinvitar sin necesidad de cancelar manualmente
+      // 2. Verificar que no exista usuario activo con ese email en el mismo tenant
+      const activeUser = await this.findActiveUserByEmail(data.email, data.tenantId);
+      if (activeUser) {
+        throw new Error('Este correo ya tiene una cuenta activa en este proveedor. No es necesario enviar invitación.');
+      }
+
+      // 2b. Si existe invitación pendiente anterior → cancelarla automáticamente
+      //     Así siempre se puede reinvitar sin necesidad de cancelar manualmente
       const existingInvitation = await this.findPendingInvitationByEmail(data.email, data.tenantId);
       if (existingInvitation) {
         console.log('📧 [INVITATION] Cancelando invitación anterior:', existingInvitation.id);
@@ -121,6 +127,8 @@ export class InvitationService {
 
       try {
         // Primero intentar Firebase Auth email (opción A)
+        // Determinar template: provider (invitación a proveedor externo) o user (usuario del mismo tenant)
+        const templateType = tenant.plan === 'internal' ? 'user' : 'provider';
         await this.sendFirebaseInvitationEmail(
           data.email.toLowerCase(),
           token,
@@ -129,7 +137,8 @@ export class InvitationService {
           currentUser.email,
           data.role,
           expiresAt.toDate().toISOString(),
-          frontendUrl
+          frontendUrl,
+          templateType
         );
         emailSent = true;
         console.log('✅ [INVITATION] Email sent via Firebase/MailSlurp');
@@ -287,7 +296,8 @@ export class InvitationService {
     invitedByEmail: string,
     role: string,
     expiresAt: string,
-    frontendUrl: string
+    frontendUrl: string,
+    templateType: string = 'provider'
   ): Promise<void> {
     const idToken = await this.authService.getIdToken();
     if (!idToken) throw new Error('No se pudo obtener token de autenticación');
@@ -308,7 +318,8 @@ export class InvitationService {
           invited_by_email: invitedByEmail,
           role,
           expires_at: expiresAt,
-          frontend_url: frontendUrl
+          frontend_url: frontendUrl,
+          template_type: templateType
         },
         { headers }
       )
@@ -427,6 +438,22 @@ _Al hacer clic en el link podrás configurar tu contraseña y acceder a tus dash
     } catch (error) {
       console.error('❌ [INVITATION] Error getting invitation:', error);
       return null;
+    }
+  }
+
+  private async findActiveUserByEmail(email: string, tenantId: string): Promise<boolean> {
+    try {
+      const usersRef = collection(this.firestore, 'users');
+      const q = query(
+        usersRef,
+        where('email', '==', email.toLowerCase()),
+        where('tenantId', '==', tenantId),
+        where('isActive', '==', true)
+      );
+      const snap = await getDocs(q);
+      return !snap.empty;
+    } catch {
+      return false;
     }
   }
 
