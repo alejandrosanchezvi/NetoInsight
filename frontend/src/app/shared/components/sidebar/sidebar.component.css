@@ -412,3 +412,53 @@
 app-trial-info {
   margin-top: auto;
 }
+
+/* ===== SIMULAR PROVEEDOR ===== */
+.sidebar-impersonate {
+  padding: 0.5rem 0.75rem 0;
+}
+
+.btn-impersonate {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px dashed rgba(245, 158, 11, 0.5);
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.06);
+  color: #b45309;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  overflow: hidden;
+}
+
+.btn-impersonate:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.7);
+}
+
+.btn-impersonate.active {
+  background: rgba(245, 158, 11, 0.12);
+  border-style: solid;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.btn-impersonate .sidebar-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-impersonate svg {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.sidebar.mini .btn-impersonate .sidebar-label { display: none; }
+.sidebar.mini .btn-impersonate { justify-content: center; }
+.sidebar.mini .sidebar-impersonate { padding: 0.5rem 0.375rem 0; }

@@ -4,6 +4,9 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ImpersonationService } from '../../../core/services/impersonation.service';
+import { ProviderPickerComponent } from '../provider-picker/provider-picker.component';
+import { ImpersonationTarget } from '../../../core/services/impersonation.service';
 import { filter } from 'rxjs/operators';
 import { TrialInfoComponent } from './trial-banner.component';
 
@@ -20,7 +23,7 @@ interface MenuItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, TrialInfoComponent],
+  imports: [CommonModule, RouterModule, TrialInfoComponent, ProviderPickerComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css'],
 })
@@ -91,10 +94,12 @@ export class SidebarComponent implements OnInit {
   ];
 
   activeMenuItem: string = '';
+  showProviderPicker = false;
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    public impersonation: ImpersonationService,
   ) { }
 
   ngOnInit(): void {
@@ -149,6 +154,20 @@ export class SidebarComponent implements OnInit {
   isActive(item: MenuItem): boolean {
     return this.activeMenuItem === item.id;
   }
+
+  isNetoAdmin(): boolean {
+    const user = this.authService.getCurrentUser();
+    return user?.isInternal === true && user?.role === 'admin';
+  }
+
+  openProviderPicker(): void { this.showProviderPicker = true; }
+
+  onProviderSelected(target: ImpersonationTarget): void {
+    this.impersonation.start(target);
+    this.showProviderPicker = false;
+  }
+
+  onPickerClosed(): void { this.showProviderPicker = false; }
 
   /**
    * Verificar si se debe mostrar el item (basado en permisos internos)

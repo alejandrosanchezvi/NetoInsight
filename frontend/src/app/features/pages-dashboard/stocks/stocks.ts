@@ -6,10 +6,11 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
-import { filter, take, takeUntil } from 'rxjs/operators';
+import { filter, take, takeUntil, skip } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { TableauDashboardService } from '../../../core/services/tableau-dashboard.service';
+import { ImpersonationService } from '../../../core/services/impersonation.service';
 import { buildCsv, downloadCsv } from '../../../core/utils/csv-export.util';
 import { DownloadClosedMonthModal } from '../../../shared/components/download-closed-month-modal/download-closed-month-modal';
 
@@ -52,7 +53,8 @@ export class Stocks implements OnInit, AfterViewInit, OnDestroy {
     private authService: AuthService,
     private tenantService: TenantService,
     private tableau: TableauDashboardService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private impersonationService: ImpersonationService,
   ) { }
 
   ngOnInit(): void {
@@ -67,7 +69,7 @@ export class Stocks implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe(user => {
         this.currentProviderName = user!.tenantName;
-        this.currentProviderId = user!.proveedorIdInterno || '';
+        this.currentProviderId = this.impersonationService.getEffectiveProviderId(user!.proveedorIdInterno || '');
 
         if (user!.tenantId) {
           this.tenantService.getTenantById(user!.tenantId).then(tenant => {
@@ -80,6 +82,15 @@ export class Stocks implements OnInit, AfterViewInit, OnDestroy {
             }
           });
         }
+      });
+
+    this.impersonationService.impersonated$
+      .pipe(skip(1), takeUntil(this.destroy$))
+      .subscribe(imp => {
+        const realUser = this.authService.getCurrentUser();
+        this.currentProviderId = imp?.proveedorIdInterno ?? realUser?.proveedorIdInterno ?? '';
+        if (imp) this.isTrial = imp.plan === 'trial';
+        if (this.viewReady) this.refreshDashboard();
       });
   }
 

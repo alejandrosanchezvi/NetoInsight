@@ -1,0 +1,25 @@
+<div class="imp-banner" *ngIf="impersonation.isActive">
+  <div class="imp-banner-inner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <span>
+      Simulando vista de
+      <strong>{{ impersonation.current?.name }}</strong>
+      <span class="imp-sian">({{ impersonation.current?.proveedorIdInterno }})</span>
+    </span>
+    <span class="imp-plan-badge" [class.badge-trial]="impersonation.current?.plan === 'trial'"
+          [class.badge-starter]="impersonation.current?.plan === 'starter'">
+      {{ impersonation.current?.plan }}
+    </span>
+  </div>
+  <button class="imp-exit" (click)="stop()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+    Salir
+  </button>
+</div>

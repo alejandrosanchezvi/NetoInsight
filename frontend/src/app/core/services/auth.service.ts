@@ -26,6 +26,8 @@ import {
   getDoc,
   updateDoc,
   serverTimestamp,
+  increment,
+  arrayUnion,
 } from '@angular/fire/firestore';
 
 import { User, UserRole } from '../models/user.model';
@@ -108,8 +110,8 @@ export class AuthService {
           throw new Error('User data not found in Firestore');
         }
 
-        // Actualizar última conexión
-        await this.updateLastLogin(credential.user.uid);
+        // Actualizar última conexión (firstLogin solo si es el primero)
+        await this.updateLastLogin(credential.user.uid, !!userData.firstLogin);
 
         console.log('✅ [AUTH] Login complete:', userData.email);
 
@@ -224,6 +226,9 @@ export class AuthService {
         mfaRequired: data['mfaRequired'] || false,
         createdAt: data['createdAt']?.toDate() || new Date(),
         lastLogin: data['lastLogin']?.toDate(),
+        firstLogin: data['firstLogin']?.toDate(),
+        loginCount: data['loginCount'] ?? 0,
+        loginDays: data['loginDays'] ?? [],
         proveedorIdInterno: proveedorIdInterno
       };
 
@@ -236,18 +241,25 @@ export class AuthService {
   }
 
   /**
-   * Actualizar última conexión
+   * Actualizar última conexión, contador de logins y primer login (si aplica).
+   * hasFirstLogin indica si el usuario ya tenía firstLogin registrado en Firestore.
    */
-  private async updateLastLogin(uid: string): Promise<void> {
+  private async updateLastLogin(uid: string, hasFirstLogin = false): Promise<void> {
     try {
       const userDocRef = doc(this.firestore, 'users', uid);
-      await updateDoc(userDocRef, {
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+      const update: Record<string, any> = {
         lastLogin: serverTimestamp(),
-      });
+        loginCount: increment(1),
+        loginDays: arrayUnion(today),
+      };
+      if (!hasFirstLogin) {
+        update['firstLogin'] = serverTimestamp();
+      }
+      await updateDoc(userDocRef, update);
       console.log('✅ [AUTH] Last login updated');
     } catch (error) {
       console.error('⚠️ [AUTH] Error updating last login:', error);
-      // No lanzar error, es una actualización secundaria
     }
   }
 
@@ -302,7 +314,7 @@ export class AuthService {
   async loadSessionFromUid(uid: string): Promise<User | null> {
     const userData = await this.getUserData(uid);
     if (userData) {
-      await this.updateLastLogin(uid);
+      await this.updateLastLogin(uid, !!userData.firstLogin);
       this.setCurrentUser(userData);
       console.log('✅ [AUTH] Sesión cargada desde UID:', uid);
     }
@@ -429,7 +441,7 @@ export class AuthService {
         throw new Error('User data not found in Firestore after MFA');
       }
 
-      await this.updateLastLogin(credential.user.uid);
+      await this.updateLastLogin(credential.user.uid, !!userData.firstLogin);
       this.setCurrentUser(userData);
 
       return userData;

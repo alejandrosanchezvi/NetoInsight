@@ -6,6 +6,7 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../../shared/components/header/header';
 import { SidebarComponent } from '../../shared/components/sidebar/sidebar.component';
 import { SessionTimeoutModal } from '../../shared/components/session-timeout-modal/session-timeout-modal';
+import { ImpersonationBannerComponent } from '../../shared/components/impersonation-banner/impersonation-banner.component';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionService } from '../../core/services/session.service';
 
@@ -17,7 +18,8 @@ import { SessionService } from '../../core/services/session.service';
     RouterOutlet,
     HeaderComponent,
     SidebarComponent,
-    SessionTimeoutModal       // ← modal de sesión
+    SessionTimeoutModal,
+    ImpersonationBannerComponent,
   ],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.css']
