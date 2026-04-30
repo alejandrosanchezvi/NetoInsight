@@ -14,6 +14,9 @@ export interface User {
   mfaRequired?: boolean;
   createdAt: Date;
   lastLogin?: Date;
+  firstLogin?: Date;
+  loginCount?: number;
+  loginDays?: string[];
   invitationId?: string;
   proveedorIdInterno: string;
 }

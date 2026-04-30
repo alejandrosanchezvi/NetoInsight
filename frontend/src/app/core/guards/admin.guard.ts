@@ -19,15 +19,13 @@ export const adminGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  // Permitir si es Admin (de cualquier tenant) o usuario interno
-  const isAdmin = currentUser.role === UserRole.ADMIN || currentUser.isInternal;
+  // Permitir si tiene role=admin (en cualquier tenant, incluyendo interno)
+  // isInternal por sí solo NO es suficiente — un viewer interno no entra
+  const isAdmin = currentUser.role === UserRole.ADMIN;
 
   if (!isAdmin) {
     console.warn('❌ [ADMIN-GUARD] Access denied - user is not admin');
-    console.warn(`   User role: ${currentUser.role}`);
-    console.warn(`   Is internal: ${currentUser.isInternal}`);
-    
-    // Redirigir a home (donde SÍ tiene acceso)
+    console.warn(`   User role: ${currentUser.role} | isInternal: ${currentUser.isInternal}`);
     router.navigate(['/categorization']);
     return false;
   }

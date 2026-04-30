@@ -115,15 +115,25 @@ def get_active_users_by_tenant(db):
 
 
 def get_pending_invitations_by_tenant(db):
-    """Returns dict: tenantId → list of pending invitation emails"""
+    """Returns dict: tenantId → list of {email, expiresAt} for pending invitations"""
     docs = db.collection("invitations").where("status", "==", "pending").stream()
     result = {}
     for doc in docs:
         d = doc.to_dict()
         tid = d.get("tenantId", "")
         email = d.get("email", "").lower()
-        result.setdefault(tid, []).append(email)
+        expires_at = d.get("expiresAt")
+        result.setdefault(tid, []).append({"email": email, "expiresAt": expires_at})
     return result
+
+
+def is_invitation_active(inv, now):
+    """Returns True if the invitation has not yet expired"""
+    exp = inv.get("expiresAt")
+    if not exp:
+        return True
+    exp_aware = exp if exp.tzinfo else exp.replace(tzinfo=timezone.utc)
+    return exp_aware > now
 
 
 def cancel_existing_invitation(db, tenant_id, email):
@@ -203,6 +213,8 @@ def run_diagnostics(db):
     already_active = []
     no_email = []
     already_pending = []
+    expired_reinvite = []
+    now = datetime.now(timezone.utc)
 
     for t in tenants:
         tid = t["tenantId"]
@@ -225,15 +237,23 @@ def run_diagnostics(db):
             already_active.append(t)
             continue
 
-        # Tiene invitación pendiente
-        pending_emails = pending.get(tid, [])
-        if email.lower() in [e.lower() for e in pending_emails]:
-            already_pending.append(t)
+        # Tiene invitación pendiente — verificar si expiró
+        pending_items = pending.get(tid, [])
+        matching = [i for i in pending_items if i["email"] == email.lower()]
+        if matching:
+            has_active_inv = any(is_invitation_active(i, now) for i in matching)
+            if has_active_inv:
+                already_pending.append(t)
+            else:
+                # Todas las invitaciones expiraron — reinvitar
+                expired_reinvite.append(t)
+                ready_to_invite.append(t)
             continue
 
         ready_to_invite.append(t)
 
     # ── Resumen ──────────────────────────────────────────────────
+    new_invites = [t for t in ready_to_invite if t not in expired_reinvite]
     trials = [t for t in ready_to_invite if t["plan"] == "trial"]
     starters = [t for t in ready_to_invite if t["plan"] != "trial"]
 
@@ -241,14 +261,16 @@ def run_diagnostics(db):
 
     print(f"  {bold('🔄 Trial')} ({len(trials)}):")
     for t in sorted(trials, key=lambda x: x["name"]):
+        tag = " [REINVITACION]" if t in expired_reinvite else ""
         print(
-            f"    • {t['name']:<35} {t['adminEmail']:<45} [{t['proveedorIdInterno']}]"
+            f"    • {t['name']:<35} {t['adminEmail']:<45} [{t['proveedorIdInterno']}]{tag}"
         )
 
     print(f"\n  {bold('⭐ Starter/Pro')} ({len(starters)}):")
     for t in sorted(starters, key=lambda x: x["name"]):
+        tag = " [REINVITACION]" if t in expired_reinvite else ""
         print(
-            f"    • {t['name']:<35} {t['adminEmail']:<45} [{t['proveedorIdInterno']}]"
+            f"    • {t['name']:<35} {t['adminEmail']:<45} [{t['proveedorIdInterno']}]{tag}"
         )
 
     print(f"\n{yellow('⏳ YA TIENEN INVITACIÓN PENDIENTE')} ({len(already_pending)}):")
@@ -267,9 +289,9 @@ def run_diagnostics(db):
 
     print(f"\n{bold('─' * 60)}")
     print(f"  Total proveedores:    {len(tenants)}")
-    print(f"  Listos para invitar:  {green(str(len(ready_to_invite)))}")
+    print(f"  Listos para invitar:  {green(str(len(ready_to_invite)))} ({len(expired_reinvite)} reinvitaciones por link expirado)")
     print(f"  Ya tienen usuario:    {blue(str(len(already_active)))}")
-    print(f"  Invitación pendiente: {yellow(str(len(already_pending)))}")
+    print(f"  Invitación vigente:   {yellow(str(len(already_pending)))}")
     print(f"  Sin correo:           {red(str(len(no_email)))}")
     print(f"{bold('─' * 60)}\n")
 

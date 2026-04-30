@@ -326,7 +326,18 @@ export class TableauDashboardService {
                 console.log(`${tag} 🎯 firstinteractive en ${ms(tVizStart)}`);
 
                 const tFilter = performance.now();
-                await this.applyProviderFilter(viz, providerId, config);
+                const filterApplied = await this.applyProviderFilter(viz, providerId, config);
+                const netoId = config.netoInternalId ?? NETO_INTERNAL_ID;
+
+                if (!filterApplied && providerId !== netoId) {
+                    clearTimeout(timeoutId);
+                    console.error(`${tag} 🚫 Proveedor "${providerId}" no encontrado en Tableau — dashboard bloqueado`);
+                    try { container.removeChild(viz); } catch { }
+                    settled = true;
+                    resolve({ vizElement: viz, error: 'filter_not_applied' });
+                    return;
+                }
+
                 if (isTrial) {
                     await this.applyTrialDateFilter(viz, config.dashboardKey);
                 }
@@ -394,7 +405,7 @@ export class TableauDashboardService {
         vizElement: any,
         providerId: string,
         config: TableauEmbedConfig
-    ): Promise<void> {
+    ): Promise<boolean> {
         const tag = `[Tableau:${config.dashboardKey}]`;
         const fieldId = config.filterFieldId ?? FILTER_FIELD_ID;  // "Proveedor Id"
         const fieldName = FILTER_FIELD_NAME;                         // "Proveedor"
@@ -402,7 +413,7 @@ export class TableauDashboardService {
 
         if (!providerId) {
             console.warn(`${tag} ⚠️ providerId vacío — sin filtro`);
-            return;
+            return false;
         }
 
         const isNetoAdmin = providerId === netoId;
@@ -469,6 +480,8 @@ export class TableauDashboardService {
                 if (!cleared) {
                     console.warn(`${tag} ⚠️ NINGUNA worksheet aplicó correctamente. dashboard sin filtrar.`);
                 }
+                // Para admin, falla silenciosa es aceptable — retornamos true
+                return true;
 
             } else {
                 // ─────────────────────────────────────────────────────────────────
@@ -517,16 +530,22 @@ export class TableauDashboardService {
                 console.log(`${tag} → Tableau propaga al resto del dashboard (proveedor)`);
 
                 if (!applied) {
-                    console.warn(`${tag} ⚠️ NINGUNA worksheet respondió a "${fieldId}" — dashboard se muestra sin filtro`);
-                    console.warn(`${tag}    Puede ser carga de Tableau Cloud. El usuario debería refrescar.`);
+                    console.warn(`${tag} ⚠️ NINGUNA worksheet respondió a "${fieldId}" — proveedor no encontrado en datasource`);
+                    console.groupEnd();
+                    return false;
                 }
+
+                return true;
             }
 
         } catch (err: any) {
             console.error(`${tag} 💥 Error en applyProviderFilter:`, err?.message ?? err);
+            console.groupEnd();
+            return false;
         }
 
         console.groupEnd();
+        return true;
     }
 
     // ──────────────────────────────────────────────

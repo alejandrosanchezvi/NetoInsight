@@ -176,7 +176,15 @@
           </p>
         </ng-container>
 
-        <ng-container *ngIf="authError !== 'jwt_error' && authError !== 'timeout_error'">
+        <ng-container *ngIf="authError === 'filter_not_applied'">
+          <h3 class="error-state-title">Proveedor no disponible</h3>
+          <p class="error-state-message">
+            Tu número de proveedor aún no está configurado en este dashboard.
+            Por favor contacta a soporte para que lo activen.
+          </p>
+        </ng-container>
+
+        <ng-container *ngIf="authError !== 'jwt_error' && authError !== 'timeout_error' && authError !== 'filter_not_applied'">
           <h3 class="error-state-title">No pudimos cargar tu dashboard</h3>
           <p class="error-state-message">
             Ocurrió un problema al conectar con tus datos. Esto suele resolverse

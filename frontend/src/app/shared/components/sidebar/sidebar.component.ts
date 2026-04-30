@@ -4,6 +4,9 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ImpersonationService } from '../../../core/services/impersonation.service';
+import { ProviderPickerComponent } from '../provider-picker/provider-picker.component';
+import { ImpersonationTarget } from '../../../core/services/impersonation.service';
 import { filter } from 'rxjs/operators';
 import { TrialInfoComponent } from './trial-banner.component';
 
@@ -14,12 +17,13 @@ interface MenuItem {
   route: string;
   badge?: number;
   internal: boolean;
+  adminOnly?: boolean;
 }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, TrialInfoComponent],
+  imports: [CommonModule, RouterModule, TrialInfoComponent, ProviderPickerComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css'],
 })
@@ -71,6 +75,7 @@ export class SidebarComponent implements OnInit {
       icon: 'users',
       route: '/users',
       internal: false,
+      adminOnly: true,
     },
     {
       id: 'admin-tenants',
@@ -89,8 +94,13 @@ export class SidebarComponent implements OnInit {
   ];
 
   activeMenuItem: string = '';
+  showProviderPicker = false;
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    public impersonation: ImpersonationService,
+  ) { }
 
   ngOnInit(): void {
     // ✅ Detectar ruta actual al cargar
@@ -145,16 +155,39 @@ export class SidebarComponent implements OnInit {
     return this.activeMenuItem === item.id;
   }
 
+  isNetoAdmin(): boolean {
+    const user = this.authService.getCurrentUser();
+    return user?.isInternal === true && user?.role === 'admin';
+  }
+
+  openProviderPicker(): void { this.showProviderPicker = true; }
+
+  onProviderSelected(target: ImpersonationTarget): void {
+    this.impersonation.start(target);
+    this.showProviderPicker = false;
+  }
+
+  onPickerClosed(): void { this.showProviderPicker = false; }
+
   /**
    * Verificar si se debe mostrar el item (basado en permisos internos)
    */
   shouldShowItem(item: MenuItem): boolean {
-    // Mostrar items no internos siempre
-    if (!item.internal) {
-      return true;
+    const user = this.authService.getCurrentUser();
+
+    // Items solo para NETO-INTERNAL con role=admin
+    // isInternal solo NO basta — un viewer interno no los ve
+    if (item.internal) {
+      return user?.isInternal === true && user?.role === 'admin';
     }
-    // Mostrar items internos solo si el usuario es interno
-    return this.isInternalUser;
+
+    // Items solo para admin (cualquier tenant con role=admin)
+    if (item.adminOnly) {
+      return user?.role === 'admin';
+    }
+
+    // El resto visible para todos
+    return true;
   }
 
   /**
