@@ -3,6 +3,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { UserRole } from '../models/user.model';
 
 export const internalAdminGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
@@ -10,13 +11,16 @@ export const internalAdminGuard: CanActivateFn = (route, state) => {
 
   console.log('🔒 [INTERNAL-ADMIN-GUARD] Checking internal admin access...');
 
-  const isInternal = authService.isInternalUser();
+  const currentUser = authService.getCurrentUser();
 
-  if (!isInternal) {
-    console.warn('❌ [INTERNAL-ADMIN-GUARD] Access denied - not internal user');
-    
-    // Redirigir silenciosamente a home
-    // El modal de error se mostrará desde el componente si es necesario
+  // Requiere: isInternal === true Y role === admin
+  // Un viewer interno (como soporte) NO tiene acceso a estas pantallas
+  const isInternalAdmin = currentUser?.isInternal === true
+    && currentUser?.role === UserRole.ADMIN;
+
+  if (!isInternalAdmin) {
+    console.warn('❌ [INTERNAL-ADMIN-GUARD] Access denied');
+    console.warn(`   isInternal: ${currentUser?.isInternal} | role: ${currentUser?.role}`);
     router.navigate(['/categorization']);
     return false;
   }
