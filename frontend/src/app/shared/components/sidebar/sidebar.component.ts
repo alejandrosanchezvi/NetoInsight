@@ -14,6 +14,7 @@ interface MenuItem {
   route: string;
   badge?: number;
   internal: boolean;
+  adminOnly?: boolean;
 }
 
 @Component({
@@ -71,6 +72,7 @@ export class SidebarComponent implements OnInit {
       icon: 'users',
       route: '/users',
       internal: false,
+      adminOnly: true,
     },
     {
       id: 'admin-tenants',
@@ -90,7 +92,10 @@ export class SidebarComponent implements OnInit {
 
   activeMenuItem: string = '';
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     // ✅ Detectar ruta actual al cargar
@@ -149,12 +154,21 @@ export class SidebarComponent implements OnInit {
    * Verificar si se debe mostrar el item (basado en permisos internos)
    */
   shouldShowItem(item: MenuItem): boolean {
-    // Mostrar items no internos siempre
-    if (!item.internal) {
-      return true;
+    const user = this.authService.getCurrentUser();
+
+    // Items solo para NETO-INTERNAL con role=admin
+    // isInternal solo NO basta — un viewer interno no los ve
+    if (item.internal) {
+      return user?.isInternal === true && user?.role === 'admin';
     }
-    // Mostrar items internos solo si el usuario es interno
-    return this.isInternalUser;
+
+    // Items solo para admin (cualquier tenant con role=admin)
+    if (item.adminOnly) {
+      return user?.role === 'admin';
+    }
+
+    // El resto visible para todos
+    return true;
   }
 
   /**

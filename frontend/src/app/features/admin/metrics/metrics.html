@@ -226,7 +226,7 @@
 
             <div class="table-card">
                 <ng-container *ngIf="!showNeverLogin">
-                    <p class="table-caption">Últimos 10 accesos al portal</p>
+                    <p class="table-caption">Todos los usuarios con acceso — ordenados por más reciente</p>
                     <table class="metrics-table">
                         <thead>
                             <tr>
@@ -243,7 +243,9 @@
                                 </td>
                                 <td class="text-muted">{{ u.tenantName }}</td>
                                 <td>
-                                    <span class="last-login-badge">{{ formatLastLogin(u.lastLogin) }}</span>
+                                    <span class="last-login-badge" [ngClass]="getLastLoginClass(u.lastLogin)">
+                                        {{ formatLastLogin(u.lastLogin) }}
+                                    </span>
                                 </td>
                             </tr>
                             <tr *ngIf="recentUsers.length === 0">

@@ -179,11 +179,10 @@ export class MetricsComponent implements OnInit, OnDestroy {
         ).length;
         this.neverLoggedIn = all.filter(u => !u.lastLogin).length;
 
-        // Últimos 10 logins
+        // Todos los usuarios con login, ordenados por más reciente
         this.recentUsers = all
             .filter(u => u.lastLogin !== null)
-            .sort((a, b) => (b.lastLogin?.getTime() ?? 0) - (a.lastLogin?.getTime() ?? 0))
-            .slice(0, 10);
+            .sort((a, b) => (b.lastLogin?.getTime() ?? 0) - (a.lastLogin?.getTime() ?? 0));
 
         // Sin login
         this.neverLoginUsers = all.filter(u => !u.lastLogin)
@@ -326,12 +325,27 @@ export class MetricsComponent implements OnInit, OnDestroy {
     formatLastLogin(date: Date | null): string {
         if (!date) return 'Nunca';
         const diffMs = this.NOW.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        if (diffDays === 0) return 'Hoy';
-        if (diffDays === 1) return 'Ayer';
+
+        if (diffMins < 1) return 'Hace un momento';
+        if (diffMins < 60) return `Hace ${diffMins} min`;
+        if (diffHours < 24) return `Hace ${diffHours}h`;
+        if (diffDays === 1) return `Ayer ${date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
         if (diffDays < 7) return `Hace ${diffDays} días`;
-        if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
+        if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} sem`;
         return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    getLastLoginClass(date: Date | null): string {
+        if (!date) return 'login-never';
+        const diffDays = Math.floor((this.NOW.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) return 'login-today';
+        if (diffDays <= 3) return 'login-recent';
+        if (diffDays <= 14) return 'login-ok';
+        if (diffDays <= 30) return 'login-warning';
+        return 'login-old';
     }
 
     getBarHeight(value: number): number {

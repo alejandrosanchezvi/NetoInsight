@@ -524,3 +524,42 @@
         padding: 0.625rem 0.875rem;
     }
 }
+
+/* Color coding por antigüedad del último login */
+.last-login-badge {
+    display: inline-block;
+    padding: 0.2rem 0.625rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.login-today {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+.login-recent {
+    background: rgba(14, 59, 131, 0.1);
+    color: #0e3b83;
+}
+
+.login-ok {
+    background: rgba(107, 114, 128, 0.1);
+    color: #374151;
+}
+
+.login-warning {
+    background: rgba(245, 130, 32, 0.12);
+    color: #b45309;
+}
+
+.login-old {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.login-never {
+    background: rgba(239, 68, 68, 0.08);
+    color: #9ca3af;
+}
